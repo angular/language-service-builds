@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-next.14+43.sha-b5da715.with-local-changes
+ * @license Angular v13.0.0-next.14+47.sha-6b85519.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -27,7 +27,7 @@ module.exports = function(provided) {
   return results;
 };
 
-define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', 'module', 'path', 'url'], function (exports, ts$1, os, ts, fs$1, module, path, url) { 'use strict';
+define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', 'module', 'path', 'url'], (function (exports, ts$1, os, ts, fs$1, module, path, url) { 'use strict';
 
     function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -40,14 +40,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     var d = Object.getOwnPropertyDescriptor(e, k);
                     Object.defineProperty(n, k, d.get ? d : {
                         enumerable: true,
-                        get: function () {
-                            return e[k];
-                        }
+                        get: function () { return e[k]; }
                     });
                 }
             });
         }
-        n['default'] = e;
+        n["default"] = e;
         return Object.freeze(n);
     }
 
@@ -418,7 +416,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         getDefaultLibLocation() {
             // TODO(devversion): Once devmode output uses ESM, we can simplify this.
-            const requireFn = isCommonJS ? require : module__default['default'].createRequire(currentFileUrl);
+            const requireFn = isCommonJS ? require : module__default["default"].createRequire(currentFileUrl);
             return this.resolve(requireFn.resolve('typescript'), '..');
         }
     }
@@ -20064,7 +20062,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.0-next.14+43.sha-b5da715.with-local-changes');
+    new Version('13.0.0-next.14+47.sha-6b85519.with-local-changes');
 
     /**
      * @license
@@ -20693,7 +20691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.0.0-next.14+43.sha-b5da715.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.14+47.sha-6b85519.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20733,7 +20731,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.0.0-next.14+43.sha-b5da715.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.14+47.sha-6b85519.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20950,7 +20948,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.0.0-next.14+43.sha-b5da715.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.14+47.sha-6b85519.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20992,7 +20990,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.0.0-next.14+43.sha-b5da715.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.14+47.sha-6b85519.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21071,7 +21069,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.0.0-next.14+43.sha-b5da715.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.14+47.sha-6b85519.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21108,7 +21106,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.0.0-next.14+43.sha-b5da715.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.14+47.sha-6b85519.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21166,7 +21164,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.0.0-next.14+43.sha-b5da715.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-next.14+47.sha-6b85519.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21198,7 +21196,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.0-next.14+43.sha-b5da715.with-local-changes');
+    new Version('13.0.0-next.14+47.sha-6b85519.with-local-changes');
 
     /**
      * @license
@@ -21208,8 +21206,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     // In TypeScript 2.1 the spread element kind was renamed.
-    ts__default['default'].SyntaxKind.SpreadElement || ts__default['default'].SyntaxKind.SpreadElementExpression;
-    ts__default['default'].createNodeArray();
+    ts__default["default"].SyntaxKind.SpreadElement || ts__default["default"].SyntaxKind.SpreadElementExpression;
+    ts__default["default"].createNodeArray();
 
     /**
      * @license
@@ -21474,11 +21472,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     function makeDiagnostic(code, node, messageText, relatedInformation) {
-        node = ts__default['default'].getOriginalNode(node);
+        node = ts__default["default"].getOriginalNode(node);
         return {
-            category: ts__default['default'].DiagnosticCategory.Error,
+            category: ts__default["default"].DiagnosticCategory.Error,
             code: ngErrorCode(code),
-            file: ts__default['default'].getOriginalNode(node).getSourceFile(),
+            file: ts__default["default"].getOriginalNode(node).getSourceFile(),
             start: node.getStart(undefined, false),
             length: node.getWidth(),
             messageText,
@@ -21486,9 +21484,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         };
     }
     function makeRelatedInformation(node, messageText) {
-        node = ts__default['default'].getOriginalNode(node);
+        node = ts__default["default"].getOriginalNode(node);
         return {
-            category: ts__default['default'].DiagnosticCategory.Message,
+            category: ts__default["default"].DiagnosticCategory.Message,
             code: 0,
             file: node.getSourceFile(),
             start: node.getStart(),
@@ -21516,12 +21514,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return D_TS.test(filePath);
     }
     function nodeNameForError(node) {
-        if (node.name !== undefined && ts__default['default'].isIdentifier(node.name)) {
+        if (node.name !== undefined && ts__default["default"].isIdentifier(node.name)) {
             return node.name.text;
         }
         else {
-            const kind = ts__default['default'].SyntaxKind[node.kind];
-            const { line, character } = ts__default['default'].getLineAndCharacterOfPosition(node.getSourceFile(), node.getStart());
+            const kind = ts__default["default"].SyntaxKind[node.kind];
+            const { line, character } = ts__default["default"].getLineAndCharacterOfPosition(node.getSourceFile(), node.getStart());
             return `${kind}@${line}:${character}`;
         }
     }
@@ -21530,17 +21528,17 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         // despite the type signature not allowing it. In that event, get the `ts.SourceFile` via the
         // original node instead (which works).
         const directSf = node.getSourceFile();
-        return directSf !== undefined ? directSf : ts__default['default'].getOriginalNode(node).getSourceFile();
+        return directSf !== undefined ? directSf : ts__default["default"].getOriginalNode(node).getSourceFile();
     }
     function getSourceFileOrNull(program, fileName) {
         return program.getSourceFile(fileName) || null;
     }
     function getTokenAtPosition(sf, pos) {
         // getTokenAtPosition is part of TypeScript's private API.
-        return ts__default['default'].getTokenAtPosition(sf, pos);
+        return ts__default["default"].getTokenAtPosition(sf, pos);
     }
     function identifierOfNode(decl) {
-        if (decl.name !== undefined && ts__default['default'].isIdentifier(decl.name)) {
+        if (decl.name !== undefined && ts__default["default"].isIdentifier(decl.name)) {
             return decl.name;
         }
         else {
@@ -21551,16 +21549,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return isValueDeclaration(node) || isTypeDeclaration(node);
     }
     function isValueDeclaration(node) {
-        return ts__default['default'].isClassDeclaration(node) || ts__default['default'].isFunctionDeclaration(node) ||
-            ts__default['default'].isVariableDeclaration(node);
+        return ts__default["default"].isClassDeclaration(node) || ts__default["default"].isFunctionDeclaration(node) ||
+            ts__default["default"].isVariableDeclaration(node);
     }
     function isTypeDeclaration(node) {
-        return ts__default['default'].isEnumDeclaration(node) || ts__default['default'].isTypeAliasDeclaration(node) ||
-            ts__default['default'].isInterfaceDeclaration(node);
+        return ts__default["default"].isEnumDeclaration(node) || ts__default["default"].isTypeAliasDeclaration(node) ||
+            ts__default["default"].isInterfaceDeclaration(node);
     }
     function isNamedDeclaration(node) {
         const namedNode = node;
-        return namedNode.name !== undefined && ts__default['default'].isIdentifier(namedNode.name);
+        return namedNode.name !== undefined && ts__default["default"].isIdentifier(namedNode.name);
     }
     function getRootDirs(host, options) {
         const rootDirs = [];
@@ -21583,8 +21581,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function nodeDebugInfo(node) {
         const sf = getSourceFile(node);
-        const { line, character } = ts__default['default'].getLineAndCharacterOfPosition(sf, node.pos);
-        return `[${sf.fileName}: ${ts__default['default'].SyntaxKind[node.kind]} @ ${line}:${character}]`;
+        const { line, character } = ts__default["default"].getLineAndCharacterOfPosition(sf, node.pos);
+        return `[${sf.fileName}: ${ts__default["default"].SyntaxKind[node.kind]} @ ${line}:${character}]`;
     }
     /**
      * Resolve the specified `moduleName` using the given `compilerOptions` and `compilerHost`.
@@ -21599,14 +21597,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             compilerOptions)[0];
         }
         else {
-            return ts__default['default']
+            return ts__default["default"]
                 .resolveModuleName(moduleName, containingFile, compilerOptions, compilerHost, moduleResolutionCache !== null ? moduleResolutionCache : undefined)
                 .resolvedModule;
         }
     }
     /** Returns true if the node is an assignment expression. */
     function isAssignment(node) {
-        return ts__default['default'].isBinaryExpression(node) && node.operatorToken.kind === ts__default['default'].SyntaxKind.EqualsToken;
+        return ts__default["default"].isBinaryExpression(node) && node.operatorToken.kind === ts__default["default"].SyntaxKind.EqualsToken;
     }
     /**
      * Obtains the non-redirected source file for `sf`.
@@ -21775,10 +21773,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             else if (!isDeclaration(ref.node)) {
                 // It's not possible to import something which isn't a declaration.
-                throw new Error(`Debug assert: unable to import a Reference to non-declaration of type ${ts__default['default'].SyntaxKind[ref.node.kind]}.`);
+                throw new Error(`Debug assert: unable to import a Reference to non-declaration of type ${ts__default["default"].SyntaxKind[ref.node.kind]}.`);
             }
             else if ((importFlags & ImportFlags.AllowTypeImports) === 0 && isTypeDeclaration(ref.node)) {
-                throw new Error(`Importing a type-only declaration of type ${ts__default['default'].SyntaxKind[ref.node.kind]} in a value position is not allowed.`);
+                throw new Error(`Importing a type-only declaration of type ${ts__default["default"].SyntaxKind[ref.node.kind]} in a value position is not allowed.`);
             }
             // Try to find the exported name of the declaration, if one is available.
             const { specifier, resolutionContext } = ref.bestGuessOwningModule;
@@ -22222,7 +22220,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * Process a `ts.SourceFile` and replace any `ts.ImportDeclaration`s.
          */
         transformSourceFile(sf) {
-            const originalSf = ts__default['default'].getOriginalNode(sf);
+            const originalSf = ts__default["default"].getOriginalNode(sf);
             // Take a fast path if no import declarations need to be preserved in the file.
             if (!this.sourceFileToUsedImports.has(originalSf)) {
                 return sf;
@@ -22231,7 +22229,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const importsToPreserve = this.sourceFileToUsedImports.get(originalSf);
             // Generate a new statement list which preserves any imports present in `importsToPreserve`.
             const statements = sf.statements.map(stmt => {
-                if (ts__default['default'].isImportDeclaration(stmt) && importsToPreserve.has(stmt)) {
+                if (ts__default["default"].isImportDeclaration(stmt) && importsToPreserve.has(stmt)) {
                     // Preserving an import that's marked as unreferenced (type-only) is tricky in TypeScript.
                     //
                     // Various approaches have been tried, with mixed success:
@@ -22258,14 +22256,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     //
                     // TODO(alxhub): discuss with the TypeScript team and determine if there's a better way to
                     // deal with this issue.
-                    stmt = ts__default['default'].getMutableClone(stmt);
+                    stmt = ts__default["default"].getMutableClone(stmt);
                 }
                 return stmt;
             });
             // Save memory - there's no need to keep these around once the transform has run for the given
             // file.
             this.sourceFileToUsedImports.delete(originalSf);
-            return ts__default['default'].updateSourceFileNode(sf, statements);
+            return ts__default["default"].updateSourceFileNode(sf, statements);
         }
     }
 
@@ -22452,7 +22450,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     function getSymbolIdentifier(decl) {
-        if (!ts__default['default'].isSourceFile(decl.parent)) {
+        if (!ts__default["default"].isSourceFile(decl.parent)) {
             return null;
         }
         // If this is a top-level class declaration, the class name is used as unique identifier.
@@ -22777,7 +22775,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * does not have any type parameters, then `null` is returned.
      */
     function extractSemanticTypeParameters(node) {
-        if (!ts__default['default'].isClassDeclaration(node) || node.typeParameters === undefined) {
+        if (!ts__default["default"].isClassDeclaration(node) || node.typeParameters === undefined) {
             return null;
         }
         return node.typeParameters.map(typeParam => ({ hasGenericTypeBound: typeParam.constraint !== undefined }));
@@ -22835,9 +22833,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         },
     };
     function isDecoratorIdentifier(exp) {
-        return ts__default['default'].isIdentifier(exp) ||
-            ts__default['default'].isPropertyAccessExpression(exp) && ts__default['default'].isIdentifier(exp.expression) &&
-                ts__default['default'].isIdentifier(exp.name);
+        return ts__default["default"].isIdentifier(exp) ||
+            ts__default["default"].isPropertyAccessExpression(exp) && ts__default["default"].isIdentifier(exp.expression) &&
+                ts__default["default"].isIdentifier(exp.name);
     }
     /**
      * An enumeration of possible kinds of class members.
@@ -22907,7 +22905,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         if (typeNode === null) {
             return missingType();
         }
-        if (!ts__default['default'].isTypeReferenceNode(typeNode)) {
+        if (!ts__default["default"].isTypeReferenceNode(typeNode)) {
             return unsupportedType(typeNode);
         }
         const symbols = resolveTypeSymbols(typeNode, checker);
@@ -22918,7 +22916,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         // It's only valid to convert a type reference to a value reference if the type actually
         // has a value declaration associated with it. Note that const enums are an exception,
         // because while they do have a value declaration, they don't exist at runtime.
-        if (decl.valueDeclaration === undefined || decl.flags & ts__default['default'].SymbolFlags.ConstEnum) {
+        if (decl.valueDeclaration === undefined || decl.flags & ts__default["default"].SymbolFlags.ConstEnum) {
             let typeOnlyDecl = null;
             if (decl.declarations !== undefined && decl.declarations.length > 0) {
                 typeOnlyDecl = decl.declarations[0];
@@ -22931,7 +22929,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         // statement. If so, extract the module specifier and the name of the imported type.
         const firstDecl = local.declarations && local.declarations[0];
         if (firstDecl !== undefined) {
-            if (ts__default['default'].isImportClause(firstDecl) && firstDecl.name !== undefined) {
+            if (ts__default["default"].isImportClause(firstDecl) && firstDecl.name !== undefined) {
                 // This is a default import.
                 //   import Foo from 'foo';
                 if (firstDecl.isTypeOnly) {
@@ -22944,7 +22942,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     defaultImportStatement: firstDecl.parent,
                 };
             }
-            else if (ts__default['default'].isImportSpecifier(firstDecl)) {
+            else if (ts__default["default"].isImportSpecifier(firstDecl)) {
                 // The symbol was imported by name
                 //   import {Foo} from 'foo';
                 // or
@@ -22968,7 +22966,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     nestedPath
                 };
             }
-            else if (ts__default['default'].isNamespaceImport(firstDecl)) {
+            else if (ts__default["default"].isNamespaceImport(firstDecl)) {
                 // The import is a namespace import
                 //   import * as Foo from 'foo';
                 if (firstDecl.parent.isTypeOnly) {
@@ -23049,7 +23047,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * This will return `null` if an equivalent expression cannot be constructed.
      */
     function typeNodeToValueExpr(node) {
-        if (ts__default['default'].isTypeReferenceNode(node)) {
+        if (ts__default["default"].isTypeReferenceNode(node)) {
             return entityNameToValue(node.typeName);
         }
         else {
@@ -23093,7 +23091,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         //   type is not qualified.
         let leftMost = typeName;
         const symbolNames = [];
-        while (ts__default['default'].isQualifiedName(leftMost)) {
+        while (ts__default["default"].isQualifiedName(leftMost)) {
             symbolNames.unshift(leftMost.right.text);
             leftMost = leftMost.left;
         }
@@ -23106,25 +23104,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         // De-alias the top-level type reference symbol to get the symbol of the actual declaration.
         let decl = typeRefSymbol;
-        if (typeRefSymbol.flags & ts__default['default'].SymbolFlags.Alias) {
+        if (typeRefSymbol.flags & ts__default["default"].SymbolFlags.Alias) {
             decl = checker.getAliasedSymbol(typeRefSymbol);
         }
         return { local, decl, symbolNames };
     }
     function entityNameToValue(node) {
-        if (ts__default['default'].isQualifiedName(node)) {
+        if (ts__default["default"].isQualifiedName(node)) {
             const left = entityNameToValue(node.left);
-            return left !== null ? ts__default['default'].createPropertyAccess(left, node.right) : null;
+            return left !== null ? ts__default["default"].createPropertyAccess(left, node.right) : null;
         }
-        else if (ts__default['default'].isIdentifier(node)) {
-            return ts__default['default'].getMutableClone(node);
+        else if (ts__default["default"].isIdentifier(node)) {
+            return ts__default["default"].getMutableClone(node);
         }
         else {
             return null;
         }
     }
     function extractModuleName(node) {
-        if (!ts__default['default'].isStringLiteral(node.moduleSpecifier)) {
+        if (!ts__default["default"].isStringLiteral(node.moduleSpecifier)) {
             throw new Error('not a module specifier');
         }
         return node.moduleSpecifier.text;
@@ -23138,10 +23136,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     function isNamedClassDeclaration(node) {
-        return ts__default['default'].isClassDeclaration(node) && isIdentifier(node.name);
+        return ts__default["default"].isClassDeclaration(node) && isIdentifier(node.name);
     }
     function isIdentifier(node) {
-        return node !== undefined && ts__default['default'].isIdentifier(node);
+        return node !== undefined && ts__default["default"].isIdentifier(node);
     }
 
     /**
@@ -23177,7 +23175,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // without a `body` are overloads whereas we want the implementation since it's the one that'll
             // be executed and which can have decorators. For declaration files, we take the first one that
             // we get.
-            const ctor = tsClazz.members.find((member) => ts__default['default'].isConstructorDeclaration(member) && (isDeclaration || member.body !== undefined));
+            const ctor = tsClazz.members.find((member) => ts__default["default"].isConstructorDeclaration(member) && (isDeclaration || member.body !== undefined));
             if (ctor === undefined) {
                 return null;
             }
@@ -23193,9 +23191,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 // and extract the type. More complex union types e.g. `foo: Foo|Bar` are not supported.
                 // We also don't need to support `foo: Foo|undefined` because Angular's DI injects `null` for
                 // optional tokes that don't have providers.
-                if (typeNode && ts__default['default'].isUnionTypeNode(typeNode)) {
-                    let childTypeNodes = typeNode.types.filter(childTypeNode => !(ts__default['default'].isLiteralTypeNode(childTypeNode) &&
-                        childTypeNode.literal.kind === ts__default['default'].SyntaxKind.NullKeyword));
+                if (typeNode && ts__default["default"].isUnionTypeNode(typeNode)) {
+                    let childTypeNodes = typeNode.types.filter(childTypeNode => !(ts__default["default"].isLiteralTypeNode(childTypeNode) &&
+                        childTypeNode.literal.kind === ts__default["default"].SyntaxKind.NullKeyword));
                     if (childTypeNodes.length === 1) {
                         typeNode = childTypeNodes[0];
                     }
@@ -23215,10 +23213,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (directImport !== null) {
                 return directImport;
             }
-            else if (ts__default['default'].isQualifiedName(id.parent) && id.parent.right === id) {
+            else if (ts__default["default"].isQualifiedName(id.parent) && id.parent.right === id) {
                 return this.getImportOfNamespacedIdentifier(id, getQualifiedNameRoot(id.parent));
             }
-            else if (ts__default['default'].isPropertyAccessExpression(id.parent) && id.parent.name === id) {
+            else if (ts__default["default"].isPropertyAccessExpression(id.parent) && id.parent.name === id) {
                 return this.getImportOfNamespacedIdentifier(id, getFarLeftIdentifier(id.parent));
             }
             else {
@@ -23227,7 +23225,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         getExportsOfModule(node) {
             // In TypeScript code, modules are only ts.SourceFiles. Throw if the node isn't a module.
-            if (!ts__default['default'].isSourceFile(node)) {
+            if (!ts__default["default"].isSourceFile(node)) {
                 throw new Error(`getExportsOfModule() called on non-SourceFile in TS code`);
             }
             // Reflect the module to a Symbol, and use getExportsOfModule() to get a list of exported
@@ -23255,11 +23253,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return this.getBaseClassExpression(clazz) !== null;
         }
         getBaseClassExpression(clazz) {
-            if (!(ts__default['default'].isClassDeclaration(clazz) || ts__default['default'].isClassExpression(clazz)) ||
+            if (!(ts__default["default"].isClassDeclaration(clazz) || ts__default["default"].isClassExpression(clazz)) ||
                 clazz.heritageClauses === undefined) {
                 return null;
             }
-            const extendsClause = clazz.heritageClauses.find(clause => clause.token === ts__default['default'].SyntaxKind.ExtendsKeyword);
+            const extendsClause = clazz.heritageClauses.find(clause => clause.token === ts__default["default"].SyntaxKind.ExtendsKeyword);
             if (extendsClause === undefined) {
                 return null;
             }
@@ -23278,8 +23276,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return this.getDeclarationOfSymbol(symbol, id);
         }
         getDefinitionOfFunction(node) {
-            if (!ts__default['default'].isFunctionDeclaration(node) && !ts__default['default'].isMethodDeclaration(node) &&
-                !ts__default['default'].isFunctionExpression(node)) {
+            if (!ts__default["default"].isFunctionDeclaration(node) && !ts__default["default"].isMethodDeclaration(node) &&
+                !ts__default["default"].isFunctionExpression(node)) {
                 return null;
             }
             return {
@@ -23293,7 +23291,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             };
         }
         getGenericArityOfClass(clazz) {
-            if (!ts__default['default'].isClassDeclaration(clazz)) {
+            if (!ts__default["default"].isClassDeclaration(clazz)) {
                 return null;
             }
             return clazz.typeParameters !== undefined ? clazz.typeParameters.length : 0;
@@ -23313,11 +23311,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         isStaticallyExported(decl) {
             // First check if there's an `export` modifier directly on the declaration.
             let topLevel = decl;
-            if (ts__default['default'].isVariableDeclaration(decl) && ts__default['default'].isVariableDeclarationList(decl.parent)) {
+            if (ts__default["default"].isVariableDeclaration(decl) && ts__default["default"].isVariableDeclarationList(decl.parent)) {
                 topLevel = decl.parent.parent;
             }
             if (topLevel.modifiers !== undefined &&
-                topLevel.modifiers.some(modifier => modifier.kind === ts__default['default'].SyntaxKind.ExportKeyword)) {
+                topLevel.modifiers.some(modifier => modifier.kind === ts__default["default"].SyntaxKind.ExportKeyword)) {
                 // The node is part of a declaration that's directly exported.
                 return true;
             }
@@ -23330,7 +23328,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // The only way to check this is to look at the module level for exports of the class. As a
             // performance optimization, this check is only performed if the class is actually declared at
             // the top level of the file and thus eligible for exporting in the first place.
-            if (topLevel.parent === undefined || !ts__default['default'].isSourceFile(topLevel.parent)) {
+            if (topLevel.parent === undefined || !ts__default["default"].isSourceFile(topLevel.parent)) {
                 return false;
             }
             const localExports = this.getLocalExportedDeclarationsOfSourceFile(decl.getSourceFile());
@@ -23349,7 +23347,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return null;
             }
             // The module specifier is guaranteed to be a string literal, so this should always pass.
-            if (!ts__default['default'].isStringLiteral(importDecl.moduleSpecifier)) {
+            if (!ts__default["default"].isStringLiteral(importDecl.moduleSpecifier)) {
                 // Not allowed to happen in TypeScript ASTs.
                 return null;
             }
@@ -23385,12 +23383,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (!declaration) {
                 return null;
             }
-            const namespaceDeclaration = ts__default['default'].isNamespaceImport(declaration) ? declaration : null;
+            const namespaceDeclaration = ts__default["default"].isNamespaceImport(declaration) ? declaration : null;
             if (!namespaceDeclaration) {
                 return null;
             }
             const importDeclaration = namespaceDeclaration.parent.parent;
-            if (!ts__default['default'].isStringLiteral(importDeclaration.moduleSpecifier)) {
+            if (!ts__default["default"].isStringLiteral(importDeclaration.moduleSpecifier)) {
                 // Should not happen as this would be invalid TypesScript
                 return null;
             }
@@ -23411,14 +23409,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             else if (symbol.declarations !== undefined && symbol.declarations.length > 0) {
                 valueDeclaration = symbol.declarations[0];
             }
-            if (valueDeclaration !== undefined && ts__default['default'].isShorthandPropertyAssignment(valueDeclaration)) {
+            if (valueDeclaration !== undefined && ts__default["default"].isShorthandPropertyAssignment(valueDeclaration)) {
                 const shorthandSymbol = this.checker.getShorthandAssignmentValueSymbol(valueDeclaration);
                 if (shorthandSymbol === undefined) {
                     return null;
                 }
                 return this.getDeclarationOfSymbol(shorthandSymbol, originalId);
             }
-            else if (valueDeclaration !== undefined && ts__default['default'].isExportSpecifier(valueDeclaration)) {
+            else if (valueDeclaration !== undefined && ts__default["default"].isExportSpecifier(valueDeclaration)) {
                 const targetSymbol = this.checker.getExportSpecifierLocalTargetSymbol(valueDeclaration);
                 if (targetSymbol === undefined) {
                     return null;
@@ -23430,7 +23428,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 importInfo.from :
                 null;
             // Now, resolve the Symbol to its declaration by following any and all aliases.
-            while (symbol.flags & ts__default['default'].SymbolFlags.Alias) {
+            while (symbol.flags & ts__default["default"].SymbolFlags.Alias) {
                 symbol = this.checker.getAliasedSymbol(symbol);
             }
             // Look at the resolved Symbol's declarations and pick one of them to return. Value declarations
@@ -23464,7 +23462,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             let decoratorExpr = node.expression;
             let args = null;
             // Check for call expressions.
-            if (ts__default['default'].isCallExpression(decoratorExpr)) {
+            if (ts__default["default"].isCallExpression(decoratorExpr)) {
                 args = Array.from(decoratorExpr.arguments);
                 decoratorExpr = decoratorExpr.expression;
             }
@@ -23473,7 +23471,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (!isDecoratorIdentifier(decoratorExpr)) {
                 return null;
             }
-            const decoratorIdentifier = ts__default['default'].isIdentifier(decoratorExpr) ? decoratorExpr : decoratorExpr.name;
+            const decoratorIdentifier = ts__default["default"].isIdentifier(decoratorExpr) ? decoratorExpr : decoratorExpr.name;
             const importDecl = this.getImportOfIdentifier(decoratorIdentifier);
             return {
                 name: decoratorIdentifier.text,
@@ -23488,33 +23486,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             let value = null;
             let name = null;
             let nameNode = null;
-            if (ts__default['default'].isPropertyDeclaration(node)) {
+            if (ts__default["default"].isPropertyDeclaration(node)) {
                 kind = ClassMemberKind.Property;
                 value = node.initializer || null;
             }
-            else if (ts__default['default'].isGetAccessorDeclaration(node)) {
+            else if (ts__default["default"].isGetAccessorDeclaration(node)) {
                 kind = ClassMemberKind.Getter;
             }
-            else if (ts__default['default'].isSetAccessorDeclaration(node)) {
+            else if (ts__default["default"].isSetAccessorDeclaration(node)) {
                 kind = ClassMemberKind.Setter;
             }
-            else if (ts__default['default'].isMethodDeclaration(node)) {
+            else if (ts__default["default"].isMethodDeclaration(node)) {
                 kind = ClassMemberKind.Method;
             }
-            else if (ts__default['default'].isConstructorDeclaration(node)) {
+            else if (ts__default["default"].isConstructorDeclaration(node)) {
                 kind = ClassMemberKind.Constructor;
             }
             else {
                 return null;
             }
-            if (ts__default['default'].isConstructorDeclaration(node)) {
+            if (ts__default["default"].isConstructorDeclaration(node)) {
                 name = 'constructor';
             }
-            else if (ts__default['default'].isIdentifier(node.name)) {
+            else if (ts__default["default"].isIdentifier(node.name)) {
                 name = node.name.text;
                 nameNode = node.name;
             }
-            else if (ts__default['default'].isStringLiteral(node.name)) {
+            else if (ts__default["default"].isStringLiteral(node.name)) {
                 name = node.name.text;
                 nameNode = node.name;
             }
@@ -23523,7 +23521,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             const decorators = this.getDecoratorsOfDeclaration(node);
             const isStatic = node.modifiers !== undefined &&
-                node.modifiers.some(mod => mod.kind === ts__default['default'].SyntaxKind.StaticKeyword);
+                node.modifiers.some(mod => mod.kind === ts__default["default"].SyntaxKind.StaticKeyword);
             return {
                 node,
                 implementation: node,
@@ -23567,7 +23565,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 // If this exported symbol comes from an `export {Foo}` statement, then the symbol is actually
                 // for the export declaration, not the original declaration. Such a symbol will be an alias,
                 // so unwrap aliasing if necessary.
-                if (exportedSymbol.flags & ts__default['default'].SymbolFlags.Alias) {
+                if (exportedSymbol.flags & ts__default["default"].SymbolFlags.Alias) {
                     exportedSymbol = this.checker.getAliasedSymbol(exportedSymbol);
                 }
                 if (exportedSymbol.valueDeclaration !== undefined &&
@@ -23584,7 +23582,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         if (realSymbol === undefined) {
             throw new Error(`Cannot resolve type entity ${type.getText()} to symbol`);
         }
-        while (realSymbol.flags & ts__default['default'].SymbolFlags.Alias) {
+        while (realSymbol.flags & ts__default["default"].SymbolFlags.Alias) {
             realSymbol = checker.getAliasedSymbol(realSymbol);
         }
         let node = null;
@@ -23597,8 +23595,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         else {
             throw new Error(`Cannot resolve type entity symbol to declaration`);
         }
-        if (ts__default['default'].isQualifiedName(type)) {
-            if (!ts__default['default'].isIdentifier(type.left)) {
+        if (ts__default["default"].isQualifiedName(type)) {
+            if (!ts__default["default"].isIdentifier(type.left)) {
                 throw new Error(`Cannot handle qualified name with non-identifier lhs`);
             }
             const symbol = checker.getSymbolAtLocation(type.left);
@@ -23607,15 +23605,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 throw new Error(`Cannot resolve qualified type entity lhs to symbol`);
             }
             const decl = symbol.declarations[0];
-            if (ts__default['default'].isNamespaceImport(decl)) {
+            if (ts__default["default"].isNamespaceImport(decl)) {
                 const clause = decl.parent;
                 const importDecl = clause.parent;
-                if (!ts__default['default'].isStringLiteral(importDecl.moduleSpecifier)) {
+                if (!ts__default["default"].isStringLiteral(importDecl.moduleSpecifier)) {
                     throw new Error(`Module specifier is not a string`);
                 }
                 return { node, from: importDecl.moduleSpecifier.text };
             }
-            else if (ts__default['default'].isModuleDeclaration(decl)) {
+            else if (ts__default["default"].isModuleDeclaration(decl)) {
                 return { node, from: null };
             }
             else {
@@ -23650,14 +23648,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function reflectObjectLiteral(node) {
         const map = new Map();
         node.properties.forEach(prop => {
-            if (ts__default['default'].isPropertyAssignment(prop)) {
+            if (ts__default["default"].isPropertyAssignment(prop)) {
                 const name = propertyNameToString(prop.name);
                 if (name === null) {
                     return;
                 }
                 map.set(name, prop.initializer);
             }
-            else if (ts__default['default'].isShorthandPropertyAssignment(prop)) {
+            else if (ts__default["default"].isShorthandPropertyAssignment(prop)) {
                 map.set(prop.name.text, prop.name);
             }
             else {
@@ -23667,13 +23665,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return map;
     }
     function castDeclarationToClassOrDie(declaration) {
-        if (!ts__default['default'].isClassDeclaration(declaration)) {
-            throw new Error(`Reflecting on a ${ts__default['default'].SyntaxKind[declaration.kind]} instead of a ClassDeclaration.`);
+        if (!ts__default["default"].isClassDeclaration(declaration)) {
+            throw new Error(`Reflecting on a ${ts__default["default"].SyntaxKind[declaration.kind]} instead of a ClassDeclaration.`);
         }
         return declaration;
     }
     function parameterName(name) {
-        if (ts__default['default'].isIdentifier(name)) {
+        if (ts__default["default"].isIdentifier(name)) {
             return name.text;
         }
         else {
@@ -23681,7 +23679,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     function propertyNameToString(node) {
-        if (ts__default['default'].isIdentifier(node) || ts__default['default'].isStringLiteral(node) || ts__default['default'].isNumericLiteral(node)) {
+        if (ts__default["default"].isIdentifier(node) || ts__default["default"].isStringLiteral(node) || ts__default["default"].isNumericLiteral(node)) {
             return node.text;
         }
         else {
@@ -23695,10 +23693,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * @returns the left most identifier in the chain or `null` if it is not an identifier.
      */
     function getQualifiedNameRoot(qualifiedName) {
-        while (ts__default['default'].isQualifiedName(qualifiedName.left)) {
+        while (ts__default["default"].isQualifiedName(qualifiedName.left)) {
             qualifiedName = qualifiedName.left;
         }
-        return ts__default['default'].isIdentifier(qualifiedName.left) ? qualifiedName.left : null;
+        return ts__default["default"].isIdentifier(qualifiedName.left) ? qualifiedName.left : null;
     }
     /**
      * Compute the left most identifier in a property access chain. E.g. the `a` of `a.b.c.d`.
@@ -23707,18 +23705,18 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * @returns the left most identifier in the chain or `null` if it is not an identifier.
      */
     function getFarLeftIdentifier(propertyAccess) {
-        while (ts__default['default'].isPropertyAccessExpression(propertyAccess.expression)) {
+        while (ts__default["default"].isPropertyAccessExpression(propertyAccess.expression)) {
             propertyAccess = propertyAccess.expression;
         }
-        return ts__default['default'].isIdentifier(propertyAccess.expression) ? propertyAccess.expression : null;
+        return ts__default["default"].isIdentifier(propertyAccess.expression) ? propertyAccess.expression : null;
     }
     /**
      * Return the ImportDeclaration for the given `node` if it is either an `ImportSpecifier` or a
      * `NamespaceImport`. If not return `null`.
      */
     function getContainingImportDeclaration(node) {
-        return ts__default['default'].isImportSpecifier(node) ? node.parent.parent.parent :
-            ts__default['default'].isNamespaceImport(node) ? node.parent.parent : null;
+        return ts__default["default"].isImportSpecifier(node) ? node.parent.parent.parent :
+            ts__default["default"].isNamespaceImport(node) ? node.parent.parent : null;
     }
     /**
      * Compute the name by which the `decl` was exported, not imported.
@@ -23726,7 +23724,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * then fallback to the `originalId`.
      */
     function getExportedName(decl, originalId) {
-        return ts__default['default'].isImportSpecifier(decl) ?
+        return ts__default["default"].isImportSpecifier(decl) ?
             (decl.propertyName !== undefined ? decl.propertyName : decl.name).text :
             originalId.text;
     }
@@ -23876,11 +23874,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     function extractReferencesFromType(checker, def, bestGuessOwningModule) {
-        if (!ts__default['default'].isTupleTypeNode(def)) {
+        if (!ts__default["default"].isTupleTypeNode(def)) {
             return [];
         }
         return def.elements.map(element => {
-            if (!ts__default['default'].isTypeQueryNode(element)) {
+            if (!ts__default["default"].isTypeQueryNode(element)) {
                 throw new Error(`Expected TypeQueryNode: ${nodeDebugInfo(element)}`);
             }
             const type = element.exprName;
@@ -23901,19 +23899,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         });
     }
     function readStringType(type) {
-        if (!ts__default['default'].isLiteralTypeNode(type) || !ts__default['default'].isStringLiteral(type.literal)) {
+        if (!ts__default["default"].isLiteralTypeNode(type) || !ts__default["default"].isStringLiteral(type.literal)) {
             return null;
         }
         return type.literal.text;
     }
     function readStringMapType(type) {
-        if (!ts__default['default'].isTypeLiteralNode(type)) {
+        if (!ts__default["default"].isTypeLiteralNode(type)) {
             return {};
         }
         const obj = {};
         type.members.forEach(member => {
-            if (!ts__default['default'].isPropertySignature(member) || member.type === undefined || member.name === undefined ||
-                !ts__default['default'].isStringLiteral(member.name)) {
+            if (!ts__default["default"].isPropertySignature(member) || member.type === undefined || member.name === undefined ||
+                !ts__default["default"].isStringLiteral(member.name)) {
                 return;
             }
             const value = readStringType(member.type);
@@ -23925,12 +23923,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return obj;
     }
     function readStringArrayType(type) {
-        if (!ts__default['default'].isTupleTypeNode(type)) {
+        if (!ts__default["default"].isTupleTypeNode(type)) {
             return [];
         }
         const res = [];
         type.elements.forEach(el => {
-            if (!ts__default['default'].isLiteralTypeNode(el) || !ts__default['default'].isStringLiteral(el.literal)) {
+            if (!ts__default["default"].isLiteralTypeNode(el) || !ts__default["default"].isStringLiteral(el.literal)) {
                 return;
             }
             res.push(el.literal.text);
@@ -23962,7 +23960,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (isRestricted(field.node)) {
                 restrictedInputFields.add(classPropertyName);
             }
-            if (field.nameNode !== null && ts__default['default'].isStringLiteral(field.nameNode)) {
+            if (field.nameNode !== null && ts__default["default"].isStringLiteral(field.nameNode)) {
                 stringLiteralInputFields.add(classPropertyName);
             }
         }
@@ -23981,9 +23979,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         if (node.modifiers === undefined) {
             return false;
         }
-        return node.modifiers.some(modifier => modifier.kind === ts__default['default'].SyntaxKind.PrivateKeyword ||
-            modifier.kind === ts__default['default'].SyntaxKind.ProtectedKeyword ||
-            modifier.kind === ts__default['default'].SyntaxKind.ReadonlyKeyword);
+        return node.modifiers.some(modifier => modifier.kind === ts__default["default"].SyntaxKind.PrivateKeyword ||
+            modifier.kind === ts__default["default"].SyntaxKind.ProtectedKeyword ||
+            modifier.kind === ts__default["default"].SyntaxKind.ReadonlyKeyword);
     }
     function extractTemplateGuard(member) {
         if (!member.name.startsWith('ngTemplateGuard_')) {
@@ -23992,8 +23990,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const inputName = afterUnderscore(member.name);
         if (member.kind === ClassMemberKind.Property) {
             let type = null;
-            if (member.type !== null && ts__default['default'].isLiteralTypeNode(member.type) &&
-                ts__default['default'].isStringLiteral(member.type.literal)) {
+            if (member.type !== null && ts__default["default"].isLiteralTypeNode(member.type) &&
+                ts__default["default"].isStringLiteral(member.type.literal)) {
                 type = member.type.literal.text;
             }
             // Only property members with string literal type 'binding' are considered as template guard.
@@ -24099,7 +24097,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             else if (
             // Validate that the shape of the ngModuleDef type is correct.
-            ngModuleDef.type === null || !ts__default['default'].isTypeReferenceNode(ngModuleDef.type) ||
+            ngModuleDef.type === null || !ts__default["default"].isTypeReferenceNode(ngModuleDef.type) ||
                 ngModuleDef.type.typeArguments === undefined ||
                 ngModuleDef.type.typeArguments.length !== 4) {
                 return null;
@@ -24125,7 +24123,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 // No definition could be found.
                 return null;
             }
-            else if (def.type === null || !ts__default['default'].isTypeReferenceNode(def.type) ||
+            else if (def.type === null || !ts__default["default"].isTypeReferenceNode(def.type) ||
                 def.type.typeArguments === undefined || def.type.typeArguments.length < 2) {
                 // The type metadata was the wrong shape.
                 return null;
@@ -24167,13 +24165,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 // No definition could be found.
                 return null;
             }
-            else if (def.type === null || !ts__default['default'].isTypeReferenceNode(def.type) ||
+            else if (def.type === null || !ts__default["default"].isTypeReferenceNode(def.type) ||
                 def.type.typeArguments === undefined || def.type.typeArguments.length < 2) {
                 // The type metadata was the wrong shape.
                 return null;
             }
             const type = def.type.typeArguments[1];
-            if (!ts__default['default'].isLiteralTypeNode(type) || !ts__default['default'].isStringLiteral(type.literal)) {
+            if (!ts__default["default"].isLiteralTypeNode(type) || !ts__default["default"].isStringLiteral(type.literal)) {
                 // The type metadata was the wrong type.
                 return null;
             }
@@ -24194,13 +24192,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         if (clazz.heritageClauses !== undefined) {
             for (const clause of clazz.heritageClauses) {
-                if (clause.token === ts__default['default'].SyntaxKind.ExtendsKeyword) {
+                if (clause.token === ts__default["default"].SyntaxKind.ExtendsKeyword) {
                     const baseExpr = clause.types[0].expression;
                     let symbol = checker.getSymbolAtLocation(baseExpr);
                     if (symbol === undefined) {
                         return 'dynamic';
                     }
-                    else if (symbol.flags & ts__default['default'].SymbolFlags.Alias) {
+                    else if (symbol.flags & ts__default["default"].SymbolFlags.Alias) {
                         symbol = checker.getAliasedSymbol(symbol);
                     }
                     if (symbol.valueDeclaration !== undefined &&
@@ -24741,21 +24739,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         let currentNode = node;
         while (currentNode !== undefined) {
             switch (currentNode.kind) {
-                case ts__default['default'].SyntaxKind.ExpressionStatement:
-                case ts__default['default'].SyntaxKind.VariableStatement:
-                case ts__default['default'].SyntaxKind.ReturnStatement:
-                case ts__default['default'].SyntaxKind.IfStatement:
-                case ts__default['default'].SyntaxKind.SwitchStatement:
-                case ts__default['default'].SyntaxKind.DoStatement:
-                case ts__default['default'].SyntaxKind.WhileStatement:
-                case ts__default['default'].SyntaxKind.ForStatement:
-                case ts__default['default'].SyntaxKind.ForInStatement:
-                case ts__default['default'].SyntaxKind.ForOfStatement:
-                case ts__default['default'].SyntaxKind.ContinueStatement:
-                case ts__default['default'].SyntaxKind.BreakStatement:
-                case ts__default['default'].SyntaxKind.ThrowStatement:
-                case ts__default['default'].SyntaxKind.ObjectBindingPattern:
-                case ts__default['default'].SyntaxKind.ArrayBindingPattern:
+                case ts__default["default"].SyntaxKind.ExpressionStatement:
+                case ts__default["default"].SyntaxKind.VariableStatement:
+                case ts__default["default"].SyntaxKind.ReturnStatement:
+                case ts__default["default"].SyntaxKind.IfStatement:
+                case ts__default["default"].SyntaxKind.SwitchStatement:
+                case ts__default["default"].SyntaxKind.DoStatement:
+                case ts__default["default"].SyntaxKind.WhileStatement:
+                case ts__default["default"].SyntaxKind.ForStatement:
+                case ts__default["default"].SyntaxKind.ForInStatement:
+                case ts__default["default"].SyntaxKind.ForOfStatement:
+                case ts__default["default"].SyntaxKind.ContinueStatement:
+                case ts__default["default"].SyntaxKind.BreakStatement:
+                case ts__default["default"].SyntaxKind.ThrowStatement:
+                case ts__default["default"].SyntaxKind.ObjectBindingPattern:
+                case ts__default["default"].SyntaxKind.ArrayBindingPattern:
                     return currentNode;
             }
             currentNode = currentNode.parent;
@@ -24949,32 +24947,32 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return { op, literal: false };
     }
     const BINARY_OPERATORS$2 = new Map([
-        [ts__default['default'].SyntaxKind.PlusToken, literalBinaryOp((a, b) => a + b)],
-        [ts__default['default'].SyntaxKind.MinusToken, literalBinaryOp((a, b) => a - b)],
-        [ts__default['default'].SyntaxKind.AsteriskToken, literalBinaryOp((a, b) => a * b)],
-        [ts__default['default'].SyntaxKind.SlashToken, literalBinaryOp((a, b) => a / b)],
-        [ts__default['default'].SyntaxKind.PercentToken, literalBinaryOp((a, b) => a % b)],
-        [ts__default['default'].SyntaxKind.AmpersandToken, literalBinaryOp((a, b) => a & b)],
-        [ts__default['default'].SyntaxKind.BarToken, literalBinaryOp((a, b) => a | b)],
-        [ts__default['default'].SyntaxKind.CaretToken, literalBinaryOp((a, b) => a ^ b)],
-        [ts__default['default'].SyntaxKind.LessThanToken, literalBinaryOp((a, b) => a < b)],
-        [ts__default['default'].SyntaxKind.LessThanEqualsToken, literalBinaryOp((a, b) => a <= b)],
-        [ts__default['default'].SyntaxKind.GreaterThanToken, literalBinaryOp((a, b) => a > b)],
-        [ts__default['default'].SyntaxKind.GreaterThanEqualsToken, literalBinaryOp((a, b) => a >= b)],
-        [ts__default['default'].SyntaxKind.EqualsEqualsToken, literalBinaryOp((a, b) => a == b)],
-        [ts__default['default'].SyntaxKind.EqualsEqualsEqualsToken, literalBinaryOp((a, b) => a === b)],
-        [ts__default['default'].SyntaxKind.ExclamationEqualsToken, literalBinaryOp((a, b) => a != b)],
-        [ts__default['default'].SyntaxKind.ExclamationEqualsEqualsToken, literalBinaryOp((a, b) => a !== b)],
-        [ts__default['default'].SyntaxKind.LessThanLessThanToken, literalBinaryOp((a, b) => a << b)],
-        [ts__default['default'].SyntaxKind.GreaterThanGreaterThanToken, literalBinaryOp((a, b) => a >> b)],
-        [ts__default['default'].SyntaxKind.GreaterThanGreaterThanGreaterThanToken, literalBinaryOp((a, b) => a >>> b)],
-        [ts__default['default'].SyntaxKind.AsteriskAsteriskToken, literalBinaryOp((a, b) => Math.pow(a, b))],
-        [ts__default['default'].SyntaxKind.AmpersandAmpersandToken, referenceBinaryOp((a, b) => a && b)],
-        [ts__default['default'].SyntaxKind.BarBarToken, referenceBinaryOp((a, b) => a || b)]
+        [ts__default["default"].SyntaxKind.PlusToken, literalBinaryOp((a, b) => a + b)],
+        [ts__default["default"].SyntaxKind.MinusToken, literalBinaryOp((a, b) => a - b)],
+        [ts__default["default"].SyntaxKind.AsteriskToken, literalBinaryOp((a, b) => a * b)],
+        [ts__default["default"].SyntaxKind.SlashToken, literalBinaryOp((a, b) => a / b)],
+        [ts__default["default"].SyntaxKind.PercentToken, literalBinaryOp((a, b) => a % b)],
+        [ts__default["default"].SyntaxKind.AmpersandToken, literalBinaryOp((a, b) => a & b)],
+        [ts__default["default"].SyntaxKind.BarToken, literalBinaryOp((a, b) => a | b)],
+        [ts__default["default"].SyntaxKind.CaretToken, literalBinaryOp((a, b) => a ^ b)],
+        [ts__default["default"].SyntaxKind.LessThanToken, literalBinaryOp((a, b) => a < b)],
+        [ts__default["default"].SyntaxKind.LessThanEqualsToken, literalBinaryOp((a, b) => a <= b)],
+        [ts__default["default"].SyntaxKind.GreaterThanToken, literalBinaryOp((a, b) => a > b)],
+        [ts__default["default"].SyntaxKind.GreaterThanEqualsToken, literalBinaryOp((a, b) => a >= b)],
+        [ts__default["default"].SyntaxKind.EqualsEqualsToken, literalBinaryOp((a, b) => a == b)],
+        [ts__default["default"].SyntaxKind.EqualsEqualsEqualsToken, literalBinaryOp((a, b) => a === b)],
+        [ts__default["default"].SyntaxKind.ExclamationEqualsToken, literalBinaryOp((a, b) => a != b)],
+        [ts__default["default"].SyntaxKind.ExclamationEqualsEqualsToken, literalBinaryOp((a, b) => a !== b)],
+        [ts__default["default"].SyntaxKind.LessThanLessThanToken, literalBinaryOp((a, b) => a << b)],
+        [ts__default["default"].SyntaxKind.GreaterThanGreaterThanToken, literalBinaryOp((a, b) => a >> b)],
+        [ts__default["default"].SyntaxKind.GreaterThanGreaterThanGreaterThanToken, literalBinaryOp((a, b) => a >>> b)],
+        [ts__default["default"].SyntaxKind.AsteriskAsteriskToken, literalBinaryOp((a, b) => Math.pow(a, b))],
+        [ts__default["default"].SyntaxKind.AmpersandAmpersandToken, referenceBinaryOp((a, b) => a && b)],
+        [ts__default["default"].SyntaxKind.BarBarToken, referenceBinaryOp((a, b) => a || b)]
     ]);
     const UNARY_OPERATORS$2 = new Map([
-        [ts__default['default'].SyntaxKind.TildeToken, a => ~a], [ts__default['default'].SyntaxKind.MinusToken, a => -a],
-        [ts__default['default'].SyntaxKind.PlusToken, a => +a], [ts__default['default'].SyntaxKind.ExclamationToken, a => !a]
+        [ts__default["default"].SyntaxKind.TildeToken, a => ~a], [ts__default["default"].SyntaxKind.MinusToken, a => -a],
+        [ts__default["default"].SyntaxKind.PlusToken, a => +a], [ts__default["default"].SyntaxKind.ExclamationToken, a => !a]
     ]);
     class StaticInterpreter {
         constructor(host, checker, dependencyTracker) {
@@ -24987,61 +24985,61 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         visitExpression(node, context) {
             let result;
-            if (node.kind === ts__default['default'].SyntaxKind.TrueKeyword) {
+            if (node.kind === ts__default["default"].SyntaxKind.TrueKeyword) {
                 return true;
             }
-            else if (node.kind === ts__default['default'].SyntaxKind.FalseKeyword) {
+            else if (node.kind === ts__default["default"].SyntaxKind.FalseKeyword) {
                 return false;
             }
-            else if (node.kind === ts__default['default'].SyntaxKind.NullKeyword) {
+            else if (node.kind === ts__default["default"].SyntaxKind.NullKeyword) {
                 return null;
             }
-            else if (ts__default['default'].isStringLiteral(node)) {
+            else if (ts__default["default"].isStringLiteral(node)) {
                 return node.text;
             }
-            else if (ts__default['default'].isNoSubstitutionTemplateLiteral(node)) {
+            else if (ts__default["default"].isNoSubstitutionTemplateLiteral(node)) {
                 return node.text;
             }
-            else if (ts__default['default'].isTemplateExpression(node)) {
+            else if (ts__default["default"].isTemplateExpression(node)) {
                 result = this.visitTemplateExpression(node, context);
             }
-            else if (ts__default['default'].isNumericLiteral(node)) {
+            else if (ts__default["default"].isNumericLiteral(node)) {
                 return parseFloat(node.text);
             }
-            else if (ts__default['default'].isObjectLiteralExpression(node)) {
+            else if (ts__default["default"].isObjectLiteralExpression(node)) {
                 result = this.visitObjectLiteralExpression(node, context);
             }
-            else if (ts__default['default'].isIdentifier(node)) {
+            else if (ts__default["default"].isIdentifier(node)) {
                 result = this.visitIdentifier(node, context);
             }
-            else if (ts__default['default'].isPropertyAccessExpression(node)) {
+            else if (ts__default["default"].isPropertyAccessExpression(node)) {
                 result = this.visitPropertyAccessExpression(node, context);
             }
-            else if (ts__default['default'].isCallExpression(node)) {
+            else if (ts__default["default"].isCallExpression(node)) {
                 result = this.visitCallExpression(node, context);
             }
-            else if (ts__default['default'].isConditionalExpression(node)) {
+            else if (ts__default["default"].isConditionalExpression(node)) {
                 result = this.visitConditionalExpression(node, context);
             }
-            else if (ts__default['default'].isPrefixUnaryExpression(node)) {
+            else if (ts__default["default"].isPrefixUnaryExpression(node)) {
                 result = this.visitPrefixUnaryExpression(node, context);
             }
-            else if (ts__default['default'].isBinaryExpression(node)) {
+            else if (ts__default["default"].isBinaryExpression(node)) {
                 result = this.visitBinaryExpression(node, context);
             }
-            else if (ts__default['default'].isArrayLiteralExpression(node)) {
+            else if (ts__default["default"].isArrayLiteralExpression(node)) {
                 result = this.visitArrayLiteralExpression(node, context);
             }
-            else if (ts__default['default'].isParenthesizedExpression(node)) {
+            else if (ts__default["default"].isParenthesizedExpression(node)) {
                 result = this.visitParenthesizedExpression(node, context);
             }
-            else if (ts__default['default'].isElementAccessExpression(node)) {
+            else if (ts__default["default"].isElementAccessExpression(node)) {
                 result = this.visitElementAccessExpression(node, context);
             }
-            else if (ts__default['default'].isAsExpression(node)) {
+            else if (ts__default["default"].isAsExpression(node)) {
                 result = this.visitExpression(node.expression, context);
             }
-            else if (ts__default['default'].isNonNullExpression(node)) {
+            else if (ts__default["default"].isNonNullExpression(node)) {
                 result = this.visitExpression(node.expression, context);
             }
             else if (this.host.isClass(node)) {
@@ -25059,7 +25057,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const array = [];
             for (let i = 0; i < node.elements.length; i++) {
                 const element = node.elements[i];
-                if (ts__default['default'].isSpreadElement(element)) {
+                if (ts__default["default"].isSpreadElement(element)) {
                     array.push(...this.visitSpreadElement(element, context));
                 }
                 else {
@@ -25072,7 +25070,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             const map = new Map();
             for (let i = 0; i < node.properties.length; i++) {
                 const property = node.properties[i];
-                if (ts__default['default'].isPropertyAssignment(property)) {
+                if (ts__default["default"].isPropertyAssignment(property)) {
                     const name = this.stringNameFromPropertyName(property.name, context);
                     // Check whether the name can be determined statically.
                     if (name === undefined) {
@@ -25080,7 +25078,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     }
                     map.set(name, this.visitExpression(property.initializer, context));
                 }
-                else if (ts__default['default'].isShorthandPropertyAssignment(property)) {
+                else if (ts__default["default"].isShorthandPropertyAssignment(property)) {
                     const symbol = this.checker.getShorthandAssignmentValueSymbol(property);
                     if (symbol === undefined || symbol.valueDeclaration === undefined) {
                         map.set(property.name.text, DynamicValue.fromUnknown(property));
@@ -25089,7 +25087,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                         map.set(property.name.text, this.visitDeclaration(symbol.valueDeclaration, context));
                     }
                 }
-                else if (ts__default['default'].isSpreadAssignment(property)) {
+                else if (ts__default["default"].isSpreadAssignment(property)) {
                     const spread = this.visitExpression(property.expression, context);
                     if (spread instanceof DynamicValue) {
                         return DynamicValue.fromDynamicInput(node, spread);
@@ -25125,7 +25123,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitIdentifier(node, context) {
             const decl = this.host.getDeclarationOfIdentifier(node);
             if (decl === null) {
-                if (node.originalKeywordKind === ts__default['default'].SyntaxKind.UndefinedKeyword) {
+                if (node.originalKeywordKind === ts__default["default"].SyntaxKind.UndefinedKeyword) {
                     return undefined;
                 }
                 else {
@@ -25170,22 +25168,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (this.host.isClass(node)) {
                 return this.getReference(node, context);
             }
-            else if (ts__default['default'].isVariableDeclaration(node)) {
+            else if (ts__default["default"].isVariableDeclaration(node)) {
                 return this.visitVariableDeclaration(node, context);
             }
-            else if (ts__default['default'].isParameter(node) && context.scope.has(node)) {
+            else if (ts__default["default"].isParameter(node) && context.scope.has(node)) {
                 return context.scope.get(node);
             }
-            else if (ts__default['default'].isExportAssignment(node)) {
+            else if (ts__default["default"].isExportAssignment(node)) {
                 return this.visitExpression(node.expression, context);
             }
-            else if (ts__default['default'].isEnumDeclaration(node)) {
+            else if (ts__default["default"].isEnumDeclaration(node)) {
                 return this.visitEnumDeclaration(node, context);
             }
-            else if (ts__default['default'].isSourceFile(node)) {
+            else if (ts__default["default"].isSourceFile(node)) {
                 return this.visitSourceFile(node, context);
             }
-            else if (ts__default['default'].isBindingElement(node)) {
+            else if (ts__default["default"].isBindingElement(node)) {
                 return this.visitBindingElement(node, context);
             }
             else {
@@ -25418,7 +25416,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (fn.body === null) {
                 return DynamicValue.fromUnknown(node);
             }
-            else if (fn.body.length !== 1 || !ts__default['default'].isReturnStatement(fn.body[0])) {
+            else if (fn.body.length !== 1 || !ts__default["default"].isReturnStatement(fn.body[0])) {
                 return DynamicValue.fromComplexFunctionCall(node, fn);
             }
             const ret = fn.body[0];
@@ -25495,7 +25493,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         evaluateFunctionArguments(node, context) {
             const args = [];
             for (const arg of node.arguments) {
-                if (ts__default['default'].isSpreadElement(arg)) {
+                if (ts__default["default"].isSpreadElement(arg)) {
                     args.push(...this.visitSpreadElement(arg, context));
                 }
                 else {
@@ -25519,27 +25517,27 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitBindingElement(node, context) {
             const path = [];
             let closestDeclaration = node;
-            while (ts__default['default'].isBindingElement(closestDeclaration) ||
-                ts__default['default'].isArrayBindingPattern(closestDeclaration) ||
-                ts__default['default'].isObjectBindingPattern(closestDeclaration)) {
-                if (ts__default['default'].isBindingElement(closestDeclaration)) {
+            while (ts__default["default"].isBindingElement(closestDeclaration) ||
+                ts__default["default"].isArrayBindingPattern(closestDeclaration) ||
+                ts__default["default"].isObjectBindingPattern(closestDeclaration)) {
+                if (ts__default["default"].isBindingElement(closestDeclaration)) {
                     path.unshift(closestDeclaration);
                 }
                 closestDeclaration = closestDeclaration.parent;
             }
-            if (!ts__default['default'].isVariableDeclaration(closestDeclaration) ||
+            if (!ts__default["default"].isVariableDeclaration(closestDeclaration) ||
                 closestDeclaration.initializer === undefined) {
                 return DynamicValue.fromUnknown(node);
             }
             let value = this.visit(closestDeclaration.initializer, context);
             for (const element of path) {
                 let key;
-                if (ts__default['default'].isArrayBindingPattern(element.parent)) {
+                if (ts__default["default"].isArrayBindingPattern(element.parent)) {
                     key = element.parent.elements.indexOf(element);
                 }
                 else {
                     const name = element.propertyName || element.name;
-                    if (ts__default['default'].isIdentifier(name)) {
+                    if (ts__default["default"].isIdentifier(name)) {
                         key = name.text;
                     }
                     else {
@@ -25554,10 +25552,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return value;
         }
         stringNameFromPropertyName(node, context) {
-            if (ts__default['default'].isIdentifier(node) || ts__default['default'].isStringLiteral(node) || ts__default['default'].isNumericLiteral(node)) {
+            if (ts__default["default"].isIdentifier(node) || ts__default["default"].isStringLiteral(node) || ts__default["default"].isNumericLiteral(node)) {
                 return node.text;
             }
-            else if (ts__default['default'].isComputedPropertyName(node)) {
+            else if (ts__default["default"].isComputedPropertyName(node)) {
                 const literal = this.visitExpression(node.expression, context);
                 return typeof literal === 'string' ? literal : undefined;
             }
@@ -25581,13 +25579,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return new Reference(node, owningModule(context));
         }
         visitType(node, context) {
-            if (ts__default['default'].isLiteralTypeNode(node)) {
+            if (ts__default["default"].isLiteralTypeNode(node)) {
                 return this.visitExpression(node.literal, context);
             }
-            else if (ts__default['default'].isTupleTypeNode(node)) {
+            else if (ts__default["default"].isTupleTypeNode(node)) {
                 return this.visitTupleType(node, context);
             }
-            else if (ts__default['default'].isNamedTupleMember(node)) {
+            else if (ts__default["default"].isNamedTupleMember(node)) {
                 return this.visitType(node.type, context);
             }
             return DynamicValue.fromDynamicType(node);
@@ -25601,8 +25599,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     function isFunctionOrMethodReference(ref) {
-        return ts__default['default'].isFunctionDeclaration(ref.node) || ts__default['default'].isMethodDeclaration(ref.node) ||
-            ts__default['default'].isFunctionExpression(ref.node);
+        return ts__default["default"].isFunctionDeclaration(ref.node) || ts__default["default"].isMethodDeclaration(ref.node) ||
+            ts__default["default"].isFunctionExpression(ref.node);
     }
     function literal(value, reject) {
         if (value instanceof EnumValue) {
@@ -25615,16 +25613,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return reject(value);
     }
     function isVariableDeclarationDeclared(node) {
-        if (node.parent === undefined || !ts__default['default'].isVariableDeclarationList(node.parent)) {
+        if (node.parent === undefined || !ts__default["default"].isVariableDeclarationList(node.parent)) {
             return false;
         }
         const declList = node.parent;
-        if (declList.parent === undefined || !ts__default['default'].isVariableStatement(declList.parent)) {
+        if (declList.parent === undefined || !ts__default["default"].isVariableStatement(declList.parent)) {
             return false;
         }
         const varStmt = declList.parent;
         return varStmt.modifiers !== undefined &&
-            varStmt.modifiers.some(mod => mod.kind === ts__default['default'].SyntaxKind.DeclareKeyword);
+            varStmt.modifiers.some(mod => mod.kind === ts__default["default"].SyntaxKind.DeclareKeyword);
     }
     const EMPTY = {};
     function joinModuleContext(existing, node, decl) {
@@ -26169,21 +26167,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function aliasTransformFactory(exportStatements) {
         return (context) => {
             return (file) => {
-                if (ts__default['default'].isBundle(file) || !exportStatements.has(file.fileName)) {
+                if (ts__default["default"].isBundle(file) || !exportStatements.has(file.fileName)) {
                     return file;
                 }
                 const statements = [...file.statements];
                 exportStatements.get(file.fileName).forEach(([moduleName, symbolName], aliasName) => {
-                    const stmt = ts__default['default'].createExportDeclaration(
+                    const stmt = ts__default["default"].createExportDeclaration(
                     /* decorators */ undefined, 
                     /* modifiers */ undefined, 
-                    /* exportClause */ ts__default['default'].createNamedExports([ts__default['default'].createExportSpecifier(
+                    /* exportClause */ ts__default["default"].createNamedExports([ts__default["default"].createExportSpecifier(
                         /* propertyName */ symbolName, 
                         /* name */ aliasName)]), 
-                    /* moduleSpecifier */ ts__default['default'].createStringLiteral(moduleName));
+                    /* moduleSpecifier */ ts__default["default"].createStringLiteral(moduleName));
                     statements.push(stmt);
                 });
-                return ts__default['default'].updateSourceFileNode(file, statements);
+                return ts__default["default"].updateSourceFileNode(file, statements);
             };
         };
     }
@@ -26365,7 +26363,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 if (this.reflector.isClass(node)) {
                     this.analyzeClass(node, preanalyze ? promises : null);
                 }
-                ts__default['default'].forEachChild(node, visit);
+                ts__default["default"].forEachChild(node, visit);
             };
             visit(sf);
             if (preanalyze && promises.length > 0) {
@@ -26505,7 +26503,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     if (isPrimaryHandler && record.hasPrimaryHandler) {
                         // The class already has a PRIMARY handler, and another one just matched.
                         record.metaDiagnostics = [{
-                                category: ts__default['default'].DiagnosticCategory.Error,
+                                category: ts__default["default"].DiagnosticCategory.Error,
                                 code: Number('-99' + ErrorCode.DECORATOR_COLLISION),
                                 file: getSourceFile(clazz),
                                 start: clazz.getStart(undefined, false),
@@ -26737,7 +26735,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
         }
         compile(clazz, constantPool) {
-            const original = ts__default['default'].getOriginalNode(clazz);
+            const original = ts__default["default"].getOriginalNode(clazz);
             if (!this.reflector.isClass(clazz) || !this.reflector.isClass(original) ||
                 !this.classes.has(original)) {
                 return null;
@@ -26782,7 +26780,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return res.length > 0 ? res : null;
         }
         decoratorsFor(node) {
-            const original = ts__default['default'].getOriginalNode(node);
+            const original = ts__default["default"].getOriginalNode(node);
             if (!this.reflector.isClass(original) || !this.classes.has(original)) {
                 return [];
             }
@@ -26792,7 +26790,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 if (trait.state !== TraitState.Resolved) {
                     continue;
                 }
-                if (trait.detected.trigger !== null && ts__default['default'].isDecorator(trait.detected.trigger)) {
+                if (trait.detected.trigger !== null && ts__default["default"].isDecorator(trait.detected.trigger)) {
                     decorators.push(trait.detected.trigger);
                 }
             }
@@ -26862,7 +26860,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         generateNamespaceImport(moduleName) {
             if (!this.specifierToIdentifier.has(moduleName)) {
-                this.specifierToIdentifier.set(moduleName, ts__default['default'].createIdentifier(`${this.prefix}${this.nextIndex++}`));
+                this.specifierToIdentifier.set(moduleName, ts__default["default"].createIdentifier(`${this.prefix}${this.nextIndex++}`));
             }
             return this.specifierToIdentifier.get(moduleName);
         }
@@ -27215,16 +27213,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         visitBuiltinType(type, context) {
             switch (type.name) {
                 case BuiltinTypeName.Bool:
-                    return ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.BooleanKeyword);
+                    return ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.BooleanKeyword);
                 case BuiltinTypeName.Dynamic:
-                    return ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword);
+                    return ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword);
                 case BuiltinTypeName.Int:
                 case BuiltinTypeName.Number:
-                    return ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.NumberKeyword);
+                    return ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.NumberKeyword);
                 case BuiltinTypeName.String:
-                    return ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.StringKeyword);
+                    return ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.StringKeyword);
                 case BuiltinTypeName.None:
-                    return ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.NeverKeyword);
+                    return ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.NeverKeyword);
                 default:
                     throw new Error(`Unsupported builtin type: ${BuiltinTypeName[type.name]}`);
             }
@@ -27234,31 +27232,31 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (type.typeParams === null) {
                 return typeNode;
             }
-            if (!ts__default['default'].isTypeReferenceNode(typeNode)) {
+            if (!ts__default["default"].isTypeReferenceNode(typeNode)) {
                 throw new Error('An ExpressionType with type arguments must translate into a TypeReferenceNode');
             }
             else if (typeNode.typeArguments !== undefined) {
                 throw new Error(`An ExpressionType with type arguments cannot have multiple levels of type arguments`);
             }
             const typeArgs = type.typeParams.map(param => this.translateType(param, context));
-            return ts__default['default'].createTypeReferenceNode(typeNode.typeName, typeArgs);
+            return ts__default["default"].createTypeReferenceNode(typeNode.typeName, typeArgs);
         }
         visitArrayType(type, context) {
-            return ts__default['default'].createArrayTypeNode(this.translateType(type.of, context));
+            return ts__default["default"].createArrayTypeNode(this.translateType(type.of, context));
         }
         visitMapType(type, context) {
-            const parameter = ts__default['default'].createParameter(undefined, undefined, undefined, 'key', undefined, ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.StringKeyword));
+            const parameter = ts__default["default"].createParameter(undefined, undefined, undefined, 'key', undefined, ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.StringKeyword));
             const typeArgs = type.valueType !== null ?
                 this.translateType(type.valueType, context) :
-                ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.UnknownKeyword);
-            const indexSignature = ts__default['default'].createIndexSignature(undefined, undefined, [parameter], typeArgs);
-            return ts__default['default'].createTypeLiteralNode([indexSignature]);
+                ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.UnknownKeyword);
+            const indexSignature = ts__default["default"].createIndexSignature(undefined, undefined, [parameter], typeArgs);
+            return ts__default["default"].createTypeLiteralNode([indexSignature]);
         }
         visitReadVarExpr(ast, context) {
             if (ast.name === null) {
                 throw new Error(`ReadVarExpr with no variable name in type`);
             }
-            return ts__default['default'].createTypeQueryNode(ts__default['default'].createIdentifier(ast.name));
+            return ts__default["default"].createTypeQueryNode(ts__default["default"].createIdentifier(ast.name));
         }
         visitWriteVarExpr(expr, context) {
             throw new Error('Method not implemented.');
@@ -27280,19 +27278,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         visitLiteralExpr(ast, context) {
             if (ast.value === null) {
-                return ts__default['default'].createLiteralTypeNode(ts__default['default'].createNull());
+                return ts__default["default"].createLiteralTypeNode(ts__default["default"].createNull());
             }
             else if (ast.value === undefined) {
-                return ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.UndefinedKeyword);
+                return ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.UndefinedKeyword);
             }
             else if (typeof ast.value === 'boolean') {
-                return ts__default['default'].createLiteralTypeNode(ts__default['default'].createLiteral(ast.value));
+                return ts__default["default"].createLiteralTypeNode(ts__default["default"].createLiteral(ast.value));
             }
             else if (typeof ast.value === 'number') {
-                return ts__default['default'].createLiteralTypeNode(ts__default['default'].createLiteral(ast.value));
+                return ts__default["default"].createLiteralTypeNode(ts__default["default"].createLiteral(ast.value));
             }
             else {
-                return ts__default['default'].createLiteralTypeNode(ts__default['default'].createLiteral(ast.value));
+                return ts__default["default"].createLiteralTypeNode(ts__default["default"].createLiteral(ast.value));
             }
         }
         visitLocalizedString(ast, context) {
@@ -27303,12 +27301,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 throw new Error(`Import unknown module or symbol`);
             }
             const { moduleImport, symbol } = this.imports.generateNamedImport(ast.value.moduleName, ast.value.name);
-            const symbolIdentifier = ts__default['default'].createIdentifier(symbol);
-            const typeName = moduleImport ? ts__default['default'].createQualifiedName(moduleImport, symbolIdentifier) : symbolIdentifier;
+            const symbolIdentifier = ts__default["default"].createIdentifier(symbol);
+            const typeName = moduleImport ? ts__default["default"].createQualifiedName(moduleImport, symbolIdentifier) : symbolIdentifier;
             const typeArguments = ast.typeParams !== null ?
                 ast.typeParams.map(type => this.translateType(type, context)) :
                 undefined;
-            return ts__default['default'].createTypeReferenceNode(typeName, typeArguments);
+            return ts__default["default"].createTypeReferenceNode(typeName, typeArguments);
         }
         visitConditionalExpr(ast, context) {
             throw new Error('Method not implemented.');
@@ -27339,58 +27337,58 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         visitLiteralArrayExpr(ast, context) {
             const values = ast.entries.map(expr => this.translateExpression(expr, context));
-            return ts__default['default'].createTupleTypeNode(values);
+            return ts__default["default"].createTupleTypeNode(values);
         }
         visitLiteralMapExpr(ast, context) {
             const entries = ast.entries.map(entry => {
                 const { key, quoted } = entry;
                 const type = this.translateExpression(entry.value, context);
-                return ts__default['default'].createPropertySignature(
+                return ts__default["default"].createPropertySignature(
                 /* modifiers */ undefined, 
-                /* name */ quoted ? ts__default['default'].createStringLiteral(key) : key, 
+                /* name */ quoted ? ts__default["default"].createStringLiteral(key) : key, 
                 /* questionToken */ undefined, 
                 /* type */ type, 
                 /* initializer */ undefined);
             });
-            return ts__default['default'].createTypeLiteralNode(entries);
+            return ts__default["default"].createTypeLiteralNode(entries);
         }
         visitCommaExpr(ast, context) {
             throw new Error('Method not implemented.');
         }
         visitWrappedNodeExpr(ast, context) {
             const node = ast.node;
-            if (ts__default['default'].isEntityName(node)) {
-                return ts__default['default'].createTypeReferenceNode(node, /* typeArguments */ undefined);
+            if (ts__default["default"].isEntityName(node)) {
+                return ts__default["default"].createTypeReferenceNode(node, /* typeArguments */ undefined);
             }
-            else if (ts__default['default'].isTypeNode(node)) {
+            else if (ts__default["default"].isTypeNode(node)) {
                 return node;
             }
-            else if (ts__default['default'].isLiteralExpression(node)) {
-                return ts__default['default'].createLiteralTypeNode(node);
+            else if (ts__default["default"].isLiteralExpression(node)) {
+                return ts__default["default"].createLiteralTypeNode(node);
             }
             else {
-                throw new Error(`Unsupported WrappedNodeExpr in TypeTranslatorVisitor: ${ts__default['default'].SyntaxKind[node.kind]}`);
+                throw new Error(`Unsupported WrappedNodeExpr in TypeTranslatorVisitor: ${ts__default["default"].SyntaxKind[node.kind]}`);
             }
         }
         visitTypeofExpr(ast, context) {
             const typeNode = this.translateExpression(ast.expr, context);
-            if (!ts__default['default'].isTypeReferenceNode(typeNode)) {
+            if (!ts__default["default"].isTypeReferenceNode(typeNode)) {
                 throw new Error(`The target of a typeof expression must be a type reference, but it was
-          ${ts__default['default'].SyntaxKind[typeNode.kind]}`);
+          ${ts__default["default"].SyntaxKind[typeNode.kind]}`);
             }
-            return ts__default['default'].createTypeQueryNode(typeNode.typeName);
+            return ts__default["default"].createTypeQueryNode(typeNode.typeName);
         }
         translateType(type, context) {
             const typeNode = type.visitType(this, context);
-            if (!ts__default['default'].isTypeNode(typeNode)) {
-                throw new Error(`A Type must translate to a TypeNode, but was ${ts__default['default'].SyntaxKind[typeNode.kind]}`);
+            if (!ts__default["default"].isTypeNode(typeNode)) {
+                throw new Error(`A Type must translate to a TypeNode, but was ${ts__default["default"].SyntaxKind[typeNode.kind]}`);
             }
             return typeNode;
         }
         translateExpression(expr, context) {
             const typeNode = expr.visitExpression(this, context);
-            if (!ts__default['default'].isTypeNode(typeNode)) {
-                throw new Error(`An Expression must translate to a TypeNode, but was ${ts__default['default'].SyntaxKind[typeNode.kind]}`);
+            if (!ts__default["default"].isTypeNode(typeNode)) {
+                throw new Error(`An Expression must translate to a TypeNode, but was ${ts__default["default"].SyntaxKind[typeNode.kind]}`);
             }
             return typeNode;
         }
@@ -27418,33 +27416,33 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         PureAnnotation["TERSER"] = "@__PURE__";
     })(PureAnnotation || (PureAnnotation = {}));
     const UNARY_OPERATORS = {
-        '+': ts__default['default'].SyntaxKind.PlusToken,
-        '-': ts__default['default'].SyntaxKind.MinusToken,
-        '!': ts__default['default'].SyntaxKind.ExclamationToken,
+        '+': ts__default["default"].SyntaxKind.PlusToken,
+        '-': ts__default["default"].SyntaxKind.MinusToken,
+        '!': ts__default["default"].SyntaxKind.ExclamationToken,
     };
     const BINARY_OPERATORS = {
-        '&&': ts__default['default'].SyntaxKind.AmpersandAmpersandToken,
-        '>': ts__default['default'].SyntaxKind.GreaterThanToken,
-        '>=': ts__default['default'].SyntaxKind.GreaterThanEqualsToken,
-        '&': ts__default['default'].SyntaxKind.AmpersandToken,
-        '/': ts__default['default'].SyntaxKind.SlashToken,
-        '==': ts__default['default'].SyntaxKind.EqualsEqualsToken,
-        '===': ts__default['default'].SyntaxKind.EqualsEqualsEqualsToken,
-        '<': ts__default['default'].SyntaxKind.LessThanToken,
-        '<=': ts__default['default'].SyntaxKind.LessThanEqualsToken,
-        '-': ts__default['default'].SyntaxKind.MinusToken,
-        '%': ts__default['default'].SyntaxKind.PercentToken,
-        '*': ts__default['default'].SyntaxKind.AsteriskToken,
-        '!=': ts__default['default'].SyntaxKind.ExclamationEqualsToken,
-        '!==': ts__default['default'].SyntaxKind.ExclamationEqualsEqualsToken,
-        '||': ts__default['default'].SyntaxKind.BarBarToken,
-        '+': ts__default['default'].SyntaxKind.PlusToken,
-        '??': ts__default['default'].SyntaxKind.QuestionQuestionToken,
+        '&&': ts__default["default"].SyntaxKind.AmpersandAmpersandToken,
+        '>': ts__default["default"].SyntaxKind.GreaterThanToken,
+        '>=': ts__default["default"].SyntaxKind.GreaterThanEqualsToken,
+        '&': ts__default["default"].SyntaxKind.AmpersandToken,
+        '/': ts__default["default"].SyntaxKind.SlashToken,
+        '==': ts__default["default"].SyntaxKind.EqualsEqualsToken,
+        '===': ts__default["default"].SyntaxKind.EqualsEqualsEqualsToken,
+        '<': ts__default["default"].SyntaxKind.LessThanToken,
+        '<=': ts__default["default"].SyntaxKind.LessThanEqualsToken,
+        '-': ts__default["default"].SyntaxKind.MinusToken,
+        '%': ts__default["default"].SyntaxKind.PercentToken,
+        '*': ts__default["default"].SyntaxKind.AsteriskToken,
+        '!=': ts__default["default"].SyntaxKind.ExclamationEqualsToken,
+        '!==': ts__default["default"].SyntaxKind.ExclamationEqualsEqualsToken,
+        '||': ts__default["default"].SyntaxKind.BarBarToken,
+        '+': ts__default["default"].SyntaxKind.PlusToken,
+        '??': ts__default["default"].SyntaxKind.QuestionQuestionToken,
     };
     const VAR_TYPES = {
-        'const': ts__default['default'].NodeFlags.Const,
-        'let': ts__default['default'].NodeFlags.Let,
-        'var': ts__default['default'].NodeFlags.None,
+        'const': ts__default["default"].NodeFlags.Const,
+        'let': ts__default["default"].NodeFlags.Let,
+        'var': ts__default["default"].NodeFlags.None,
     };
     /**
      * A TypeScript flavoured implementation of the AstFactory.
@@ -27454,75 +27452,75 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.annotateForClosureCompiler = annotateForClosureCompiler;
             this.externalSourceFiles = new Map();
             this.attachComments = attachComments;
-            this.createArrayLiteral = ts__default['default'].createArrayLiteral;
-            this.createConditional = ts__default['default'].createConditional;
-            this.createElementAccess = ts__default['default'].createElementAccess;
-            this.createExpressionStatement = ts__default['default'].createExpressionStatement;
-            this.createIdentifier = ts__default['default'].createIdentifier;
-            this.createParenthesizedExpression = ts__default['default'].createParen;
-            this.createPropertyAccess = ts__default['default'].createPropertyAccess;
-            this.createThrowStatement = ts__default['default'].createThrow;
-            this.createTypeOfExpression = ts__default['default'].createTypeOf;
+            this.createArrayLiteral = ts__default["default"].createArrayLiteral;
+            this.createConditional = ts__default["default"].createConditional;
+            this.createElementAccess = ts__default["default"].createElementAccess;
+            this.createExpressionStatement = ts__default["default"].createExpressionStatement;
+            this.createIdentifier = ts__default["default"].createIdentifier;
+            this.createParenthesizedExpression = ts__default["default"].createParen;
+            this.createPropertyAccess = ts__default["default"].createPropertyAccess;
+            this.createThrowStatement = ts__default["default"].createThrow;
+            this.createTypeOfExpression = ts__default["default"].createTypeOf;
         }
         createAssignment(target, value) {
-            return ts__default['default'].createBinary(target, ts__default['default'].SyntaxKind.EqualsToken, value);
+            return ts__default["default"].createBinary(target, ts__default["default"].SyntaxKind.EqualsToken, value);
         }
         createBinaryExpression(leftOperand, operator, rightOperand) {
-            return ts__default['default'].createBinary(leftOperand, BINARY_OPERATORS[operator], rightOperand);
+            return ts__default["default"].createBinary(leftOperand, BINARY_OPERATORS[operator], rightOperand);
         }
         createBlock(body) {
-            return ts__default['default'].createBlock(body);
+            return ts__default["default"].createBlock(body);
         }
         createCallExpression(callee, args, pure) {
-            const call = ts__default['default'].createCall(callee, undefined, args);
+            const call = ts__default["default"].createCall(callee, undefined, args);
             if (pure) {
-                ts__default['default'].addSyntheticLeadingComment(call, ts__default['default'].SyntaxKind.MultiLineCommentTrivia, this.annotateForClosureCompiler ? PureAnnotation.CLOSURE : PureAnnotation.TERSER, 
+                ts__default["default"].addSyntheticLeadingComment(call, ts__default["default"].SyntaxKind.MultiLineCommentTrivia, this.annotateForClosureCompiler ? PureAnnotation.CLOSURE : PureAnnotation.TERSER, 
                 /* trailing newline */ false);
             }
             return call;
         }
         createFunctionDeclaration(functionName, parameters, body) {
-            if (!ts__default['default'].isBlock(body)) {
-                throw new Error(`Invalid syntax, expected a block, but got ${ts__default['default'].SyntaxKind[body.kind]}.`);
+            if (!ts__default["default"].isBlock(body)) {
+                throw new Error(`Invalid syntax, expected a block, but got ${ts__default["default"].SyntaxKind[body.kind]}.`);
             }
-            return ts__default['default'].createFunctionDeclaration(undefined, undefined, undefined, functionName, undefined, parameters.map(param => ts__default['default'].createParameter(undefined, undefined, undefined, param)), undefined, body);
+            return ts__default["default"].createFunctionDeclaration(undefined, undefined, undefined, functionName, undefined, parameters.map(param => ts__default["default"].createParameter(undefined, undefined, undefined, param)), undefined, body);
         }
         createFunctionExpression(functionName, parameters, body) {
-            if (!ts__default['default'].isBlock(body)) {
-                throw new Error(`Invalid syntax, expected a block, but got ${ts__default['default'].SyntaxKind[body.kind]}.`);
+            if (!ts__default["default"].isBlock(body)) {
+                throw new Error(`Invalid syntax, expected a block, but got ${ts__default["default"].SyntaxKind[body.kind]}.`);
             }
-            return ts__default['default'].createFunctionExpression(undefined, undefined, functionName ?? undefined, undefined, parameters.map(param => ts__default['default'].createParameter(undefined, undefined, undefined, param)), undefined, body);
+            return ts__default["default"].createFunctionExpression(undefined, undefined, functionName ?? undefined, undefined, parameters.map(param => ts__default["default"].createParameter(undefined, undefined, undefined, param)), undefined, body);
         }
         createIfStatement(condition, thenStatement, elseStatement) {
-            return ts__default['default'].createIf(condition, thenStatement, elseStatement ?? undefined);
+            return ts__default["default"].createIf(condition, thenStatement, elseStatement ?? undefined);
         }
         createLiteral(value) {
             if (value === undefined) {
-                return ts__default['default'].createIdentifier('undefined');
+                return ts__default["default"].createIdentifier('undefined');
             }
             else if (value === null) {
-                return ts__default['default'].createNull();
+                return ts__default["default"].createNull();
             }
             else {
-                return ts__default['default'].createLiteral(value);
+                return ts__default["default"].createLiteral(value);
             }
         }
         createNewExpression(expression, args) {
-            return ts__default['default'].createNew(expression, undefined, args);
+            return ts__default["default"].createNew(expression, undefined, args);
         }
         createObjectLiteral(properties) {
-            return ts__default['default'].createObjectLiteral(properties.map(prop => ts__default['default'].createPropertyAssignment(prop.quoted ? ts__default['default'].createLiteral(prop.propertyName) :
-                ts__default['default'].createIdentifier(prop.propertyName), prop.value)));
+            return ts__default["default"].createObjectLiteral(properties.map(prop => ts__default["default"].createPropertyAssignment(prop.quoted ? ts__default["default"].createLiteral(prop.propertyName) :
+                ts__default["default"].createIdentifier(prop.propertyName), prop.value)));
         }
         createReturnStatement(expression) {
-            return ts__default['default'].createReturn(expression ?? undefined);
+            return ts__default["default"].createReturn(expression ?? undefined);
         }
         createTaggedTemplate(tag, template) {
             let templateLiteral;
             const length = template.elements.length;
             const head = template.elements[0];
             if (length === 1) {
-                templateLiteral = ts__default['default'].createNoSubstitutionTemplateLiteral(head.cooked, head.raw);
+                templateLiteral = ts__default["default"].createNoSubstitutionTemplateLiteral(head.cooked, head.raw);
             }
             else {
                 const spans = [];
@@ -27533,7 +27531,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     if (range !== null) {
                         this.setSourceMapRange(middle, range);
                     }
-                    spans.push(ts__default['default'].createTemplateSpan(template.expressions[i - 1], middle));
+                    spans.push(ts__default["default"].createTemplateSpan(template.expressions[i - 1], middle));
                 }
                 // Create the tail part
                 const resolvedExpression = template.expressions[length - 2];
@@ -27542,21 +27540,21 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 if (templatePart.range !== null) {
                     this.setSourceMapRange(templateTail, templatePart.range);
                 }
-                spans.push(ts__default['default'].createTemplateSpan(resolvedExpression, templateTail));
+                spans.push(ts__default["default"].createTemplateSpan(resolvedExpression, templateTail));
                 // Put it all together
                 templateLiteral =
-                    ts__default['default'].createTemplateExpression(ts__default['default'].createTemplateHead(head.cooked, head.raw), spans);
+                    ts__default["default"].createTemplateExpression(ts__default["default"].createTemplateHead(head.cooked, head.raw), spans);
             }
             if (head.range !== null) {
                 this.setSourceMapRange(templateLiteral, head.range);
             }
-            return ts__default['default'].createTaggedTemplate(tag, templateLiteral);
+            return ts__default["default"].createTaggedTemplate(tag, templateLiteral);
         }
         createUnaryExpression(operator, operand) {
-            return ts__default['default'].createPrefix(UNARY_OPERATORS[operator], operand);
+            return ts__default["default"].createPrefix(UNARY_OPERATORS[operator], operand);
         }
         createVariableDeclaration(variableName, initializer, type) {
-            return ts__default['default'].createVariableStatement(undefined, ts__default['default'].createVariableDeclarationList([ts__default['default'].createVariableDeclaration(variableName, undefined, initializer ?? undefined)], VAR_TYPES[type]));
+            return ts__default["default"].createVariableStatement(undefined, ts__default["default"].createVariableDeclarationList([ts__default["default"].createVariableDeclaration(variableName, undefined, initializer ?? undefined)], VAR_TYPES[type]));
         }
         setSourceMapRange(node, sourceMapRange) {
             if (sourceMapRange === null) {
@@ -27564,25 +27562,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
             const url = sourceMapRange.url;
             if (!this.externalSourceFiles.has(url)) {
-                this.externalSourceFiles.set(url, ts__default['default'].createSourceMapSource(url, sourceMapRange.content, pos => pos));
+                this.externalSourceFiles.set(url, ts__default["default"].createSourceMapSource(url, sourceMapRange.content, pos => pos));
             }
             const source = this.externalSourceFiles.get(url);
-            ts__default['default'].setSourceMapRange(node, { pos: sourceMapRange.start.offset, end: sourceMapRange.end.offset, source });
+            ts__default["default"].setSourceMapRange(node, { pos: sourceMapRange.start.offset, end: sourceMapRange.end.offset, source });
             return node;
         }
     }
     // HACK: Use this in place of `ts.createTemplateMiddle()`.
     // Revert once https://github.com/microsoft/TypeScript/issues/35374 is fixed.
     function createTemplateMiddle(cooked, raw) {
-        const node = ts__default['default'].createTemplateHead(cooked, raw);
-        node.kind = ts__default['default'].SyntaxKind.TemplateMiddle;
+        const node = ts__default["default"].createTemplateHead(cooked, raw);
+        node.kind = ts__default["default"].SyntaxKind.TemplateMiddle;
         return node;
     }
     // HACK: Use this in place of `ts.createTemplateTail()`.
     // Revert once https://github.com/microsoft/TypeScript/issues/35374 is fixed.
     function createTemplateTail(cooked, raw) {
-        const node = ts__default['default'].createTemplateHead(cooked, raw);
-        node.kind = ts__default['default'].SyntaxKind.TemplateTail;
+        const node = ts__default["default"].createTemplateHead(cooked, raw);
+        node.kind = ts__default["default"].SyntaxKind.TemplateTail;
         return node;
     }
     /**
@@ -27593,14 +27591,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function attachComments(statement, leadingComments) {
         for (const comment of leadingComments) {
-            const commentKind = comment.multiline ? ts__default['default'].SyntaxKind.MultiLineCommentTrivia :
-                ts__default['default'].SyntaxKind.SingleLineCommentTrivia;
+            const commentKind = comment.multiline ? ts__default["default"].SyntaxKind.MultiLineCommentTrivia :
+                ts__default["default"].SyntaxKind.SingleLineCommentTrivia;
             if (comment.multiline) {
-                ts__default['default'].addSyntheticLeadingComment(statement, commentKind, comment.toString(), comment.trailingNewline);
+                ts__default["default"].addSyntheticLeadingComment(statement, commentKind, comment.toString(), comment.trailingNewline);
             }
             else {
                 for (const line of comment.toString().split('\n')) {
-                    ts__default['default'].addSyntheticLeadingComment(statement, commentKind, line, comment.trailingNewline);
+                    ts__default["default"].addSyntheticLeadingComment(statement, commentKind, line, comment.trailingNewline);
                 }
             }
         }
@@ -27635,15 +27633,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function addImports(importManager, sf, extraStatements = []) {
         // Generate the import statements to prepend.
         const addedImports = importManager.getAllImports(sf.fileName).map(i => {
-            const qualifier = ts__default['default'].createIdentifier(i.qualifier.text);
-            const importClause = ts__default['default'].createImportClause(
+            const qualifier = ts__default["default"].createIdentifier(i.qualifier.text);
+            const importClause = ts__default["default"].createImportClause(
             /* name */ undefined, 
-            /* namedBindings */ ts__default['default'].createNamespaceImport(qualifier));
-            const decl = ts__default['default'].createImportDeclaration(
+            /* namedBindings */ ts__default["default"].createNamespaceImport(qualifier));
+            const decl = ts__default["default"].createImportDeclaration(
             /* decorators */ undefined, 
             /* modifiers */ undefined, 
             /* importClause */ importClause, 
-            /* moduleSpecifier */ ts__default['default'].createLiteral(i.specifier));
+            /* moduleSpecifier */ ts__default["default"].createLiteral(i.specifier));
             // Set the qualifier's original TS node to the `ts.ImportDeclaration`. This allows downstream
             // transforms such as tsickle to properly process references to this import.
             //
@@ -27652,7 +27650,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             //
             // TODO(alxhub): add a test for this when tsickle is updated externally to depend on this
             // behavior.
-            ts__default['default'].setOriginalNode(i.qualifier, decl);
+            ts__default["default"].setOriginalNode(i.qualifier, decl);
             return decl;
         });
         // Filter out the existing imports and the source file body. All new statements
@@ -27664,16 +27662,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // If we prepend imports, we also prepend NotEmittedStatement to use it as an anchor
             // for @fileoverview Closure annotation. If there is no @fileoverview annotations, this
             // statement would be a noop.
-            const fileoverviewAnchorStmt = ts__default['default'].createNotEmittedStatement(sf);
-            return ts__default['default'].updateSourceFileNode(sf, ts__default['default'].createNodeArray([
+            const fileoverviewAnchorStmt = ts__default["default"].createNotEmittedStatement(sf);
+            return ts__default["default"].updateSourceFileNode(sf, ts__default["default"].createNodeArray([
                 fileoverviewAnchorStmt, ...existingImports, ...addedImports, ...extraStatements, ...body
             ]));
         }
         return sf;
     }
     function isImportStatement(stmt) {
-        return ts__default['default'].isImportDeclaration(stmt) || ts__default['default'].isImportEqualsDeclaration(stmt) ||
-            ts__default['default'].isNamespaceImport(stmt);
+        return ts__default["default"].isImportDeclaration(stmt) || ts__default["default"].isImportEqualsDeclaration(stmt) ||
+            ts__default["default"].isNamespaceImport(stmt);
     }
 
     /**
@@ -27709,7 +27707,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             if (!sf.isDeclarationFile) {
                 return null;
             }
-            const originalSf = ts__default['default'].getOriginalNode(sf);
+            const originalSf = ts__default["default"].getOriginalNode(sf);
             let transforms = null;
             if (this.ivyDeclarationTransforms.has(originalSf)) {
                 transforms = [];
@@ -27722,7 +27720,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return (context) => {
             const transformer = new DtsTransformer(context, importRewriter, importPrefix);
             return (fileOrBundle) => {
-                if (ts__default['default'].isBundle(fileOrBundle)) {
+                if (ts__default["default"].isBundle(fileOrBundle)) {
                     // Only attempt to transform source files.
                     return fileOrBundle;
                 }
@@ -27749,19 +27747,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         transform(sf, transforms) {
             const imports = new ImportManager(this.importRewriter, this.importPrefix);
             const visitor = (node) => {
-                if (ts__default['default'].isClassDeclaration(node)) {
+                if (ts__default["default"].isClassDeclaration(node)) {
                     return this.transformClassDeclaration(node, transforms, imports);
                 }
-                else if (ts__default['default'].isFunctionDeclaration(node)) {
+                else if (ts__default["default"].isFunctionDeclaration(node)) {
                     return this.transformFunctionDeclaration(node, transforms, imports);
                 }
                 else {
                     // Otherwise return node as is.
-                    return ts__default['default'].visitEachChild(node, visitor, this.ctx);
+                    return ts__default["default"].visitEachChild(node, visitor, this.ctx);
                 }
             };
             // Recursively scan through the AST and process all nodes as desired.
-            sf = ts__default['default'].visitNode(sf, visitor);
+            sf = ts__default["default"].visitNode(sf, visitor);
             // Add new imports for this file.
             return addImports(imports, sf);
         }
@@ -27794,7 +27792,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // If some elements have been transformed but the class itself has not been transformed, create
             // an updated class declaration with the updated elements.
             if (elementsChanged && clazz === newClazz) {
-                newClazz = ts__default['default'].updateClassDeclaration(
+                newClazz = ts__default["default"].updateClassDeclaration(
                 /* node */ clazz, 
                 /* decorators */ clazz.decorators, 
                 /* modifiers */ clazz.modifiers, 
@@ -27823,16 +27821,16 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.declarationFields.set(decl, fields);
         }
         transformClass(clazz, members, imports) {
-            const original = ts__default['default'].getOriginalNode(clazz);
+            const original = ts__default["default"].getOriginalNode(clazz);
             if (!this.declarationFields.has(original)) {
                 return clazz;
             }
             const fields = this.declarationFields.get(original);
             const newMembers = fields.map(decl => {
-                const modifiers = [ts__default['default'].createModifier(ts__default['default'].SyntaxKind.StaticKeyword)];
+                const modifiers = [ts__default["default"].createModifier(ts__default["default"].SyntaxKind.StaticKeyword)];
                 const typeRef = translateType(decl.type, imports);
                 markForEmitAsSingleLine(typeRef);
-                return ts__default['default'].createProperty(
+                return ts__default["default"].createProperty(
                 /* decorators */ undefined, 
                 /* modifiers */ modifiers, 
                 /* name */ decl.name, 
@@ -27840,7 +27838,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 /* type */ typeRef, 
                 /* initializer */ undefined);
             });
-            return ts__default['default'].updateClassDeclaration(
+            return ts__default["default"].updateClassDeclaration(
             /* node */ clazz, 
             /* decorators */ clazz.decorators, 
             /* modifiers */ clazz.modifiers, 
@@ -27851,8 +27849,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
     }
     function markForEmitAsSingleLine(node) {
-        ts__default['default'].setEmitFlags(node, ts__default['default'].EmitFlags.SingleLine);
-        ts__default['default'].forEachChild(node, markForEmitAsSingleLine);
+        ts__default["default"].setEmitFlags(node, ts__default["default"].EmitFlags.SingleLine);
+        ts__default["default"].forEachChild(node, markForEmitAsSingleLine);
     }
 
     /**
@@ -27909,8 +27907,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             // First, visit the node. visitedNode starts off as `null` but should be set after visiting
             // is completed.
             let visitedNode = null;
-            node = ts__default['default'].visitEachChild(node, child => this._visit(child, context), context);
-            if (ts__default['default'].isClassDeclaration(node)) {
+            node = ts__default["default"].visitEachChild(node, child => this._visit(child, context), context);
+            if (ts__default["default"].isClassDeclaration(node)) {
                 visitedNode =
                     this._visitListEntryNode(node, (node) => this.visitClassDeclaration(node));
             }
@@ -27931,7 +27929,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return node;
             }
             // There are statements to prepend, so clone the original node.
-            const clone = ts__default['default'].getMutableClone(node);
+            const clone = ts__default["default"].getMutableClone(node);
             // Build a new list of statements and patch it onto the clone.
             const newStatements = [];
             clone.statements.forEach(stmt => {
@@ -27945,7 +27943,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     this._after.delete(stmt);
                 }
             });
-            clone.statements = ts__default['default'].createNodeArray(newStatements, node.statements.hasTrailingComma);
+            clone.statements = ts__default["default"].createNodeArray(newStatements, node.statements.hasTrailingComma);
             return clone;
         }
     }
@@ -28025,13 +28023,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 // Translate the initializer for the field into TS nodes.
                 const exprNode = translateExpression(field.initializer, this.importManager, translateOptions);
                 // Create a static property declaration for the new field.
-                const property = ts__default['default'].createProperty(undefined, [ts__default['default'].createToken(ts__default['default'].SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
+                const property = ts__default["default"].createProperty(undefined, [ts__default["default"].createToken(ts__default["default"].SyntaxKind.StaticKeyword)], field.name, undefined, undefined, exprNode);
                 if (this.isClosureCompilerEnabled) {
                     // Closure compiler transforms the form `Service.ɵprov = X` into `Service$ɵprov = X`. To
                     // prevent this transformation, such assignments need to be annotated with @nocollapse.
                     // Note that tsickle is typically responsible for adding such annotations, however it
                     // doesn't yet handle synthetic fields added during other transformations.
-                    ts__default['default'].addSyntheticLeadingComment(property, ts__default['default'].SyntaxKind.MultiLineCommentTrivia, '* @nocollapse ', 
+                    ts__default["default"].addSyntheticLeadingComment(property, ts__default["default"].SyntaxKind.MultiLineCommentTrivia, '* @nocollapse ', 
                     /* hasTrailingNewLine */ false);
                 }
                 field.statements.map(stmt => translateStatement(stmt, this.importManager, translateOptions))
@@ -28039,7 +28037,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 members.push(property);
             }
             // Replace the class declaration with an updated version.
-            node = ts__default['default'].updateClassDeclaration(node, 
+            node = ts__default["default"].updateClassDeclaration(node, 
             // Remove the decorator which triggered this compilation, leaving the others alone.
             maybeFilterDecorator(node.decorators, this.compilation.decoratorsFor(node)), node.modifiers, node.name, node.typeParameters, node.heritageClauses || [], 
             // Map over the class members and remove any Angular decorators from them.
@@ -28094,7 +28092,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 return undefined;
             }
             // Create a new `NodeArray` with the filtered decorators that sourcemaps back to the original.
-            const array = ts__default['default'].createNodeArray(filtered);
+            const array = ts__default["default"].createNodeArray(filtered);
             array.pos = node.decorators.pos;
             array.end = node.decorators.end;
             return array;
@@ -28106,31 +28104,31 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          * as parameters of constructors.
          */
         _stripAngularDecorators(node) {
-            if (ts__default['default'].isParameter(node)) {
+            if (ts__default["default"].isParameter(node)) {
                 // Strip decorators from parameters (probably of the constructor).
-                node = ts__default['default'].updateParameter(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.dotDotDotToken, node.name, node.questionToken, node.type, node.initializer);
+                node = ts__default["default"].updateParameter(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.dotDotDotToken, node.name, node.questionToken, node.type, node.initializer);
             }
-            else if (ts__default['default'].isMethodDeclaration(node) && node.decorators !== undefined) {
+            else if (ts__default["default"].isMethodDeclaration(node) && node.decorators !== undefined) {
                 // Strip decorators of methods.
-                node = ts__default['default'].updateMethod(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.asteriskToken, node.name, node.questionToken, node.typeParameters, node.parameters, node.type, node.body);
+                node = ts__default["default"].updateMethod(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.asteriskToken, node.name, node.questionToken, node.typeParameters, node.parameters, node.type, node.body);
             }
-            else if (ts__default['default'].isPropertyDeclaration(node) && node.decorators !== undefined) {
+            else if (ts__default["default"].isPropertyDeclaration(node) && node.decorators !== undefined) {
                 // Strip decorators of properties.
-                node = ts__default['default'].updateProperty(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.questionToken, node.type, node.initializer);
+                node = ts__default["default"].updateProperty(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.questionToken, node.type, node.initializer);
             }
-            else if (ts__default['default'].isGetAccessor(node)) {
+            else if (ts__default["default"].isGetAccessor(node)) {
                 // Strip decorators of getters.
-                node = ts__default['default'].updateGetAccessor(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.parameters, node.type, node.body);
+                node = ts__default["default"].updateGetAccessor(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.parameters, node.type, node.body);
             }
-            else if (ts__default['default'].isSetAccessor(node)) {
+            else if (ts__default["default"].isSetAccessor(node)) {
                 // Strip decorators of setters.
-                node = ts__default['default'].updateSetAccessor(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.parameters, node.body);
+                node = ts__default["default"].updateSetAccessor(node, this._nonCoreDecoratorsOnly(node), node.modifiers, node.name, node.parameters, node.body);
             }
-            else if (ts__default['default'].isConstructorDeclaration(node)) {
+            else if (ts__default["default"].isConstructorDeclaration(node)) {
                 // For constructors, strip decorators of the parameters.
                 const parameters = node.parameters.map(param => this._stripAngularDecorators(param));
                 node =
-                    ts__default['default'].updateConstructor(node, node.decorators, node.modifiers, parameters, node.body);
+                    ts__default["default"].updateConstructor(node, node.decorators, node.modifiers, parameters, node.body);
             }
             return node;
         }
@@ -28159,7 +28157,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         let sf = visit(file, transformationVisitor, context);
         // Generate the constant statements first, as they may involve adding additional imports
         // to the ImportManager.
-        const downlevelTranslatedCode = getLocalizeCompileTarget(context) < ts__default['default'].ScriptTarget.ES2015;
+        const downlevelTranslatedCode = getLocalizeCompileTarget(context) < ts__default["default"].ScriptTarget.ES2015;
         const constants = constantPool.statements.map(stmt => translateStatement(stmt, importManager, {
             recordWrappedNode,
             downlevelTaggedTemplates: downlevelTranslatedCode,
@@ -28187,20 +28185,20 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * downleveling for us.
      */
     function getLocalizeCompileTarget(context) {
-        const target = context.getCompilerOptions().target || ts__default['default'].ScriptTarget.ES2015;
-        return target !== ts__default['default'].ScriptTarget.JSON ? target : ts__default['default'].ScriptTarget.ES2015;
+        const target = context.getCompilerOptions().target || ts__default["default"].ScriptTarget.ES2015;
+        return target !== ts__default["default"].ScriptTarget.JSON ? target : ts__default["default"].ScriptTarget.ES2015;
     }
     function getFileOverviewComment(statements) {
         if (statements.length > 0) {
             const host = statements[0];
             let trailing = false;
-            let comments = ts__default['default'].getSyntheticLeadingComments(host);
+            let comments = ts__default["default"].getSyntheticLeadingComments(host);
             // If @fileoverview tag is not found in source file, tsickle produces fake node with trailing
             // comment and inject it at the very beginning of the generated file. So we need to check for
             // leading as well as trailing comments.
             if (!comments || comments.length === 0) {
                 trailing = true;
-                comments = ts__default['default'].getSyntheticTrailingComments(host);
+                comments = ts__default["default"].getSyntheticTrailingComments(host);
             }
             if (comments && comments.length > 0 && CLOSURE_FILE_OVERVIEW_REGEXP.test(comments[0].text)) {
                 return { comments, host, trailing };
@@ -28215,23 +28213,23 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         // that hosted it.
         if (sf.statements.length > 0 && host !== sf.statements[0]) {
             if (trailing) {
-                ts__default['default'].setSyntheticTrailingComments(host, undefined);
+                ts__default["default"].setSyntheticTrailingComments(host, undefined);
             }
             else {
-                ts__default['default'].setSyntheticLeadingComments(host, undefined);
+                ts__default["default"].setSyntheticLeadingComments(host, undefined);
             }
-            ts__default['default'].setSyntheticLeadingComments(sf.statements[0], comments);
+            ts__default["default"].setSyntheticLeadingComments(sf.statements[0], comments);
         }
     }
     function maybeFilterDecorator(decorators, toRemove) {
         if (decorators === undefined) {
             return undefined;
         }
-        const filtered = decorators.filter(dec => toRemove.find(decToRemove => ts__default['default'].getOriginalNode(dec) === decToRemove) === undefined);
+        const filtered = decorators.filter(dec => toRemove.find(decToRemove => ts__default["default"].getOriginalNode(dec) === decToRemove) === undefined);
         if (filtered.length === 0) {
             return undefined;
         }
-        return ts__default['default'].createNodeArray(filtered);
+        return ts__default["default"].createNodeArray(filtered);
     }
     function isFromAngularCore(decorator) {
         return decorator.import !== null && decorator.import.from === '@angular/core';
@@ -28294,12 +28292,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     }
                     const attributeName = dec.args[0];
                     token = new WrappedNodeExpr(attributeName);
-                    if (ts__default['default'].isStringLiteralLike(attributeName)) {
+                    if (ts__default["default"].isStringLiteralLike(attributeName)) {
                         attributeNameType = new LiteralExpr(attributeName.text);
                     }
                     else {
                         attributeNameType =
-                            new WrappedNodeExpr(ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.UnknownKeyword));
+                            new WrappedNodeExpr(ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.UnknownKeyword));
                     }
                 }
                 else {
@@ -28442,11 +28440,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         const chain = {
             messageText: `No suitable injection token for parameter '${param.name || index}' of class '${clazz.name.text}'.`,
-            category: ts__default['default'].DiagnosticCategory.Error,
+            category: ts__default["default"].DiagnosticCategory.Error,
             code: 0,
             next: [{
                     messageText: chainMessage,
-                    category: ts__default['default'].DiagnosticCategory.Message,
+                    category: ts__default["default"].DiagnosticCategory.Message,
                     code: 0,
                 }],
         };
@@ -28485,25 +28483,25 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * For example, the expression "(foo as Type)" unwraps to "foo".
      */
     function unwrapExpression(node) {
-        while (ts__default['default'].isAsExpression(node) || ts__default['default'].isParenthesizedExpression(node)) {
+        while (ts__default["default"].isAsExpression(node) || ts__default["default"].isParenthesizedExpression(node)) {
             node = node.expression;
         }
         return node;
     }
     function expandForwardRef(arg) {
         arg = unwrapExpression(arg);
-        if (!ts__default['default'].isArrowFunction(arg) && !ts__default['default'].isFunctionExpression(arg)) {
+        if (!ts__default["default"].isArrowFunction(arg) && !ts__default["default"].isFunctionExpression(arg)) {
             return null;
         }
         const body = arg.body;
         // Either the body is a ts.Expression directly, or a block with a single return statement.
-        if (ts__default['default'].isBlock(body)) {
+        if (ts__default["default"].isBlock(body)) {
             // Block body - look for a single return statement.
             if (body.statements.length !== 1) {
                 return null;
             }
             const stmt = body.statements[0];
-            if (!ts__default['default'].isReturnStatement(stmt) || stmt.expression === undefined) {
+            if (!ts__default["default"].isReturnStatement(stmt) || stmt.expression === undefined) {
                 return null;
             }
             return stmt.expression;
@@ -28524,11 +28522,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      */
     function tryUnwrapForwardRef(node, reflector) {
         node = unwrapExpression(node);
-        if (!ts__default['default'].isCallExpression(node) || node.arguments.length !== 1) {
+        if (!ts__default["default"].isCallExpression(node) || node.arguments.length !== 1) {
             return null;
         }
-        const fn = ts__default['default'].isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression;
-        if (!ts__default['default'].isIdentifier(fn)) {
+        const fn = ts__default["default"].isPropertyAccessExpression(node.expression) ? node.expression.name : node.expression;
+        if (!ts__default["default"].isIdentifier(fn)) {
             return null;
         }
         const expr = expandForwardRef(node.arguments[0]);
@@ -28572,7 +28570,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     function isExpressionForwardReference(expr, context, contextSource) {
         if (isWrappedTsNodeExpr(expr)) {
-            const node = ts__default['default'].getOriginalNode(expr.node);
+            const node = ts__default["default"].getOriginalNode(expr.node);
             return node.getSourceFile() === contextSource && context.pos < node.pos;
         }
         else {
@@ -28597,13 +28595,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     }
     const parensWrapperTransformerFactory = (context) => {
         const visitor = (node) => {
-            const visited = ts__default['default'].visitEachChild(node, visitor, context);
-            if (ts__default['default'].isArrowFunction(visited) || ts__default['default'].isFunctionExpression(visited)) {
-                return ts__default['default'].createParen(visited);
+            const visited = ts__default["default"].visitEachChild(node, visitor, context);
+            if (ts__default["default"].isArrowFunction(visited) || ts__default["default"].isFunctionExpression(visited)) {
+                return ts__default["default"].createParen(visited);
             }
             return visited;
         };
-        return (node) => ts__default['default'].visitEachChild(node, visitor, context);
+        return (node) => ts__default["default"].visitEachChild(node, visitor, context);
     };
     /**
      * Wraps all functions in a given expression in parentheses. This is needed to avoid problems
@@ -28616,7 +28614,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * @param expression Expression where functions should be wrapped in parentheses
      */
     function wrapFunctionExpressionsInParens(expression) {
-        return ts__default['default'].transform(expression, [parensWrapperTransformerFactory]).transformed[0];
+        return ts__default["default"].transform(expression, [parensWrapperTransformerFactory]).transformed[0];
     }
     /**
      * Create a `ts.Diagnostic` which indicates the given class is part of the declarations of two or
@@ -28769,11 +28767,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         const chain = {
             messageText,
-            category: ts__default['default'].DiagnosticCategory.Error,
+            category: ts__default["default"].DiagnosticCategory.Error,
             code: 0,
             next: [{
                     messageText: chainedMessage,
-                    category: ts__default['default'].DiagnosticCategory.Message,
+                    category: ts__default["default"].DiagnosticCategory.Message,
                     code: 0,
                 }]
         };
@@ -28927,7 +28925,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (ngClassDecorators.length === 0) {
             return null;
         }
-        const metaDecorators = new WrappedNodeExpr(ts__default['default'].createArrayLiteral(ngClassDecorators));
+        const metaDecorators = new WrappedNodeExpr(ts__default["default"].createArrayLiteral(ngClassDecorators));
         // Convert the constructor parameters to metadata, passing null if none are present.
         let metaCtorParameters = null;
         const classCtorParameters = reflection.getConstructorParameters(clazz);
@@ -28950,7 +28948,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         const decoratedMembers = classMembers.map(member => classMemberToMetadata(member.nameNode ?? member.name, member.decorators, isCore));
         if (decoratedMembers.length > 0) {
-            metaPropDecorators = new WrappedNodeExpr(ts__default['default'].createObjectLiteral(decoratedMembers));
+            metaPropDecorators = new WrappedNodeExpr(ts__default["default"].createObjectLiteral(decoratedMembers));
         }
         return {
             type: new WrappedNodeExpr(id),
@@ -28975,7 +28973,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         if (param.decorators !== null) {
             const ngDecorators = param.decorators.filter(dec => isAngularDecorator(dec, isCore))
                 .map((decorator) => decoratorToMetadata(decorator));
-            const value = new WrappedNodeExpr(ts__default['default'].createArrayLiteral(ngDecorators));
+            const value = new WrappedNodeExpr(ts__default["default"].createArrayLiteral(ngDecorators));
             mapEntries.push({ key: 'decorators', value, quoted: false });
         }
         return literalMap(mapEntries);
@@ -28986,8 +28984,8 @@ Either add the @Injectable() decorator to '${provider.node.name
     function classMemberToMetadata(name, decorators, isCore) {
         const ngDecorators = decorators.filter(dec => isAngularDecorator(dec, isCore))
             .map((decorator) => decoratorToMetadata(decorator));
-        const decoratorMeta = ts__default['default'].createArrayLiteral(ngDecorators);
-        return ts__default['default'].createPropertyAssignment(name, decoratorMeta);
+        const decoratorMeta = ts__default["default"].createArrayLiteral(ngDecorators);
+        return ts__default["default"].createPropertyAssignment(name, decoratorMeta);
     }
     /**
      * Convert a reflected decorator to metadata.
@@ -28998,17 +28996,17 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         // Decorators have a type.
         const properties = [
-            ts__default['default'].createPropertyAssignment('type', ts__default['default'].getMutableClone(decorator.identifier)),
+            ts__default["default"].createPropertyAssignment('type', ts__default["default"].getMutableClone(decorator.identifier)),
         ];
         // Sometimes they have arguments.
         if (decorator.args !== null && decorator.args.length > 0) {
             const args = decorator.args.map(arg => {
-                const expr = ts__default['default'].getMutableClone(arg);
+                const expr = ts__default["default"].getMutableClone(arg);
                 return wrapFunctionsInParens ? wrapFunctionExpressionsInParens(expr) : expr;
             });
-            properties.push(ts__default['default'].createPropertyAssignment('args', ts__default['default'].createArrayLiteral(args)));
+            properties.push(ts__default["default"].createPropertyAssignment('args', ts__default["default"].createArrayLiteral(args)));
         }
-        return ts__default['default'].createObjectLiteral(properties, true);
+        return ts__default["default"].createObjectLiteral(properties, true);
     }
     /**
      * Whether a given decorator should be treated as an Angular decorator.
@@ -29024,10 +29022,10 @@ Either add the @Injectable() decorator to '${provider.node.name
      * taken from one place any emitted to another one exactly as it has been written.
      */
     function removeIdentifierReferences(node, name) {
-        const result = ts__default['default'].transform(node, [context => root => ts__default['default'].visitNode(root, function walk(current) {
-                return ts__default['default'].isIdentifier(current) && current.text === name ?
-                    ts__default['default'].createIdentifier(current.text) :
-                    ts__default['default'].visitEachChild(current, walk, context);
+        const result = ts__default["default"].transform(node, [context => root => ts__default["default"].visitNode(root, function walk(current) {
+                return ts__default["default"].isIdentifier(current) && current.text === name ?
+                    ts__default["default"].createIdentifier(current.text) :
+                    ts__default["default"].visitEachChild(current, walk, context);
             })]);
         return result.transformed[0];
     }
@@ -29307,7 +29305,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         else {
             const meta = unwrapExpression(decorator.args[0]);
-            if (!ts__default['default'].isObjectLiteralExpression(meta)) {
+            if (!ts__default["default"].isObjectLiteralExpression(meta)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, `@${decorator.name} argument must be an object literal`);
             }
             directive = reflectObjectLiteral(meta);
@@ -29452,7 +29450,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         let emitDistinctChangesOnly = emitDistinctChangesOnlyDefaultValue;
         if (args.length === 2) {
             const optionsExpr = unwrapExpression(args[1]);
-            if (!ts__default['default'].isObjectLiteralExpression(optionsExpr)) {
+            if (!ts__default["default"].isObjectLiteralExpression(optionsExpr)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, optionsExpr, `@${name} options must be an object literal`);
             }
             const options = reflectObjectLiteral(optionsExpr);
@@ -29499,18 +29497,18 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function extractQueriesFromDecorator(queryData, reflector, evaluator, isCore) {
         const content = [], view = [];
-        if (!ts__default['default'].isObjectLiteralExpression(queryData)) {
+        if (!ts__default["default"].isObjectLiteralExpression(queryData)) {
             throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator queries metadata must be an object literal');
         }
         reflectObjectLiteral(queryData).forEach((queryExpr, propertyName) => {
             queryExpr = unwrapExpression(queryExpr);
-            if (!ts__default['default'].isNewExpression(queryExpr)) {
+            if (!ts__default["default"].isNewExpression(queryExpr)) {
                 throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
             }
-            const queryType = ts__default['default'].isPropertyAccessExpression(queryExpr.expression) ?
+            const queryType = ts__default["default"].isPropertyAccessExpression(queryExpr.expression) ?
                 queryExpr.expression.name :
                 queryExpr.expression;
-            if (!ts__default['default'].isIdentifier(queryType)) {
+            if (!ts__default["default"].isIdentifier(queryType)) {
                 throw new FatalDiagnosticError(ErrorCode.VALUE_HAS_WRONG_TYPE, queryData, 'Decorator query metadata must be an instance of a query type');
             }
             const type = reflector.getImportOfIdentifier(queryType);
@@ -29830,8 +29828,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             // @NgModule can be invoked without arguments. In case it is, pretend as if a blank object
             // literal was specified. This simplifies the code below.
             const meta = decorator.args.length === 1 ? unwrapExpression(decorator.args[0]) :
-                ts__default['default'].createObjectLiteral([]);
-            if (!ts__default['default'].isObjectLiteralExpression(meta)) {
+                ts__default["default"].createObjectLiteral([]);
+            if (!ts__default["default"].isObjectLiteralExpression(meta)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, '@NgModule argument must be an object literal');
             }
             const ngModule = reflectObjectLiteral(meta);
@@ -30169,12 +30167,12 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         _reflectModuleFromTypeParam(type, node) {
             // Examine the type of the function to see if it's a ModuleWithProviders reference.
-            if (!ts__default['default'].isTypeReferenceNode(type)) {
+            if (!ts__default["default"].isTypeReferenceNode(type)) {
                 return null;
             }
             const typeName = type &&
-                (ts__default['default'].isIdentifier(type.typeName) && type.typeName ||
-                    ts__default['default'].isQualifiedName(type.typeName) && type.typeName.right) ||
+                (ts__default["default"].isIdentifier(type.typeName) && type.typeName ||
+                    ts__default["default"].isQualifiedName(type.typeName) && type.typeName.right) ||
                 null;
             if (typeName === null) {
                 return null;
@@ -30191,7 +30189,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // If there's no type parameter specified, bail.
             if (type.typeArguments === undefined || type.typeArguments.length !== 1) {
-                const parent = ts__default['default'].isMethodDeclaration(node) && ts__default['default'].isClassDeclaration(node.parent) ? node.parent : null;
+                const parent = ts__default["default"].isMethodDeclaration(node) && ts__default["default"].isClassDeclaration(node.parent) ? node.parent : null;
                 const symbolName = (parent && parent.name ? parent.name.getText() + '.' : '') +
                     (node.name ? node.name.getText() : 'anonymous');
                 throw new FatalDiagnosticError(ErrorCode.NGMODULE_MODULE_WITH_PROVIDERS_MISSING_GENERIC, type, `${symbolName} returns a ModuleWithProviders type without a generic type argument. ` +
@@ -30208,13 +30206,13 @@ Either add the @Injectable() decorator to '${provider.node.name
          * @returns the identifier of the NgModule type if found, or null otherwise.
          */
         _reflectModuleFromLiteralType(type) {
-            if (!ts__default['default'].isIntersectionTypeNode(type)) {
+            if (!ts__default["default"].isIntersectionTypeNode(type)) {
                 return null;
             }
             for (const t of type.types) {
-                if (ts__default['default'].isTypeLiteralNode(t)) {
+                if (ts__default["default"].isTypeLiteralNode(t)) {
                     for (const m of t.members) {
-                        const ngModuleType = ts__default['default'].isPropertySignature(m) && ts__default['default'].isIdentifier(m.name) &&
+                        const ngModuleType = ts__default["default"].isPropertySignature(m) && ts__default["default"].isIdentifier(m.name) &&
                             m.name.text === 'ngModule' && m.type ||
                             null;
                         const ngModuleExpression = ngModuleType && typeNodeToValueExpr(ngModuleType);
@@ -30697,7 +30695,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         }
         typeCheck(ctx, node, meta) {
-            if (this.typeCheckScopeRegistry === null || !ts__default['default'].isClassDeclaration(node)) {
+            if (this.typeCheckScopeRegistry === null || !ts__default["default"].isClassDeclaration(node)) {
                 return;
             }
             if (meta.isPoisoned && !this.usePoisonedData) {
@@ -30959,20 +30957,20 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Set the `template` property if the `templateUrl` property is set.
             if (metadata.has('templateUrl')) {
                 metadata.delete('templateUrl');
-                metadata.set('template', ts__default['default'].createStringLiteral(template.content));
+                metadata.set('template', ts__default["default"].createStringLiteral(template.content));
             }
             // Set the `styles` property if the `styleUrls` property is set.
             if (metadata.has('styleUrls')) {
                 metadata.delete('styleUrls');
-                metadata.set('styles', ts__default['default'].createArrayLiteral(styles.map(s => ts__default['default'].createStringLiteral(s))));
+                metadata.set('styles', ts__default["default"].createArrayLiteral(styles.map(s => ts__default["default"].createStringLiteral(s))));
             }
             // Convert the metadata to TypeScript AST object literal element nodes.
             const newMetadataFields = [];
             for (const [name, value] of metadata.entries()) {
-                newMetadataFields.push(ts__default['default'].createPropertyAssignment(name, value));
+                newMetadataFields.push(ts__default["default"].createPropertyAssignment(name, value));
             }
             // Return the original decorator with the overridden metadata argument.
-            return { ...dec, args: [ts__default['default'].createObjectLiteral(newMetadataFields)] };
+            return { ...dec, args: [ts__default["default"].createObjectLiteral(newMetadataFields)] };
         }
         _resolveLiteral(decorator) {
             if (this.literalCache.has(decorator)) {
@@ -30982,7 +30980,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), `Incorrect number of arguments to @Component decorator`);
             }
             const meta = unwrapExpression(decorator.args[0]);
-            if (!ts__default['default'].isObjectLiteralExpression(meta)) {
+            if (!ts__default["default"].isObjectLiteralExpression(meta)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, `Decorator argument must be literal.`);
             }
             this.literalCache.set(decorator, meta);
@@ -31010,9 +31008,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         _extractStyleUrlsFromExpression(styleUrlsExpr) {
             const styleUrls = [];
-            if (ts__default['default'].isArrayLiteralExpression(styleUrlsExpr)) {
+            if (ts__default["default"].isArrayLiteralExpression(styleUrlsExpr)) {
                 for (const styleUrlExpr of styleUrlsExpr.elements) {
-                    if (ts__default['default'].isSpreadElement(styleUrlExpr)) {
+                    if (ts__default["default"].isSpreadElement(styleUrlExpr)) {
                         styleUrls.push(...this._extractStyleUrlsFromExpression(styleUrlExpr.expression));
                     }
                     else {
@@ -31046,12 +31044,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         _extractStyleResources(component, containingFile) {
             const styles = new Set();
             function stringLiteralElements(array) {
-                return array.elements.filter((e) => ts__default['default'].isStringLiteralLike(e));
+                return array.elements.filter((e) => ts__default["default"].isStringLiteralLike(e));
             }
             // If styleUrls is a literal array, process each resource url individually and
             // register ones that are string literals.
             const styleUrlsExpr = component.get('styleUrls');
-            if (styleUrlsExpr !== undefined && ts__default['default'].isArrayLiteralExpression(styleUrlsExpr)) {
+            if (styleUrlsExpr !== undefined && ts__default["default"].isArrayLiteralExpression(styleUrlsExpr)) {
                 for (const expression of stringLiteralElements(styleUrlsExpr)) {
                     try {
                         const resourceUrl = this.resourceLoader.resolve(expression.text, containingFile);
@@ -31065,7 +31063,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             const stylesExpr = component.get('styles');
-            if (stylesExpr !== undefined && ts__default['default'].isArrayLiteralExpression(stylesExpr)) {
+            if (stylesExpr !== undefined && ts__default["default"].isArrayLiteralExpression(stylesExpr)) {
                 for (const expression of stringLiteralElements(stylesExpr)) {
                     styles.add({ path: null, expression });
                 }
@@ -31117,8 +31115,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 let escapedString = false;
                 let sourceMapUrl;
                 // We only support SourceMaps for inline templates that are simple string literals.
-                if (ts__default['default'].isStringLiteral(template.expression) ||
-                    ts__default['default'].isNoSubstitutionTemplateLiteral(template.expression)) {
+                if (ts__default["default"].isStringLiteral(template.expression) ||
+                    ts__default["default"].isNoSubstitutionTemplateLiteral(template.expression)) {
                     // the start and end of the `templateExpr` node includes the quotation marks, which we must
                     // strip
                     sourceParseRange = getTemplateRange(template.expression);
@@ -31340,7 +31338,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function getTemplateRange(templateExpr) {
         const startPos = templateExpr.getStart() + 1;
-        const { line, character } = ts__default['default'].getLineAndCharacterOfPosition(templateExpr.getSourceFile(), startPos);
+        const { line, character } = ts__default["default"].getLineAndCharacterOfPosition(templateExpr.getSourceFile(), startPos);
         return {
             startPos,
             startLine: line,
@@ -31518,7 +31516,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Firstly make sure the decorator argument is an inline literal - if not, it's illegal to
             // transport references from one location to another. This is the problem that lowering
             // used to solve - if this restriction proves too undesirable we can re-implement lowering.
-            if (!ts__default['default'].isObjectLiteralExpression(metaNode)) {
+            if (!ts__default["default"].isObjectLiteralExpression(metaNode)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, metaNode, `@Injectable argument must be an object literal`);
             }
             // Resolve the fields of the literal into a map of field name to expression.
@@ -31529,7 +31527,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             let deps = undefined;
             if ((meta.has('useClass') || meta.has('useFactory')) && meta.has('deps')) {
                 const depsExpr = meta.get('deps');
-                if (!ts__default['default'].isArrayLiteralExpression(depsExpr)) {
+                if (!ts__default["default"].isArrayLiteralExpression(depsExpr)) {
                     throw new FatalDiagnosticError(ErrorCode.VALUE_NOT_LITERAL, depsExpr, `@Injectable deps metadata must be an inline array`);
                 }
                 deps = depsExpr.elements.map(dep => getDep(dep, reflector));
@@ -31636,13 +31634,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             return true;
         }
-        if (ts__default['default'].isArrayLiteralExpression(dep)) {
+        if (ts__default["default"].isArrayLiteralExpression(dep)) {
             dep.elements.forEach(el => {
                 let isDecorator = false;
-                if (ts__default['default'].isIdentifier(el)) {
+                if (ts__default["default"].isIdentifier(el)) {
                     isDecorator = maybeUpdateDecorator(el, reflector);
                 }
-                else if (ts__default['default'].isNewExpression(el) && ts__default['default'].isIdentifier(el.expression)) {
+                else if (ts__default["default"].isNewExpression(el) && ts__default["default"].isIdentifier(el.expression)) {
                     const token = el.arguments && el.arguments.length > 0 && el.arguments[0] || undefined;
                     isDecorator = maybeUpdateDecorator(el.expression, reflector, token);
                 }
@@ -31719,7 +31717,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, Decorator.nodeForError(decorator), '@Pipe must have exactly one argument');
             }
             const meta = unwrapExpression(decorator.args[0]);
-            if (!ts__default['default'].isObjectLiteralExpression(meta)) {
+            if (!ts__default["default"].isObjectLiteralExpression(meta)) {
                 throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARG_NOT_LITERAL, meta, '@Pipe must have a literal argument');
             }
             const pipe = reflectObjectLiteral(meta);
@@ -32020,11 +32018,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const imports = new Set();
                 // Look through the source file for import and export statements.
                 for (const stmt of sf.statements) {
-                    if ((!ts__default['default'].isImportDeclaration(stmt) && !ts__default['default'].isExportDeclaration(stmt)) ||
+                    if ((!ts__default["default"].isImportDeclaration(stmt) && !ts__default["default"].isExportDeclaration(stmt)) ||
                         stmt.moduleSpecifier === undefined) {
                         continue;
                     }
-                    if (ts__default['default'].isImportDeclaration(stmt) && stmt.importClause !== undefined &&
+                    if (ts__default["default"].isImportDeclaration(stmt) && stmt.importClause !== undefined &&
                         stmt.importClause.isTypeOnly) {
                         // Exclude type-only imports as they are always elided, so they don't contribute to
                         // cycles.
@@ -32036,7 +32034,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         continue;
                     }
                     const moduleFile = symbol.valueDeclaration;
-                    if (ts__default['default'].isSourceFile(moduleFile) && isLocalFile(moduleFile)) {
+                    if (ts__default["default"].isSourceFile(moduleFile) && isLocalFile(moduleFile)) {
                         // Record this local import.
                         imports.add(moduleFile);
                     }
@@ -32116,7 +32114,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         // Loop through the exported symbols, de-alias if needed, and add them to `topLevelExports`.
         // TODO(alxhub): use proper iteration when build.sh is removed. (#27762)
         exportedSymbols.forEach(symbol => {
-            if (symbol.flags & ts__default['default'].SymbolFlags.Alias) {
+            if (symbol.flags & ts__default["default"].SymbolFlags.Alias) {
                 symbol = checker.getAliasedSymbol(symbol);
             }
             const decl = symbol.valueDeclaration;
@@ -32152,7 +32150,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         visibleVia = transitivePath.map(seg => getNameOfDeclaration(seg)).join(' -> ');
                     }
                     const diagnostic = {
-                        category: ts__default['default'].DiagnosticCategory.Error,
+                        category: ts__default["default"].DiagnosticCategory.Error,
                         code: ngErrorCode(ErrorCode.SYMBOL_NOT_EXPORTED),
                         file: transitiveReference.getSourceFile(),
                         ...getPosOfDeclaration(transitiveReference),
@@ -32172,9 +32170,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         };
     }
     function getIdentifierOfDeclaration(decl) {
-        if ((ts__default['default'].isClassDeclaration(decl) || ts__default['default'].isVariableDeclaration(decl) ||
-            ts__default['default'].isFunctionDeclaration(decl)) &&
-            decl.name !== undefined && ts__default['default'].isIdentifier(decl.name)) {
+        if ((ts__default["default"].isClassDeclaration(decl) || ts__default["default"].isVariableDeclaration(decl) ||
+            ts__default["default"].isFunctionDeclaration(decl)) &&
+            decl.name !== undefined && ts__default["default"].isIdentifier(decl.name)) {
             return decl.name;
         }
         else {
@@ -32187,13 +32185,13 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function getDescriptorOfDeclaration(decl) {
         switch (decl.kind) {
-            case ts__default['default'].SyntaxKind.ClassDeclaration:
+            case ts__default["default"].SyntaxKind.ClassDeclaration:
                 return 'class';
-            case ts__default['default'].SyntaxKind.FunctionDeclaration:
+            case ts__default["default"].SyntaxKind.FunctionDeclaration:
                 return 'function';
-            case ts__default['default'].SyntaxKind.VariableDeclaration:
+            case ts__default["default"].SyntaxKind.VariableDeclaration:
                 return 'variable';
-            case ts__default['default'].SyntaxKind.EnumDeclaration:
+            case ts__default["default"].SyntaxKind.EnumDeclaration:
                 return 'enum';
             default:
                 return 'declaration';
@@ -32363,16 +32361,16 @@ Either add the @Injectable() decorator to '${provider.node.name
         // Consider all the statements.
         for (const stmt of file.statements) {
             // Look for imports to @angular/core.
-            if (ts__default['default'].isImportDeclaration(stmt) && ts__default['default'].isStringLiteral(stmt.moduleSpecifier) &&
+            if (ts__default["default"].isImportDeclaration(stmt) && ts__default["default"].isStringLiteral(stmt.moduleSpecifier) &&
                 stmt.moduleSpecifier.text === '@angular/core') {
                 // Update the import path to point to the correct file using the ImportRewriter.
                 const rewrittenModuleSpecifier = importRewriter.rewriteSpecifier('@angular/core', sourceFilePath);
                 if (rewrittenModuleSpecifier !== stmt.moduleSpecifier.text) {
-                    transformedStatements.push(ts__default['default'].updateImportDeclaration(stmt, stmt.decorators, stmt.modifiers, stmt.importClause, ts__default['default'].createStringLiteral(rewrittenModuleSpecifier)));
+                    transformedStatements.push(ts__default["default"].updateImportDeclaration(stmt, stmt.decorators, stmt.modifiers, stmt.importClause, ts__default["default"].createStringLiteral(rewrittenModuleSpecifier)));
                     // Record the identifier by which this imported module goes, so references to its symbols
                     // can be discovered later.
                     if (stmt.importClause !== undefined && stmt.importClause.namedBindings !== undefined &&
-                        ts__default['default'].isNamespaceImport(stmt.importClause.namedBindings)) {
+                        ts__default["default"].isNamespaceImport(stmt.importClause.namedBindings)) {
                         coreImportIdentifiers.add(stmt.importClause.namedBindings.name.text);
                     }
                 }
@@ -32380,10 +32378,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                     transformedStatements.push(stmt);
                 }
             }
-            else if (ts__default['default'].isVariableStatement(stmt) && stmt.declarationList.declarations.length === 1) {
+            else if (ts__default["default"].isVariableStatement(stmt) && stmt.declarationList.declarations.length === 1) {
                 const decl = stmt.declarationList.declarations[0];
                 // If this is the ɵNonEmptyModule export, then save it for later.
-                if (ts__default['default'].isIdentifier(decl.name)) {
+                if (ts__default["default"].isIdentifier(decl.name)) {
                     if (decl.name.text === 'ɵNonEmptyModule') {
                         nonEmptyExport = stmt;
                         continue;
@@ -32418,25 +32416,25 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         // Check whether the empty module export is still needed.
-        if (!transformedStatements.some(ts__default['default'].isVariableStatement) && nonEmptyExport !== null) {
+        if (!transformedStatements.some(ts__default["default"].isVariableStatement) && nonEmptyExport !== null) {
             // If the resulting file has no factories, include an empty export to
             // satisfy closure compiler.
             transformedStatements.push(nonEmptyExport);
         }
-        file = ts__default['default'].updateSourceFileNode(file, transformedStatements);
+        file = ts__default["default"].updateSourceFileNode(file, transformedStatements);
         // If any imports to @angular/core were detected and rewritten (which happens when compiling
         // @angular/core), go through the SourceFile and rewrite references to symbols imported from core.
         if (coreImportIdentifiers.size > 0) {
             const visit = (node) => {
-                node = ts__default['default'].visitEachChild(node, child => visit(child), context);
+                node = ts__default["default"].visitEachChild(node, child => visit(child), context);
                 // Look for expressions of the form "i.s" where 'i' is a detected name for an @angular/core
                 // import that was changed above. Rewrite 's' using the ImportResolver.
-                if (ts__default['default'].isPropertyAccessExpression(node) && ts__default['default'].isIdentifier(node.expression) &&
+                if (ts__default["default"].isPropertyAccessExpression(node) && ts__default["default"].isIdentifier(node.expression) &&
                     coreImportIdentifiers.has(node.expression.text)) {
                     // This is an import of a symbol from @angular/core. Transform it with the importRewriter.
                     const rewrittenSymbol = importRewriter.rewriteSymbol(node.name.text, '@angular/core');
                     if (rewrittenSymbol !== node.name.text) {
-                        const updated = ts__default['default'].updatePropertyAccess(node, node.expression, ts__default['default'].createIdentifier(rewrittenSymbol));
+                        const updated = ts__default["default"].updatePropertyAccess(node, node.expression, ts__default["default"].createIdentifier(rewrittenSymbol));
                         node = updated;
                     }
                 }
@@ -32455,20 +32453,20 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Example: Takes `1 + 2` and returns `i0.ɵnoSideEffects(() => 1 + 2)`.
      */
     function wrapInNoSideEffects(expr) {
-        const noSideEffects = ts__default['default'].createPropertyAccess(ts__default['default'].createIdentifier('i0'), 'ɵnoSideEffects');
-        return ts__default['default'].createCall(noSideEffects, 
+        const noSideEffects = ts__default["default"].createPropertyAccess(ts__default["default"].createIdentifier('i0'), 'ɵnoSideEffects');
+        return ts__default["default"].createCall(noSideEffects, 
         /* typeArguments */ [], 
         /* arguments */
         [
-            ts__default['default'].createFunctionExpression(
+            ts__default["default"].createFunctionExpression(
             /* modifiers */ [], 
             /* asteriskToken */ undefined, 
             /* name */ undefined, 
             /* typeParameters */ [], 
             /* parameters */ [], 
             /* type */ undefined, 
-            /* body */ ts__default['default'].createBlock([
-                ts__default['default'].createReturn(expr),
+            /* body */ ts__default["default"].createBlock([
+                ts__default["default"].createReturn(expr),
             ])),
         ]);
     }
@@ -32477,7 +32475,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * expression provided. Does not mutate the input statement.
      */
     function updateInitializers(stmt, update) {
-        return ts__default['default'].updateVariableStatement(stmt, stmt.modifiers, ts__default['default'].updateVariableDeclarationList(stmt.declarationList, stmt.declarationList.declarations.map((decl) => ts__default['default'].updateVariableDeclaration(decl, decl.name, decl.type, update(decl.initializer)))));
+        return ts__default["default"].updateVariableStatement(stmt, stmt.modifiers, ts__default["default"].updateVariableDeclarationList(stmt.declarationList, stmt.declarationList.declarations.map((decl) => ts__default["default"].updateVariableDeclaration(decl, decl.name, decl.type, update(decl.initializer)))));
     }
 
     /**
@@ -33525,7 +33523,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          */
         getResolvedCandidateLocations(url, fromFile) {
             // clang-format off
-            const failedLookup = ts__default['default'].resolveModuleName(url + RESOURCE_MARKER, fromFile, this.options, this.lookupResolutionHost);
+            const failedLookup = ts__default["default"].resolveModuleName(url + RESOURCE_MARKER, fromFile, this.options, this.lookupResolutionHost);
             // clang-format on
             if (failedLookup.failedLookupLocations === undefined) {
                 throw new Error(`Internal error: expected to find failedLookupLocations during resolution of resource '${url}' in context of ${fromFile}`);
@@ -34094,7 +34092,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         getExportedScope(ref, diagnostics, ownerForErrors, type) {
             if (ref.node.getSourceFile().isDeclarationFile) {
                 // The NgModule is declared in a .d.ts file. Resolve it with the `DependencyScopeReader`.
-                if (!ts__default['default'].isClassDeclaration(ref.node)) {
+                if (!ts__default["default"].isClassDeclaration(ref.node)) {
                     // The NgModule is in a .d.ts file but is not declared as a ts.ClassDeclaration. This is an
                     // error in the .d.ts metadata.
                     const code = type === 'import' ? ErrorCode.NGMODULE_INVALID_IMPORT :
@@ -34288,8 +34286,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             for (const { name, ref } of scope.compilation.pipes) {
-                if (!ts__default['default'].isClassDeclaration(ref.node)) {
-                    throw new Error(`Unexpected non-class declaration ${ts__default['default'].SyntaxKind[ref.node.kind]} for pipe ${ref.debugName}`);
+                if (!ts__default["default"].isClassDeclaration(ref.node)) {
+                    throw new Error(`Unexpected non-class declaration ${ts__default["default"].SyntaxKind[ref.node.kind]} for pipe ${ref.debugName}`);
                 }
                 pipes.set(name, ref);
             }
@@ -34334,7 +34332,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         for (let i = 0; i < sf.statements.length; i++) {
             const statement = sf.statements[i];
             // Skip over everything that isn't a variable statement.
-            if (!ts__default['default'].isVariableStatement(statement) || !hasIvySwitches(statement)) {
+            if (!ts__default["default"].isVariableStatement(statement) || !hasIvySwitches(statement)) {
                 continue;
             }
             // This statement needs to be replaced. Check if the newStatements array needs to be lazily
@@ -34348,7 +34346,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         // Only update the statements in the SourceFile if any have changed.
         if (newStatements !== undefined) {
-            return ts__default['default'].updateSourceFileNode(sf, newStatements);
+            return ts__default["default"].updateSourceFileNode(sf, newStatements);
         }
         return sf;
     }
@@ -34365,14 +34363,14 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     function findPostSwitchIdentifier(statements, name) {
         for (const stmt of statements) {
-            if (ts__default['default'].isVariableStatement(stmt)) {
-                const decl = stmt.declarationList.declarations.find(decl => ts__default['default'].isIdentifier(decl.name) && decl.name.text === name);
+            if (ts__default["default"].isVariableStatement(stmt)) {
+                const decl = stmt.declarationList.declarations.find(decl => ts__default["default"].isIdentifier(decl.name) && decl.name.text === name);
                 if (decl !== undefined) {
                     return decl.name;
                 }
             }
-            else if (ts__default['default'].isFunctionDeclaration(stmt) || ts__default['default'].isClassDeclaration(stmt)) {
-                if (stmt.name !== undefined && ts__default['default'].isIdentifier(stmt.name) && stmt.name.text === name) {
+            else if (ts__default["default"].isFunctionDeclaration(stmt) || ts__default["default"].isClassDeclaration(stmt)) {
+                if (stmt.name !== undefined && ts__default["default"].isIdentifier(stmt.name) && stmt.name.text === name) {
                     return stmt.name;
                 }
             }
@@ -34390,7 +34388,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         for (let i = 0; i < newDeclarations.length; i++) {
             const decl = newDeclarations[i];
             // Skip declarations that aren't initialized to an identifier.
-            if (decl.initializer === undefined || !ts__default['default'].isIdentifier(decl.initializer)) {
+            if (decl.initializer === undefined || !ts__default["default"].isIdentifier(decl.initializer)) {
                 continue;
             }
             // Skip declarations that aren't Ivy switches.
@@ -34405,16 +34403,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (newIdentifier === null) {
                 throw new Error(`Unable to find identifier ${postSwitchName} in ${stmt.getSourceFile().fileName} for the Ivy switch.`);
             }
-            newDeclarations[i] = ts__default['default'].updateVariableDeclaration(
+            newDeclarations[i] = ts__default["default"].updateVariableDeclaration(
             /* node */ decl, 
             /* name */ decl.name, 
             /* type */ decl.type, 
             /* initializer */ newIdentifier);
         }
-        const newDeclList = ts__default['default'].updateVariableDeclarationList(
+        const newDeclList = ts__default["default"].updateVariableDeclarationList(
         /* declarationList */ stmt.declarationList, 
         /* declarations */ newDeclarations);
-        const newStmt = ts__default['default'].updateVariableStatement(
+        const newStmt = ts__default["default"].updateVariableStatement(
         /* statement */ stmt, 
         /* modifiers */ stmt.modifiers, 
         /* declarationList */ newDeclList);
@@ -34424,7 +34422,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Check whether the given VariableStatement has any Ivy switch variables.
      */
     function hasIvySwitches(stmt) {
-        return stmt.declarationList.declarations.some(decl => decl.initializer !== undefined && ts__default['default'].isIdentifier(decl.initializer) &&
+        return stmt.declarationList.declarations.some(decl => decl.initializer !== undefined && ts__default["default"].isIdentifier(decl.initializer) &&
             decl.initializer.text.endsWith(IVY_SWITCH_PRE_SUFFIX));
     }
 
@@ -34514,7 +34512,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 relatedInformation = [];
                 for (const relatedMessage of relatedMessages) {
                     relatedInformation.push({
-                        category: ts__default['default'].DiagnosticCategory.Message,
+                        category: ts__default["default"].DiagnosticCategory.Message,
                         code: 0,
                         file: relatedMessage.sourceFile,
                         start: relatedMessage.start,
@@ -34553,12 +34551,12 @@ Either add the @Injectable() decorator to '${provider.node.name
             // TODO(alxhub): investigate creating a fake `ts.SourceFile` here instead of invoking the TS
             // parser against the template (HTML is just really syntactically invalid TypeScript code ;).
             // Also investigate caching the file to avoid running the parser multiple times.
-            const sf = ts__default['default'].createSourceFile(fileName, mapping.template, ts__default['default'].ScriptTarget.Latest, false, ts__default['default'].ScriptKind.JSX);
+            const sf = ts__default["default"].createSourceFile(fileName, mapping.template, ts__default["default"].ScriptTarget.Latest, false, ts__default["default"].ScriptKind.JSX);
             let relatedInformation = [];
             if (relatedMessages !== undefined) {
                 for (const relatedMessage of relatedMessages) {
                     relatedInformation.push({
-                        category: ts__default['default'].DiagnosticCategory.Message,
+                        category: ts__default["default"].DiagnosticCategory.Message,
                         code: 0,
                         file: relatedMessage.sourceFile,
                         start: relatedMessage.start,
@@ -34568,7 +34566,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
             }
             relatedInformation.push({
-                category: ts__default['default'].DiagnosticCategory.Message,
+                category: ts__default["default"].DiagnosticCategory.Message,
                 code: 0,
                 file: componentSf,
                 // mapping.node represents either the 'template' or 'templateUrl' expression. getStart()
@@ -34634,8 +34632,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Will return `null` if no trailing comments on the node match the expected form of a source span.
      */
     function readSpanComment(node, sourceFile = node.getSourceFile()) {
-        return ts__default['default'].forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts__default['default'].SyntaxKind.MultiLineCommentTrivia) {
+        return ts__default["default"].forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts__default["default"].SyntaxKind.MultiLineCommentTrivia) {
                 return null;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
@@ -34661,7 +34659,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     })(ExpressionIdentifier || (ExpressionIdentifier = {}));
     /** Tags the node with the given expression identifier. */
     function addExpressionIdentifier(node, identifier) {
-        ts__default['default'].addSyntheticTrailingComment(node, ts__default['default'].SyntaxKind.MultiLineCommentTrivia, `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`, 
+        ts__default["default"].addSyntheticTrailingComment(node, ts__default["default"].SyntaxKind.MultiLineCommentTrivia, `${CommentTriviaType.EXPRESSION_TYPE_IDENTIFIER}:${identifier}`, 
         /* hasTrailingNewLine */ false);
     }
     const IGNORE_FOR_DIAGNOSTICS_MARKER = `${CommentTriviaType.DIAGNOSTIC}:ignore`;
@@ -34670,13 +34668,13 @@ Either add the @Injectable() decorator to '${provider.node.name
      * should be ignored.
      */
     function markIgnoreDiagnostics(node) {
-        ts__default['default'].addSyntheticTrailingComment(node, ts__default['default'].SyntaxKind.MultiLineCommentTrivia, IGNORE_FOR_DIAGNOSTICS_MARKER, 
+        ts__default["default"].addSyntheticTrailingComment(node, ts__default["default"].SyntaxKind.MultiLineCommentTrivia, IGNORE_FOR_DIAGNOSTICS_MARKER, 
         /* hasTrailingNewLine */ false);
     }
     /** Returns true if the node has a marker that indicates diagnostics errors should be ignored.  */
     function hasIgnoreForDiagnosticsMarker(node, sourceFile) {
-        return ts__default['default'].forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts__default['default'].SyntaxKind.MultiLineCommentTrivia) {
+        return ts__default["default"].forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts__default["default"].SyntaxKind.MultiLineCommentTrivia) {
                 return null;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
@@ -34766,8 +34764,8 @@ Either add the @Injectable() decorator to '${provider.node.name
         return results;
     }
     function hasExpressionIdentifier(sourceFile, node, identifier) {
-        return ts__default['default'].forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
-            if (kind !== ts__default['default'].SyntaxKind.MultiLineCommentTrivia) {
+        return ts__default["default"].forEachTrailingCommentRange(sourceFile.text, node.getEnd(), (pos, end, kind) => {
+            if (kind !== ts__default["default"].SyntaxKind.MultiLineCommentTrivia) {
                 return false;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
@@ -34801,7 +34799,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.expressionCompletionCache = new Map();
             // Find the component completion expression within the TCB. This looks like: `ctx. /* ... */;`
             const globalRead = findFirstMatchingNode(this.tcb, {
-                filter: ts__default['default'].isPropertyAccessExpression,
+                filter: ts__default["default"].isPropertyAccessExpression,
                 withExpressionIdentifier: ExpressionIdentifier.COMPONENT_COMPLETION
             });
             if (globalRead !== null) {
@@ -34836,7 +34834,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             let nodeContext = null;
             if (node instanceof EmptyExpr) {
                 const nodeLocation = findFirstMatchingNode(this.tcb, {
-                    filter: ts__default['default'].isIdentifier,
+                    filter: ts__default["default"].isIdentifier,
                     withSpan: node.sourceSpan,
                 });
                 if (nodeLocation !== null) {
@@ -34848,7 +34846,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             if (node instanceof PropertyRead && node.receiver instanceof ImplicitReceiver) {
                 const nodeLocation = findFirstMatchingNode(this.tcb, {
-                    filter: ts__default['default'].isPropertyAccessExpression,
+                    filter: ts__default["default"].isPropertyAccessExpression,
                     withSpan: node.sourceSpan,
                 });
                 if (nodeLocation) {
@@ -34873,7 +34871,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (expr instanceof PropertyRead || expr instanceof PropertyWrite) {
                 // Non-safe navigation operations are trivial: `foo.bar` or `foo.bar()`
                 tsExpr = findFirstMatchingNode(this.tcb, {
-                    filter: ts__default['default'].isPropertyAccessExpression,
+                    filter: ts__default["default"].isPropertyAccessExpression,
                     withSpan: expr.nameSpan,
                 });
             }
@@ -34881,17 +34879,17 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Safe navigation operations are a little more complex, and involve a ternary. Completion
                 // happens in the "true" case of the ternary.
                 const ternaryExpr = findFirstMatchingNode(this.tcb, {
-                    filter: ts__default['default'].isParenthesizedExpression,
+                    filter: ts__default["default"].isParenthesizedExpression,
                     withSpan: expr.sourceSpan,
                 });
-                if (ternaryExpr === null || !ts__default['default'].isConditionalExpression(ternaryExpr.expression)) {
+                if (ternaryExpr === null || !ts__default["default"].isConditionalExpression(ternaryExpr.expression)) {
                     return null;
                 }
                 const whenTrue = ternaryExpr.expression.whenTrue;
-                if (ts__default['default'].isPropertyAccessExpression(whenTrue)) {
+                if (ts__default["default"].isPropertyAccessExpression(whenTrue)) {
                     tsExpr = whenTrue;
                 }
-                else if (ts__default['default'].isCallExpression(whenTrue) && ts__default['default'].isPropertyAccessExpression(whenTrue.expression)) {
+                else if (ts__default["default"].isCallExpression(whenTrue) && ts__default["default"].isPropertyAccessExpression(whenTrue.expression)) {
                     tsExpr = whenTrue.expression;
                 }
             }
@@ -34912,16 +34910,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             let tsExpr = null;
             if (expr instanceof TextAttribute) {
                 const strNode = findFirstMatchingNode(this.tcb, {
-                    filter: ts__default['default'].isParenthesizedExpression,
+                    filter: ts__default["default"].isParenthesizedExpression,
                     withSpan: expr.sourceSpan,
                 });
-                if (strNode !== null && ts__default['default'].isStringLiteral(strNode.expression)) {
+                if (strNode !== null && ts__default["default"].isStringLiteral(strNode.expression)) {
                     tsExpr = strNode.expression;
                 }
             }
             else {
                 tsExpr = findFirstMatchingNode(this.tcb, {
-                    filter: (n) => ts__default['default'].isStringLiteral(n) || ts__default['default'].isNumericLiteral(n),
+                    filter: (n) => ts__default["default"].isStringLiteral(n) || ts__default["default"].isNumericLiteral(n),
                     withSpan: expr.sourceSpan,
                 });
             }
@@ -34929,7 +34927,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             let positionInShimFile = tsExpr.getEnd();
-            if (ts__default['default'].isStringLiteral(tsExpr)) {
+            if (ts__default["default"].isStringLiteral(tsExpr)) {
                 // In the shimFile, if `tsExpr` is a string, the position should be in the quotes.
                 positionInShimFile -= 1;
             }
@@ -35008,7 +35006,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     errorMsg +=
                         `2. To allow any element add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`;
                 }
-                const diag = makeTemplateDiagnostic(id, mapping, element.startSourceSpan, ts__default['default'].DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ELEMENT), errorMsg);
+                const diag = makeTemplateDiagnostic(id, mapping, element.startSourceSpan, ts__default["default"].DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ELEMENT), errorMsg);
                 this._diagnostics.push(diag);
             }
         }
@@ -35028,7 +35026,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                             .name}' is a Web Component then add 'CUSTOM_ELEMENTS_SCHEMA' to the '@NgModule.schemas' of this component to suppress this message.` +
                             `\n3. To allow any property add 'NO_ERRORS_SCHEMA' to the '@NgModule.schemas' of this component.`;
                 }
-                const diag = makeTemplateDiagnostic(id, mapping, span, ts__default['default'].DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ATTRIBUTE), errorMsg);
+                const diag = makeTemplateDiagnostic(id, mapping, span, ts__default["default"].DiagnosticCategory.Error, ngErrorCode(ErrorCode.SCHEMA_INVALID_ATTRIBUTE), errorMsg);
                 this._diagnostics.push(diag);
             }
         }
@@ -35054,30 +35052,30 @@ Either add the @Injectable() decorator to '${provider.node.name
     //
     const SAFE_TO_CAST_WITHOUT_PARENS = new Set([
         // Expressions which are already parenthesized can be cast without further wrapping.
-        ts__default['default'].SyntaxKind.ParenthesizedExpression,
+        ts__default["default"].SyntaxKind.ParenthesizedExpression,
         // Expressions which form a single lexical unit leave no room for precedence issues with the cast.
-        ts__default['default'].SyntaxKind.Identifier,
-        ts__default['default'].SyntaxKind.CallExpression,
-        ts__default['default'].SyntaxKind.NonNullExpression,
-        ts__default['default'].SyntaxKind.ElementAccessExpression,
-        ts__default['default'].SyntaxKind.PropertyAccessExpression,
-        ts__default['default'].SyntaxKind.ArrayLiteralExpression,
-        ts__default['default'].SyntaxKind.ObjectLiteralExpression,
+        ts__default["default"].SyntaxKind.Identifier,
+        ts__default["default"].SyntaxKind.CallExpression,
+        ts__default["default"].SyntaxKind.NonNullExpression,
+        ts__default["default"].SyntaxKind.ElementAccessExpression,
+        ts__default["default"].SyntaxKind.PropertyAccessExpression,
+        ts__default["default"].SyntaxKind.ArrayLiteralExpression,
+        ts__default["default"].SyntaxKind.ObjectLiteralExpression,
         // The same goes for various literals.
-        ts__default['default'].SyntaxKind.StringLiteral,
-        ts__default['default'].SyntaxKind.NumericLiteral,
-        ts__default['default'].SyntaxKind.TrueKeyword,
-        ts__default['default'].SyntaxKind.FalseKeyword,
-        ts__default['default'].SyntaxKind.NullKeyword,
-        ts__default['default'].SyntaxKind.UndefinedKeyword,
+        ts__default["default"].SyntaxKind.StringLiteral,
+        ts__default["default"].SyntaxKind.NumericLiteral,
+        ts__default["default"].SyntaxKind.TrueKeyword,
+        ts__default["default"].SyntaxKind.FalseKeyword,
+        ts__default["default"].SyntaxKind.NullKeyword,
+        ts__default["default"].SyntaxKind.UndefinedKeyword,
     ]);
     function tsCastToAny(expr) {
         // Wrap `expr` in parentheses if needed (see `SAFE_TO_CAST_WITHOUT_PARENS` above).
         if (!SAFE_TO_CAST_WITHOUT_PARENS.has(expr.kind)) {
-            expr = ts__default['default'].createParen(expr);
+            expr = ts__default["default"].createParen(expr);
         }
         // The outer expression is always wrapped in parentheses.
-        return ts__default['default'].createParen(ts__default['default'].createAsExpression(expr, ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword)));
+        return ts__default["default"].createParen(ts__default["default"].createAsExpression(expr, ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword)));
     }
     /**
      * Create an expression which instantiates an element by its HTML tagName.
@@ -35086,12 +35084,12 @@ Either add the @Injectable() decorator to '${provider.node.name
      * based on the tag name, including for custom elements that have appropriate .d.ts definitions.
      */
     function tsCreateElement(tagName) {
-        const createElement = ts__default['default'].createPropertyAccess(
-        /* expression */ ts__default['default'].createIdentifier('document'), 'createElement');
-        return ts__default['default'].createCall(
+        const createElement = ts__default["default"].createPropertyAccess(
+        /* expression */ ts__default["default"].createIdentifier('document'), 'createElement');
+        return ts__default["default"].createCall(
         /* expression */ createElement, 
         /* typeArguments */ undefined, 
-        /* argumentsArray */ [ts__default['default'].createLiteral(tagName)]);
+        /* argumentsArray */ [ts__default["default"].createLiteral(tagName)]);
     }
     /**
      * Create a `ts.VariableStatement` which declares a variable without explicit initialization.
@@ -35101,11 +35099,11 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Unlike with `tsCreateVariable`, the type of the variable is explicitly specified.
      */
     function tsDeclareVariable(id, type) {
-        const decl = ts__default['default'].createVariableDeclaration(
+        const decl = ts__default["default"].createVariableDeclaration(
         /* name */ id, 
         /* type */ type, 
-        /* initializer */ ts__default['default'].createNonNullExpression(ts__default['default'].createNull()));
-        return ts__default['default'].createVariableStatement(
+        /* initializer */ ts__default["default"].createNonNullExpression(ts__default["default"].createNull()));
+        return ts__default["default"].createVariableStatement(
         /* modifiers */ undefined, 
         /* declarationList */ [decl]);
     }
@@ -35119,7 +35117,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * @param coercedInputName The field name of the coerced input.
      */
     function tsCreateTypeQueryForCoercedInput(typeName, coercedInputName) {
-        return ts__default['default'].createTypeQueryNode(ts__default['default'].createQualifiedName(typeName, `ngAcceptInputType_${coercedInputName}`));
+        return ts__default["default"].createTypeQueryNode(ts__default["default"].createQualifiedName(typeName, `ngAcceptInputType_${coercedInputName}`));
     }
     /**
      * Create a `ts.VariableStatement` that initializes a variable with a given expression.
@@ -35128,11 +35126,11 @@ Either add the @Injectable() decorator to '${provider.node.name
      * expression.
      */
     function tsCreateVariable(id, initializer) {
-        const decl = ts__default['default'].createVariableDeclaration(
+        const decl = ts__default["default"].createVariableDeclaration(
         /* name */ id, 
         /* type */ undefined, 
         /* initializer */ initializer);
-        return ts__default['default'].createVariableStatement(
+        return ts__default["default"].createVariableStatement(
         /* modifiers */ undefined, 
         /* declarationList */ [decl]);
     }
@@ -35140,8 +35138,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Construct a `ts.CallExpression` that calls a method on a receiver.
      */
     function tsCallMethod(receiver, methodName, args = []) {
-        const methodAccess = ts__default['default'].createPropertyAccess(receiver, methodName);
-        return ts__default['default'].createCall(
+        const methodAccess = ts__default["default"].createPropertyAccess(receiver, methodName);
+        return ts__default["default"].createCall(
         /* expression */ methodAccess, 
         /* typeArguments */ undefined, 
         /* argumentsArray */ args);
@@ -35151,11 +35149,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         // 1) it has the 'export' modifier.
         // 2) it's declared at the top level, and there is an export statement for the class.
         if (node.modifiers !== undefined &&
-            node.modifiers.some(mod => mod.kind === ts__default['default'].SyntaxKind.ExportKeyword)) {
+            node.modifiers.some(mod => mod.kind === ts__default["default"].SyntaxKind.ExportKeyword)) {
             // Condition 1 is true, the class has an 'export' keyword attached.
             return true;
         }
-        else if (node.parent !== undefined && ts__default['default'].isSourceFile(node.parent) &&
+        else if (node.parent !== undefined && ts__default["default"].isSourceFile(node.parent) &&
             checkIfFileHasExport(node.parent, node.name.text)) {
             // Condition 2 is true, the class is exported via an 'export {}' statement.
             return true;
@@ -35164,8 +35162,8 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function checkIfFileHasExport(sf, name) {
         for (const stmt of sf.statements) {
-            if (ts__default['default'].isExportDeclaration(stmt) && stmt.exportClause !== undefined &&
-                ts__default['default'].isNamedExports(stmt.exportClause)) {
+            if (ts__default["default"].isExportDeclaration(stmt) && stmt.exportClause !== undefined &&
+                ts__default["default"].isNamedExports(stmt.exportClause)) {
                 for (const element of stmt.exportClause.elements) {
                     if (element.propertyName === undefined && element.name.text === name) {
                         // The named declaration is directly exported.
@@ -35181,7 +35179,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         return false;
     }
     function isAccessExpression(node) {
-        return ts__default['default'].isPropertyAccessExpression(node) || ts__default['default'].isElementAccessExpression(node);
+        return ts__default["default"].isPropertyAccessExpression(node) || ts__default["default"].isElementAccessExpression(node);
     }
 
     /**
@@ -35214,17 +35212,17 @@ Either add the @Injectable() decorator to '${provider.node.name
         function visitNode(node) {
             // `import('module')` type nodes are not supported, as it may require rewriting the module
             // specifier which is currently not done.
-            if (ts__default['default'].isImportTypeNode(node)) {
+            if (ts__default["default"].isImportTypeNode(node)) {
                 return INELIGIBLE;
             }
             // Emitting a type reference node in a different context requires that an import for the type
             // can be created. If a type reference node cannot be emitted, `INELIGIBLE` is returned to stop
             // the walk.
-            if (ts__default['default'].isTypeReferenceNode(node) && !canEmitTypeReference(node)) {
+            if (ts__default["default"].isTypeReferenceNode(node) && !canEmitTypeReference(node)) {
                 return INELIGIBLE;
             }
             else {
-                return ts__default['default'].forEachChild(node, visitNode);
+                return ts__default["default"].forEachChild(node, visitNode);
             }
         }
         function canEmitTypeReference(type) {
@@ -35279,30 +35277,30 @@ Either add the @Injectable() decorator to '${provider.node.name
         emitType(type) {
             const typeReferenceTransformer = context => {
                 const visitNode = (node) => {
-                    if (ts__default['default'].isImportTypeNode(node)) {
+                    if (ts__default["default"].isImportTypeNode(node)) {
                         throw new Error('Unable to emit import type');
                     }
-                    if (ts__default['default'].isTypeReferenceNode(node)) {
+                    if (ts__default["default"].isTypeReferenceNode(node)) {
                         return this.emitTypeReference(node);
                     }
-                    else if (ts__default['default'].isLiteralExpression(node)) {
+                    else if (ts__default["default"].isLiteralExpression(node)) {
                         // TypeScript would typically take the emit text for a literal expression from the source
                         // file itself. As the type node is being emitted into a different file, however,
                         // TypeScript would extract the literal text from the wrong source file. To mitigate this
                         // issue the literal is cloned and explicitly marked as synthesized by setting its text
                         // range to a negative range, forcing TypeScript to determine the node's literal text from
                         // the synthesized node's text instead of the incorrect source file.
-                        const clone = ts__default['default'].getMutableClone(node);
-                        ts__default['default'].setTextRange(clone, { pos: -1, end: -1 });
+                        const clone = ts__default["default"].getMutableClone(node);
+                        ts__default["default"].setTextRange(clone, { pos: -1, end: -1 });
                         return clone;
                     }
                     else {
-                        return ts__default['default'].visitEachChild(node, visitNode, context);
+                        return ts__default["default"].visitEachChild(node, visitNode, context);
                     }
                 };
-                return node => ts__default['default'].visitNode(node, visitNode);
+                return node => ts__default["default"].visitNode(node, visitNode);
             };
-            return ts__default['default'].transform(type, [typeReferenceTransformer]).transformed[0];
+            return ts__default["default"].transform(type, [typeReferenceTransformer]).transformed[0];
         }
         emitTypeReference(type) {
             // Determine the reference that the type corresponds with.
@@ -35313,18 +35311,18 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Emit the type arguments, if any.
             let typeArguments = undefined;
             if (type.typeArguments !== undefined) {
-                typeArguments = ts__default['default'].createNodeArray(type.typeArguments.map(typeArg => this.emitType(typeArg)));
+                typeArguments = ts__default["default"].createNodeArray(type.typeArguments.map(typeArg => this.emitType(typeArg)));
             }
             // Emit the type name.
             let typeName = type.typeName;
             if (reference instanceof Reference) {
                 const emittedType = this.emitReference(reference);
-                if (!ts__default['default'].isTypeReferenceNode(emittedType)) {
-                    throw new Error(`Expected TypeReferenceNode for emitted reference, got ${ts__default['default'].SyntaxKind[emittedType.kind]}`);
+                if (!ts__default["default"].isTypeReferenceNode(emittedType)) {
+                    throw new Error(`Expected TypeReferenceNode for emitted reference, got ${ts__default["default"].SyntaxKind[emittedType.kind]}`);
                 }
                 typeName = emittedType.typeName;
             }
-            return ts__default['default'].updateTypeReferenceNode(type, typeName, typeArguments);
+            return ts__default["default"].updateTypeReferenceNode(type, typeName, typeArguments);
         }
     }
 
@@ -35373,7 +35371,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             return this.typeParameters.map(typeParam => {
                 const constraint = typeParam.constraint !== undefined ? emitter.emitType(typeParam.constraint) : undefined;
                 const defaultType = typeParam.default !== undefined ? emitter.emitType(typeParam.default) : undefined;
-                return ts__default['default'].updateTypeParameterDeclaration(
+                return ts__default["default"].updateTypeParameterDeclaration(
                 /* node */ typeParam, 
                 /* name */ typeParam.name, 
                 /* constraint */ constraint, 
@@ -35381,7 +35379,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             });
         }
         resolveTypeReference(type) {
-            const target = ts__default['default'].isIdentifier(type.typeName) ? type.typeName : type.typeName.right;
+            const target = ts__default["default"].isIdentifier(type.typeName) ? type.typeName : type.typeName.right;
             const declaration = this.reflector.getDeclarationOfIdentifier(target);
             // If no declaration could be resolved or does not have a `ts.Declaration`, the type cannot be
             // resolved.
@@ -35408,7 +35406,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             return new Reference(declaration.node, owningModule);
         }
         isTopLevelExport(decl) {
-            if (decl.parent === undefined || !ts__default['default'].isSourceFile(decl.parent)) {
+            if (decl.parent === undefined || !ts__default["default"].isSourceFile(decl.parent)) {
                 // The declaration has to exist at the top-level, as the reference emitters are not capable of
                 // generating imports to classes declared in a namespace.
                 return false;
@@ -35492,7 +35490,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function findTypeCheckBlock(file, id, isDiagnosticRequest) {
         for (const stmt of file.statements) {
-            if (ts__default['default'].isFunctionDeclaration(stmt) && getTemplateId(stmt, file, isDiagnosticRequest) === id) {
+            if (ts__default["default"].isFunctionDeclaration(stmt) && getTemplateId(stmt, file, isDiagnosticRequest) === id) {
                 return stmt;
             }
         }
@@ -35506,7 +35504,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     function findSourceLocation(node, sourceFile, isDiagnosticsRequest) {
         // Search for comments until the TCB's function declaration is encountered.
-        while (node !== undefined && !ts__default['default'].isFunctionDeclaration(node)) {
+        while (node !== undefined && !ts__default["default"].isFunctionDeclaration(node)) {
             if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticsRequest) {
                 // There's an ignore marker on this node, so the diagnostic should not be reported.
                 return null;
@@ -35527,7 +35525,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function getTemplateId(node, sourceFile, isDiagnosticRequest) {
         // Walk up to the function declaration of the TCB, the file information is attached there.
-        while (!ts__default['default'].isFunctionDeclaration(node)) {
+        while (!ts__default["default"].isFunctionDeclaration(node)) {
             if (hasIgnoreForDiagnosticsMarker(node, sourceFile) && isDiagnosticRequest) {
                 // There's an ignore marker on this node, so the diagnostic should not be reported.
                 return null;
@@ -35539,8 +35537,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         const start = node.getFullStart();
-        return ts__default['default'].forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
-            if (kind !== ts__default['default'].SyntaxKind.MultiLineCommentTrivia) {
+        return ts__default["default"].forEachLeadingCommentRange(sourceFile.text, start, (pos, end, kind) => {
+            if (kind !== ts__default["default"].SyntaxKind.MultiLineCommentTrivia) {
                 return null;
             }
             const commentText = sourceFile.text.substring(pos + 2, end - 2);
@@ -35564,27 +35562,27 @@ Either add the @Injectable() decorator to '${provider.node.name
             throw new Error(`${node.name.text} requires an inline type constructor`);
         }
         const rawTypeArgs = typeParams !== undefined ? generateGenericArgs(typeParams) : undefined;
-        const rawType = ts__default['default'].createTypeReferenceNode(nodeTypeRef, rawTypeArgs);
+        const rawType = ts__default["default"].createTypeReferenceNode(nodeTypeRef, rawTypeArgs);
         const initParam = constructTypeCtorParameter(node, meta, rawType);
         const typeParameters = typeParametersWithDefaultTypes(typeParams);
         if (meta.body) {
-            const fnType = ts__default['default'].createFunctionTypeNode(
+            const fnType = ts__default["default"].createFunctionTypeNode(
             /* typeParameters */ typeParameters, 
             /* parameters */ [initParam], 
             /* type */ rawType);
-            const decl = ts__default['default'].createVariableDeclaration(
+            const decl = ts__default["default"].createVariableDeclaration(
             /* name */ meta.fnName, 
             /* type */ fnType, 
-            /* body */ ts__default['default'].createNonNullExpression(ts__default['default'].createNull()));
-            const declList = ts__default['default'].createVariableDeclarationList([decl], ts__default['default'].NodeFlags.Const);
-            return ts__default['default'].createVariableStatement(
+            /* body */ ts__default["default"].createNonNullExpression(ts__default["default"].createNull()));
+            const declList = ts__default["default"].createVariableDeclarationList([decl], ts__default["default"].NodeFlags.Const);
+            return ts__default["default"].createVariableStatement(
             /* modifiers */ undefined, 
             /* declarationList */ declList);
         }
         else {
-            return ts__default['default'].createFunctionDeclaration(
+            return ts__default["default"].createFunctionDeclaration(
             /* decorators */ undefined, 
-            /* modifiers */ [ts__default['default'].createModifier(ts__default['default'].SyntaxKind.DeclareKeyword)], 
+            /* modifiers */ [ts__default["default"].createModifier(ts__default["default"].SyntaxKind.DeclareKeyword)], 
             /* asteriskToken */ undefined, 
             /* name */ meta.fnName, 
             /* typeParameters */ typeParameters, 
@@ -35633,21 +35631,21 @@ Either add the @Injectable() decorator to '${provider.node.name
         // the definition without any type bounds. For example, if the class is
         // `FooDirective<T extends Bar>`, its rawType would be `FooDirective<T>`.
         const rawTypeArgs = node.typeParameters !== undefined ? generateGenericArgs(node.typeParameters) : undefined;
-        const rawType = ts__default['default'].createTypeReferenceNode(node.name, rawTypeArgs);
+        const rawType = ts__default["default"].createTypeReferenceNode(node.name, rawTypeArgs);
         const initParam = constructTypeCtorParameter(node, meta, rawType);
         // If this constructor is being generated into a .ts file, then it needs a fake body. The body
         // is set to a return of `null!`. If the type constructor is being generated into a .d.ts file,
         // it needs no body.
         let body = undefined;
         if (meta.body) {
-            body = ts__default['default'].createBlock([
-                ts__default['default'].createReturn(ts__default['default'].createNonNullExpression(ts__default['default'].createNull())),
+            body = ts__default["default"].createBlock([
+                ts__default["default"].createReturn(ts__default["default"].createNonNullExpression(ts__default["default"].createNull())),
             ]);
         }
         // Create the type constructor method declaration.
-        return ts__default['default'].createMethod(
+        return ts__default["default"].createMethod(
         /* decorators */ undefined, 
-        /* modifiers */ [ts__default['default'].createModifier(ts__default['default'].SyntaxKind.StaticKeyword)], 
+        /* modifiers */ [ts__default["default"].createModifier(ts__default["default"].SyntaxKind.StaticKeyword)], 
         /* asteriskToken */ undefined, 
         /* name */ meta.fnName, 
         /* questionToken */ undefined, 
@@ -35672,10 +35670,10 @@ Either add the @Injectable() decorator to '${provider.node.name
         const coercedKeys = [];
         for (const key of keys) {
             if (!meta.coercedInputFields.has(key)) {
-                plainKeys.push(ts__default['default'].createLiteralTypeNode(ts__default['default'].createStringLiteral(key)));
+                plainKeys.push(ts__default["default"].createLiteralTypeNode(ts__default["default"].createStringLiteral(key)));
             }
             else {
-                coercedKeys.push(ts__default['default'].createPropertySignature(
+                coercedKeys.push(ts__default["default"].createPropertySignature(
                 /* modifiers */ undefined, 
                 /* name */ key, 
                 /* questionToken */ undefined, 
@@ -35685,21 +35683,21 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         if (plainKeys.length > 0) {
             // Construct a union of all the field names.
-            const keyTypeUnion = ts__default['default'].createUnionTypeNode(plainKeys);
+            const keyTypeUnion = ts__default["default"].createUnionTypeNode(plainKeys);
             // Construct the Pick<rawType, keyTypeUnion>.
-            initType = ts__default['default'].createTypeReferenceNode('Pick', [rawType, keyTypeUnion]);
+            initType = ts__default["default"].createTypeReferenceNode('Pick', [rawType, keyTypeUnion]);
         }
         if (coercedKeys.length > 0) {
-            const coercedLiteral = ts__default['default'].createTypeLiteralNode(coercedKeys);
-            initType = initType !== null ? ts__default['default'].createIntersectionTypeNode([initType, coercedLiteral]) :
+            const coercedLiteral = ts__default["default"].createTypeLiteralNode(coercedKeys);
+            initType = initType !== null ? ts__default["default"].createIntersectionTypeNode([initType, coercedLiteral]) :
                 coercedLiteral;
         }
         if (initType === null) {
             // Special case - no inputs, outputs, or other fields which could influence the result type.
-            initType = ts__default['default'].createTypeLiteralNode([]);
+            initType = ts__default["default"].createTypeLiteralNode([]);
         }
         // Create the 'init' parameter itself.
-        return ts__default['default'].createParameter(
+        return ts__default["default"].createParameter(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* dotDotDotToken */ undefined, 
@@ -35709,7 +35707,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         /* initializer */ undefined);
     }
     function generateGenericArgs(params) {
-        return params.map(param => ts__default['default'].createTypeReferenceNode(param.name, undefined));
+        return params.map(param => ts__default["default"].createTypeReferenceNode(param.name, undefined));
     }
     function requiresInlineTypeCtor(node, host) {
         // The class requires an inline type constructor if it has generic type bounds that can not be
@@ -35764,11 +35762,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         return params.map(param => {
             if (param.default === undefined) {
-                return ts__default['default'].updateTypeParameterDeclaration(
+                return ts__default["default"].updateTypeParameterDeclaration(
                 /* node */ param, 
                 /* name */ param.name, 
                 /* constraint */ param.constraint, 
-                /* defaultType */ ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword));
+                /* defaultType */ ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword));
             }
             else {
                 return param;
@@ -35826,14 +35824,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // The constructor has already been created inline, we just need to construct a reference to
                 // it.
                 const ref = this.reference(dirRef);
-                const typeCtorExpr = ts__default['default'].createPropertyAccess(ref, 'ngTypeCtor');
+                const typeCtorExpr = ts__default["default"].createPropertyAccess(ref, 'ngTypeCtor');
                 this.typeCtors.set(node, typeCtorExpr);
                 return typeCtorExpr;
             }
             else {
                 const fnName = `_ctor${this.nextIds.typeCtor++}`;
                 const nodeTypeRef = this.referenceType(dirRef);
-                if (!ts__default['default'].isTypeReferenceNode(nodeTypeRef)) {
+                if (!ts__default["default"].isTypeReferenceNode(nodeTypeRef)) {
                     throw new Error(`Expected TypeReferenceNode from reference to ${dirRef.debugName}`);
                 }
                 const meta = {
@@ -35850,7 +35848,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const typeParams = this.emitTypeParameters(node);
                 const typeCtor = generateTypeCtorDeclarationFn(node, meta, nodeTypeRef.typeName, typeParams, this.reflector);
                 this.typeCtorStatements.push(typeCtor);
-                const fnId = ts__default['default'].createIdentifier(fnName);
+                const fnId = ts__default["default"].createIdentifier(fnName);
                 this.typeCtors.set(node, fnId);
                 return fnId;
             }
@@ -35863,7 +35861,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return this.pipeInsts.get(ref.node);
             }
             const pipeType = this.referenceType(ref);
-            const pipeInstId = ts__default['default'].createIdentifier(`_pipe${this.nextIds.pipeInst++}`);
+            const pipeInstId = ts__default["default"].createIdentifier(`_pipe${this.nextIds.pipeInst++}`);
             this.pipeInstStatements.push(tsDeclareVariable(pipeInstId, pipeType));
             this.pipeInsts.set(ref.node, pipeInstId);
             return pipeInstId;
@@ -35939,7 +35937,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const mapping = this.resolver.getSourceMapping(templateId);
             const value = ref.value.trim();
             const errorMsg = `No directive found with exportAs '${value}'.`;
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, ref.valueSpan || ref.sourceSpan, ts__default['default'].DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_REFERENCE_TARGET), errorMsg));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, ref.valueSpan || ref.sourceSpan, ts__default["default"].DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_REFERENCE_TARGET), errorMsg));
         }
         missingPipe(templateId, ast) {
             if (this.recordedPipes.has(ast)) {
@@ -35951,7 +35949,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (sourceSpan === null) {
                 throw new Error(`Assertion failure: no SourceLocation found for usage of pipe '${ast.name}'.`);
             }
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts__default['default'].DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_PIPE), errorMsg));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts__default["default"].DiagnosticCategory.Error, ngErrorCode(ErrorCode.MISSING_PIPE), errorMsg));
             this.recordedPipes.add(ast);
         }
         illegalAssignmentToTemplateVar(templateId, assignment, target) {
@@ -35962,7 +35960,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (sourceSpan === null) {
                 throw new Error(`Assertion failure: no SourceLocation found for property binding.`);
             }
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts__default['default'].DiagnosticCategory.Error, ngErrorCode(ErrorCode.WRITE_TO_READ_ONLY_VARIABLE), errorMsg, [{
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, sourceSpan, ts__default["default"].DiagnosticCategory.Error, ngErrorCode(ErrorCode.WRITE_TO_READ_ONLY_VARIABLE), errorMsg, [{
                     text: `The variable ${assignment.name} is declared here.`,
                     start: target.valueSpan?.start.offset || target.sourceSpan.start.offset,
                     end: target.valueSpan?.end.offset || target.sourceSpan.end.offset,
@@ -35977,7 +35975,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // variable in question.
             //
             // TODO(alxhub): allocate to a tighter span once one is available.
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, variable.sourceSpan, ts__default['default'].DiagnosticCategory.Error, ngErrorCode(ErrorCode.DUPLICATE_VARIABLE_DECLARATION), errorMsg, [{
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, variable.sourceSpan, ts__default["default"].DiagnosticCategory.Error, ngErrorCode(ErrorCode.DUPLICATE_VARIABLE_DECLARATION), errorMsg, [{
                     text: `The variable '${firstDecl.name}' was first declared here.`,
                     start: firstDecl.sourceSpan.start.offset,
                     end: firstDecl.sourceSpan.end.offset,
@@ -36021,7 +36019,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 varIdentification += ` (and ${variables.length - 1} others)`;
             }
             const message = `This structural directive supports advanced type inference, but the current compiler configuration prevents its usage. The variable ${varIdentification} will have type 'any' as a result.\n\nConsider enabling the 'strictTemplates' option in your tsconfig.json for better type inference within this template.`;
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, diagnosticVar.keySpan, ts__default['default'].DiagnosticCategory.Suggestion, ngErrorCode(ErrorCode.SUGGEST_SUBOPTIMAL_TYPE_INFERENCE), message));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, diagnosticVar.keySpan, ts__default["default"].DiagnosticCategory.Suggestion, ngErrorCode(ErrorCode.SUGGEST_SUBOPTIMAL_TYPE_INFERENCE), message));
         }
         splitTwoWayBinding(templateId, input, output, inputConsumer, outputConsumer) {
             const mapping = this.resolver.getSourceMapping(templateId);
@@ -36054,7 +36052,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     sourceFile: outputConsumer.name.getSourceFile(),
                 });
             }
-            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, input.keySpan, ts__default['default'].DiagnosticCategory.Error, ngErrorCode(ErrorCode.SPLIT_TWO_WAY_BINDING), errorMsg, relatedMessages));
+            this._diagnostics.push(makeTemplateDiagnostic(templateId, mapping, input.keySpan, ts__default["default"].DiagnosticCategory.Error, ngErrorCode(ErrorCode.SPLIT_TWO_WAY_BINDING), errorMsg, relatedMessages));
         }
     }
     function makeInlineDiagnostic(templateId, code, node, messageText, relatedInformation) {
@@ -36093,7 +36091,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // no harm in reuse here even if it's out of date.
                 return priorShimSf;
             }
-            return ts__default['default'].createSourceFile(genFilePath, 'export const USED_FOR_NG_TYPE_CHECKING = true;', ts__default['default'].ScriptTarget.Latest, true, ts__default['default'].ScriptKind.TS);
+            return ts__default["default"].createSourceFile(genFilePath, 'export const USED_FOR_NG_TYPE_CHECKING = true;', ts__default["default"].ScriptTarget.Latest, true, ts__default["default"].ScriptKind.TS);
         }
         static shimFor(fileName) {
             return absoluteFrom(fileName.replace(/\.tsx?$/, '.ngtypecheck.ts'));
@@ -36118,7 +36116,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * positional comment would be located within that node, resulting in a mismatch.
      */
     function wrapForDiagnostics(expr) {
-        return ts__default['default'].createParen(expr);
+        return ts__default["default"].createParen(expr);
     }
     /**
      * Wraps the node in parenthesis such that inserted span comments become attached to the proper
@@ -36127,7 +36125,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * code.
      */
     function wrapForTypeChecker(expr) {
-        return ts__default['default'].createParen(expr);
+        return ts__default["default"].createParen(expr);
     }
     /**
      * Adds a synthetic comment to the expression that represents the parse span of the provided node.
@@ -36141,14 +36139,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         else {
             commentText = `${span.start.offset},${span.end.offset}`;
         }
-        ts__default['default'].addSyntheticTrailingComment(node, ts__default['default'].SyntaxKind.MultiLineCommentTrivia, commentText, /* hasTrailingNewLine */ false);
+        ts__default["default"].addSyntheticTrailingComment(node, ts__default["default"].SyntaxKind.MultiLineCommentTrivia, commentText, /* hasTrailingNewLine */ false);
     }
     /**
      * Adds a synthetic comment to the function declaration that contains the template id
      * of the class declaration.
      */
     function addTemplateId(tcb, id) {
-        ts__default['default'].addSyntheticLeadingComment(tcb, ts__default['default'].SyntaxKind.MultiLineCommentTrivia, id, true);
+        ts__default["default"].addSyntheticLeadingComment(tcb, ts__default["default"].SyntaxKind.MultiLineCommentTrivia, id, true);
     }
     /**
      * Determines if the diagnostic should be reported. Some diagnostics are produced because of the
@@ -36198,31 +36196,31 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const NULL_AS_ANY = ts__default['default'].createAsExpression(ts__default['default'].createNull(), ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword));
-    const UNDEFINED = ts__default['default'].createIdentifier('undefined');
+    const NULL_AS_ANY = ts__default["default"].createAsExpression(ts__default["default"].createNull(), ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword));
+    const UNDEFINED = ts__default["default"].createIdentifier('undefined');
     const UNARY_OPS = new Map([
-        ['+', ts__default['default'].SyntaxKind.PlusToken],
-        ['-', ts__default['default'].SyntaxKind.MinusToken],
+        ['+', ts__default["default"].SyntaxKind.PlusToken],
+        ['-', ts__default["default"].SyntaxKind.MinusToken],
     ]);
     const BINARY_OPS = new Map([
-        ['+', ts__default['default'].SyntaxKind.PlusToken],
-        ['-', ts__default['default'].SyntaxKind.MinusToken],
-        ['<', ts__default['default'].SyntaxKind.LessThanToken],
-        ['>', ts__default['default'].SyntaxKind.GreaterThanToken],
-        ['<=', ts__default['default'].SyntaxKind.LessThanEqualsToken],
-        ['>=', ts__default['default'].SyntaxKind.GreaterThanEqualsToken],
-        ['==', ts__default['default'].SyntaxKind.EqualsEqualsToken],
-        ['===', ts__default['default'].SyntaxKind.EqualsEqualsEqualsToken],
-        ['*', ts__default['default'].SyntaxKind.AsteriskToken],
-        ['/', ts__default['default'].SyntaxKind.SlashToken],
-        ['%', ts__default['default'].SyntaxKind.PercentToken],
-        ['!=', ts__default['default'].SyntaxKind.ExclamationEqualsToken],
-        ['!==', ts__default['default'].SyntaxKind.ExclamationEqualsEqualsToken],
-        ['||', ts__default['default'].SyntaxKind.BarBarToken],
-        ['&&', ts__default['default'].SyntaxKind.AmpersandAmpersandToken],
-        ['&', ts__default['default'].SyntaxKind.AmpersandToken],
-        ['|', ts__default['default'].SyntaxKind.BarToken],
-        ['??', ts__default['default'].SyntaxKind.QuestionQuestionToken],
+        ['+', ts__default["default"].SyntaxKind.PlusToken],
+        ['-', ts__default["default"].SyntaxKind.MinusToken],
+        ['<', ts__default["default"].SyntaxKind.LessThanToken],
+        ['>', ts__default["default"].SyntaxKind.GreaterThanToken],
+        ['<=', ts__default["default"].SyntaxKind.LessThanEqualsToken],
+        ['>=', ts__default["default"].SyntaxKind.GreaterThanEqualsToken],
+        ['==', ts__default["default"].SyntaxKind.EqualsEqualsToken],
+        ['===', ts__default["default"].SyntaxKind.EqualsEqualsEqualsToken],
+        ['*', ts__default["default"].SyntaxKind.AsteriskToken],
+        ['/', ts__default["default"].SyntaxKind.SlashToken],
+        ['%', ts__default["default"].SyntaxKind.PercentToken],
+        ['!=', ts__default["default"].SyntaxKind.ExclamationEqualsToken],
+        ['!==', ts__default["default"].SyntaxKind.ExclamationEqualsEqualsToken],
+        ['||', ts__default["default"].SyntaxKind.BarBarToken],
+        ['&&', ts__default["default"].SyntaxKind.AmpersandAmpersandToken],
+        ['&', ts__default["default"].SyntaxKind.AmpersandToken],
+        ['|', ts__default["default"].SyntaxKind.BarToken],
+        ['??', ts__default["default"].SyntaxKind.QuestionQuestionToken],
     ]);
     /**
      * Convert an `AST` to TypeScript code directly, without going through an intermediate `Expression`
@@ -36245,7 +36243,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             // The `EmptyExpr` doesn't have a dedicated method on `AstVisitor`, so it's special cased here.
             if (ast instanceof EmptyExpr) {
-                const res = ts__default['default'].factory.createIdentifier('undefined');
+                const res = ts__default["default"].factory.createIdentifier('undefined');
                 addParseSpanInfo(res, ast.sourceSpan);
                 return res;
             }
@@ -36262,7 +36260,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (op === undefined) {
                 throw new Error(`Unsupported Unary.operator: ${ast.operator}`);
             }
-            const node = wrapForDiagnostics(ts__default['default'].createPrefix(op, expr));
+            const node = wrapForDiagnostics(ts__default["default"].createPrefix(op, expr));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -36273,13 +36271,13 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (op === undefined) {
                 throw new Error(`Unsupported Binary.operation: ${ast.operation}`);
             }
-            const node = ts__default['default'].createBinary(lhs, op, rhs);
+            const node = ts__default["default"].createBinary(lhs, op, rhs);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitChain(ast) {
             const elements = ast.expressions.map(expr => this.translate(expr));
-            const node = wrapForDiagnostics(ts__default['default'].createCommaList(elements));
+            const node = wrapForDiagnostics(ts__default["default"].createCommaList(elements));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -36294,7 +36292,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // `conditional /*1,2*/ ? trueExpr /*3,4*/ : falseExpr /*5,6*/`
             // This should be instead be `conditional /*1,2*/ ? trueExpr /*3,4*/ : (falseExpr /*5,6*/)`
             const falseExpr = wrapForTypeChecker(this.translate(ast.falseExp));
-            const node = ts__default['default'].createParen(ts__default['default'].createConditional(condExpr, trueExpr, falseExpr));
+            const node = ts__default["default"].createParen(ts__default["default"].createConditional(condExpr, trueExpr, falseExpr));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -36308,28 +36306,28 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Build up a chain of binary + operations to simulate the string concatenation of the
             // interpolation's expressions. The chain is started using an actual string literal to ensure
             // the type is inferred as 'string'.
-            return ast.expressions.reduce((lhs, ast) => ts__default['default'].createBinary(lhs, ts__default['default'].SyntaxKind.PlusToken, wrapForTypeChecker(this.translate(ast))), ts__default['default'].createLiteral(''));
+            return ast.expressions.reduce((lhs, ast) => ts__default["default"].createBinary(lhs, ts__default["default"].SyntaxKind.PlusToken, wrapForTypeChecker(this.translate(ast))), ts__default["default"].createLiteral(''));
         }
         visitKeyedRead(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.receiver));
             const key = this.translate(ast.key);
-            const node = ts__default['default'].createElementAccess(receiver, key);
+            const node = ts__default["default"].createElementAccess(receiver, key);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitKeyedWrite(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.receiver));
-            const left = ts__default['default'].createElementAccess(receiver, this.translate(ast.key));
+            const left = ts__default["default"].createElementAccess(receiver, this.translate(ast.key));
             // TODO(joost): annotate `left` with the span of the element access, which is not currently
             //  available on `ast`.
             const right = wrapForTypeChecker(this.translate(ast.value));
-            const node = wrapForDiagnostics(ts__default['default'].createBinary(left, ts__default['default'].SyntaxKind.EqualsToken, right));
+            const node = wrapForDiagnostics(ts__default["default"].createBinary(left, ts__default["default"].SyntaxKind.EqualsToken, right));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitLiteralArray(ast) {
             const elements = ast.expressions.map(expr => this.translate(expr));
-            const literal = ts__default['default'].createArrayLiteral(elements);
+            const literal = ts__default["default"].createArrayLiteral(elements);
             // If strictLiteralTypes is disabled, array literals are cast to `any`.
             const node = this.config.strictLiteralTypes ? literal : tsCastToAny(literal);
             addParseSpanInfo(node, ast.sourceSpan);
@@ -36338,9 +36336,9 @@ Either add the @Injectable() decorator to '${provider.node.name
         visitLiteralMap(ast) {
             const properties = ast.keys.map(({ key }, idx) => {
                 const value = this.translate(ast.values[idx]);
-                return ts__default['default'].createPropertyAssignment(ts__default['default'].createStringLiteral(key), value);
+                return ts__default["default"].createPropertyAssignment(ts__default["default"].createStringLiteral(key), value);
             });
-            const literal = ts__default['default'].createObjectLiteral(properties, true);
+            const literal = ts__default["default"].createObjectLiteral(properties, true);
             // If strictLiteralTypes is disabled, object literals are cast to `any`.
             const node = this.config.strictLiteralTypes ? literal : tsCastToAny(literal);
             addParseSpanInfo(node, ast.sourceSpan);
@@ -36349,20 +36347,20 @@ Either add the @Injectable() decorator to '${provider.node.name
         visitLiteralPrimitive(ast) {
             let node;
             if (ast.value === undefined) {
-                node = ts__default['default'].createIdentifier('undefined');
+                node = ts__default["default"].createIdentifier('undefined');
             }
             else if (ast.value === null) {
-                node = ts__default['default'].createNull();
+                node = ts__default["default"].createNull();
             }
             else {
-                node = ts__default['default'].createLiteral(ast.value);
+                node = ts__default["default"].createLiteral(ast.value);
             }
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
         visitNonNullAssert(ast) {
             const expr = wrapForDiagnostics(this.translate(ast.expression));
-            const node = ts__default['default'].createNonNullExpression(expr);
+            const node = ts__default["default"].createNonNullExpression(expr);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -36371,7 +36369,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         visitPrefixNot(ast) {
             const expression = wrapForDiagnostics(this.translate(ast.expression));
-            const node = ts__default['default'].createLogicalNot(expression);
+            const node = ts__default["default"].createLogicalNot(expression);
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -36379,7 +36377,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // This is a normal property read - convert the receiver to an expression and emit the correct
             // TypeScript expression to read the property.
             const receiver = wrapForDiagnostics(this.translate(ast.receiver));
-            const name = ts__default['default'].createPropertyAccess(receiver, ast.name);
+            const name = ts__default["default"].createPropertyAccess(receiver, ast.name);
             addParseSpanInfo(name, ast.nameSpan);
             const node = wrapForDiagnostics(name);
             addParseSpanInfo(node, ast.sourceSpan);
@@ -36387,7 +36385,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         visitPropertyWrite(ast) {
             const receiver = wrapForDiagnostics(this.translate(ast.receiver));
-            const left = ts__default['default'].createPropertyAccess(receiver, ast.name);
+            const left = ts__default["default"].createPropertyAccess(receiver, ast.name);
             addParseSpanInfo(left, ast.nameSpan);
             // TypeScript reports assignment errors on the entire lvalue expression. Annotate the lvalue of
             // the assignment with the sourceSpan, which includes receivers, rather than nameSpan for
@@ -36402,7 +36400,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // It could refer to either the whole binary expression or just the RHS.
             // We should instead generate `e = ($event /*0,10*/)` so we know the span 0,10 matches RHS.
             const right = wrapForTypeChecker(this.translate(ast.value));
-            const node = wrapForDiagnostics(ts__default['default'].createBinary(leftWithPath, ts__default['default'].SyntaxKind.EqualsToken, right));
+            const node = wrapForDiagnostics(ts__default["default"].createBinary(leftWithPath, ts__default["default"].SyntaxKind.EqualsToken, right));
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
         }
@@ -36418,9 +36416,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // property read, or `undefined`. So a ternary is used to create an "or" type:
                 // "a?.b" becomes (null as any ? a!.b : undefined)
                 // The type of this expression is (typeof a!.b) | undefined, which is exactly as desired.
-                const expr = ts__default['default'].createPropertyAccess(ts__default['default'].createNonNullExpression(receiver), ast.name);
+                const expr = ts__default["default"].createPropertyAccess(ts__default["default"].createNonNullExpression(receiver), ast.name);
                 addParseSpanInfo(expr, ast.nameSpan);
-                node = ts__default['default'].createParen(ts__default['default'].createConditional(NULL_AS_ANY, expr, UNDEFINED));
+                node = ts__default["default"].createParen(ts__default["default"].createConditional(NULL_AS_ANY, expr, UNDEFINED));
             }
             else if (VeSafeLhsInferenceBugDetector.veWillInferAnyFor(ast)) {
                 // Emulate a View Engine bug where 'any' is inferred for the left-hand side of the safe
@@ -36428,13 +36426,13 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Therefore, the left-hand side only needs repeating in the output (to validate it), and then
                 // 'any' is used for the rest of the expression. This is done using a comma operator:
                 // "a?.b" becomes (a as any).b, which will of course have type 'any'.
-                node = ts__default['default'].createPropertyAccess(tsCastToAny(receiver), ast.name);
+                node = ts__default["default"].createPropertyAccess(tsCastToAny(receiver), ast.name);
             }
             else {
                 // The View Engine bug isn't active, so check the entire type of the expression, but the final
                 // result is still inferred as `any`.
                 // "a?.b" becomes (a!.b as any)
-                const expr = ts__default['default'].createPropertyAccess(ts__default['default'].createNonNullExpression(receiver), ast.name);
+                const expr = ts__default["default"].createPropertyAccess(ts__default["default"].createNonNullExpression(receiver), ast.name);
                 addParseSpanInfo(expr, ast.nameSpan);
                 node = tsCastToAny(expr);
             }
@@ -36448,17 +36446,17 @@ Either add the @Injectable() decorator to '${provider.node.name
             // The form of safe property reads depends on whether strictness is in use.
             if (this.config.strictSafeNavigationTypes) {
                 // "a?.[...]" becomes (null as any ? a![...] : undefined)
-                const expr = ts__default['default'].createElementAccess(ts__default['default'].createNonNullExpression(receiver), key);
+                const expr = ts__default["default"].createElementAccess(ts__default["default"].createNonNullExpression(receiver), key);
                 addParseSpanInfo(expr, ast.sourceSpan);
-                node = ts__default['default'].createParen(ts__default['default'].createConditional(NULL_AS_ANY, expr, UNDEFINED));
+                node = ts__default["default"].createParen(ts__default["default"].createConditional(NULL_AS_ANY, expr, UNDEFINED));
             }
             else if (VeSafeLhsInferenceBugDetector.veWillInferAnyFor(ast)) {
                 // "a?.[...]" becomes (a as any)[...]
-                node = ts__default['default'].createElementAccess(tsCastToAny(receiver), key);
+                node = ts__default["default"].createElementAccess(tsCastToAny(receiver), key);
             }
             else {
                 // "a?.[...]" becomes (a!.[...] as any)
-                const expr = ts__default['default'].createElementAccess(ts__default['default'].createNonNullExpression(receiver), key);
+                const expr = ts__default["default"].createElementAccess(ts__default["default"].createNonNullExpression(receiver), key);
                 addParseSpanInfo(expr, ast.sourceSpan);
                 node = tsCastToAny(expr);
             }
@@ -36474,20 +36472,20 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (ast.receiver instanceof SafePropertyRead || ast.receiver instanceof SafeKeyedRead) {
                 if (this.config.strictSafeNavigationTypes) {
                     // "a?.method(...)" becomes (null as any ? a!.method(...) : undefined)
-                    const call = ts__default['default'].createCall(ts__default['default'].createNonNullExpression(expr), undefined, args);
-                    node = ts__default['default'].createParen(ts__default['default'].createConditional(NULL_AS_ANY, call, UNDEFINED));
+                    const call = ts__default["default"].createCall(ts__default["default"].createNonNullExpression(expr), undefined, args);
+                    node = ts__default["default"].createParen(ts__default["default"].createConditional(NULL_AS_ANY, call, UNDEFINED));
                 }
                 else if (VeSafeLhsInferenceBugDetector.veWillInferAnyFor(ast)) {
                     // "a?.method(...)" becomes (a as any).method(...)
-                    node = ts__default['default'].createCall(tsCastToAny(expr), undefined, args);
+                    node = ts__default["default"].createCall(tsCastToAny(expr), undefined, args);
                 }
                 else {
                     // "a?.method(...)" becomes (a!.method(...) as any)
-                    node = tsCastToAny(ts__default['default'].createCall(ts__default['default'].createNonNullExpression(expr), undefined, args));
+                    node = tsCastToAny(ts__default["default"].createCall(ts__default["default"].createNonNullExpression(expr), undefined, args));
                 }
             }
             else {
-                node = ts__default['default'].createCall(expr, undefined, args);
+                node = ts__default["default"].createCall(expr, undefined, args);
             }
             addParseSpanInfo(node, ast.sourceSpan);
             return node;
@@ -36671,7 +36669,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         const tcb = new Context(env, domSchemaChecker, oobRecorder, meta.id, meta.boundTarget, meta.pipes, meta.schemas);
         const scope = Scope.forNodes(tcb, null, tcb.boundTarget.target.template, /* guard */ null);
         const ctxRawType = env.referenceType(ref);
-        if (!ts__default['default'].isTypeReferenceNode(ctxRawType)) {
+        if (!ts__default["default"].isTypeReferenceNode(ctxRawType)) {
             throw new Error(`Expected TypeReferenceNode when referencing the ctx param for ${ref.debugName}`);
         }
         let typeParameters = undefined;
@@ -36685,27 +36683,27 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // Guaranteed to emit type parameters since we checked that the class has them above.
                     typeParameters = new TypeParameterEmitter(ref.node.typeParameters, env.reflector)
                         .emit(typeRef => env.referenceType(typeRef));
-                    typeArguments = typeParameters.map(param => ts__default['default'].factory.createTypeReferenceNode(param.name));
+                    typeArguments = typeParameters.map(param => ts__default["default"].factory.createTypeReferenceNode(param.name));
                     break;
                 case TcbGenericContextBehavior.CopyClassNodes:
                     typeParameters = [...ref.node.typeParameters];
-                    typeArguments = typeParameters.map(param => ts__default['default'].factory.createTypeReferenceNode(param.name));
+                    typeArguments = typeParameters.map(param => ts__default["default"].factory.createTypeReferenceNode(param.name));
                     break;
                 case TcbGenericContextBehavior.FallbackToAny:
-                    typeArguments = ref.node.typeParameters.map(() => ts__default['default'].factory.createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword));
+                    typeArguments = ref.node.typeParameters.map(() => ts__default["default"].factory.createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword));
                     break;
             }
         }
         const paramList = [tcbCtxParam(ref.node, ctxRawType.typeName, typeArguments)];
         const scopeStatements = scope.render();
-        const innerBody = ts__default['default'].createBlock([
+        const innerBody = ts__default["default"].createBlock([
             ...env.getPreludeStatements(),
             ...scopeStatements,
         ]);
         // Wrap the body in an "if (true)" expression. This is unnecessary but has the effect of causing
         // the `ts.Printer` to format the type-check block nicely.
-        const body = ts__default['default'].createBlock([ts__default['default'].createIf(ts__default['default'].createTrue(), innerBody, undefined)]);
-        const fnDecl = ts__default['default'].createFunctionDeclaration(
+        const body = ts__default["default"].createBlock([ts__default["default"].createIf(ts__default["default"].createTrue(), innerBody, undefined)]);
+        const fnDecl = ts__default["default"].createFunctionDeclaration(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* asteriskToken */ undefined, 
@@ -36798,7 +36796,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Allocate an identifier for the TmplAstVariable, and initialize it to a read of the variable
             // on the template context.
             const id = this.tcb.allocateId();
-            const initializer = ts__default['default'].createPropertyAccess(
+            const initializer = ts__default["default"].createPropertyAccess(
             /* expression */ ctx, 
             /* name */ this.variable.value || '$implicit');
             addParseSpanInfo(id, this.variable.keySpan);
@@ -36833,7 +36831,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Allocate a template ctx variable and declare it with an 'any' type. The type of this variable
             // may be narrowed as a result of template guard conditions.
             const ctx = this.tcb.allocateId();
-            const type = ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword);
+            const type = ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword);
             this.scope.addStatement(tsDeclareVariable(ctx, type));
             return ctx;
         }
@@ -36925,7 +36923,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (directiveGuards.length > 0) {
                 // Pop the first value and use it as the initializer to reduce(). This way, a single guard
                 // will be used on its own, but two or more will be combined into binary AND expressions.
-                guard = directiveGuards.reduce((expr, dirGuard) => ts__default['default'].createBinary(expr, ts__default['default'].SyntaxKind.AmpersandAmpersandToken, dirGuard), directiveGuards.pop());
+                guard = directiveGuards.reduce((expr, dirGuard) => ts__default["default"].createBinary(expr, ts__default["default"].SyntaxKind.AmpersandAmpersandToken, dirGuard), directiveGuards.pop());
             }
             // Create a new Scope for the template. This constructs the list of operations for the template
             // children, as well as tracks bindings within the template.
@@ -36941,11 +36939,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // type-checking time.
                 return null;
             }
-            let tmplBlock = ts__default['default'].createBlock(statements);
+            let tmplBlock = ts__default["default"].createBlock(statements);
             if (guard !== null) {
                 // The scope has a guard that needs to be applied, so wrap the template block into an `if`
                 // statement containing the guard expression.
-                tmplBlock = ts__default['default'].createIf(/* expression */ guard, /* thenStatement */ tmplBlock);
+                tmplBlock = ts__default["default"].createIf(/* expression */ guard, /* thenStatement */ tmplBlock);
             }
             this.scope.addStatement(tmplBlock);
             return null;
@@ -36968,7 +36966,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute() {
             const expr = tcbExpression(this.binding.value, this.tcb, this.scope);
-            this.scope.addStatement(ts__default['default'].createExpressionStatement(expr));
+            this.scope.addStatement(ts__default["default"].createExpressionStatement(expr));
             return null;
         }
     }
@@ -36998,11 +36996,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 type = rawType;
             }
             else {
-                if (!ts__default['default'].isTypeReferenceNode(rawType)) {
+                if (!ts__default["default"].isTypeReferenceNode(rawType)) {
                     throw new Error(`Expected TypeReferenceNode when referencing the type for ${this.dir.ref.debugName}`);
                 }
-                const typeArguments = dirRef.node.typeParameters.map(() => ts__default['default'].factory.createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword));
-                type = ts__default['default'].factory.createTypeReferenceNode(rawType.typeName, typeArguments);
+                const typeArguments = dirRef.node.typeParameters.map(() => ts__default["default"].factory.createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword));
+                type = ts__default["default"].factory.createTypeReferenceNode(rawType.typeName, typeArguments);
             }
             const id = this.tcb.allocateId();
             addExpressionIdentifier(type, ExpressionIdentifier.DIRECTIVE);
@@ -37095,16 +37093,16 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // References to `TemplateRef`s and directives are pinned to 'any' when
                 // `checkTypeOfNonDomReferences` is `false`.
                 initializer =
-                    ts__default['default'].createAsExpression(initializer, ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword));
+                    ts__default["default"].createAsExpression(initializer, ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword));
             }
             else if (this.target instanceof Template) {
                 // Direct references to an <ng-template> node simply require a value of type
                 // `TemplateRef<any>`. To get this, an expression of the form
                 // `(_t1 as any as TemplateRef<any>)` is constructed.
                 initializer =
-                    ts__default['default'].createAsExpression(initializer, ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword));
-                initializer = ts__default['default'].createAsExpression(initializer, this.tcb.env.referenceExternalType('@angular/core', 'TemplateRef', [DYNAMIC_TYPE]));
-                initializer = ts__default['default'].createParen(initializer);
+                    ts__default["default"].createAsExpression(initializer, ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword));
+                initializer = ts__default["default"].createAsExpression(initializer, this.tcb.env.referenceExternalType('@angular/core', 'TemplateRef', [DYNAMIC_TYPE]));
+                initializer = ts__default["default"].createParen(initializer);
             }
             addParseSpanInfo(initializer, this.node.sourceSpan);
             addParseSpanInfo(id, this.node.keySpan);
@@ -37232,7 +37230,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 else if (!this.tcb.env.config.strictNullInputBindings) {
                     // If strict null checks are disabled, erase `null` and `undefined` from the type by
                     // wrapping the expression in a non-null assertion.
-                    expr = ts__default['default'].createNonNullExpression(expr);
+                    expr = ts__default["default"].createNonNullExpression(expr);
                 }
                 let assignment = wrapForDiagnostics(expr);
                 for (const fieldName of input.fieldNames) {
@@ -37243,7 +37241,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // with a type of `typeof Directive.ngAcceptInputType_fieldName` which is then used as
                         // target of the assignment.
                         const dirTypeRef = this.tcb.env.referenceType(this.dir.ref);
-                        if (!ts__default['default'].isTypeReferenceNode(dirTypeRef)) {
+                        if (!ts__default["default"].isTypeReferenceNode(dirTypeRef)) {
                             throw new Error(`Expected TypeReferenceNode from reference to ${this.dir.ref.debugName}`);
                         }
                         const id = this.tcb.allocateId();
@@ -37268,10 +37266,10 @@ Either add the @Injectable() decorator to '${provider.node.name
                         }
                         const id = this.tcb.allocateId();
                         const dirTypeRef = this.tcb.env.referenceType(this.dir.ref);
-                        if (!ts__default['default'].isTypeReferenceNode(dirTypeRef)) {
+                        if (!ts__default["default"].isTypeReferenceNode(dirTypeRef)) {
                             throw new Error(`Expected TypeReferenceNode from reference to ${this.dir.ref.debugName}`);
                         }
-                        const type = ts__default['default'].createIndexedAccessTypeNode(ts__default['default'].createTypeQueryNode(dirId), ts__default['default'].createLiteralTypeNode(ts__default['default'].createStringLiteral(fieldName)));
+                        const type = ts__default["default"].createIndexedAccessTypeNode(ts__default["default"].createTypeQueryNode(dirId), ts__default["default"].createLiteralTypeNode(ts__default["default"].createStringLiteral(fieldName)));
                         const temp = tsDeclareVariable(id, type);
                         this.scope.addStatement(temp);
                         target = id;
@@ -37284,14 +37282,14 @@ Either add the @Injectable() decorator to '${provider.node.name
                         // when possible. String literal fields may not be valid JS identifiers so we use
                         // literal element access instead for those cases.
                         target = this.dir.stringLiteralInputFields.has(fieldName) ?
-                            ts__default['default'].createElementAccess(dirId, ts__default['default'].createStringLiteral(fieldName)) :
-                            ts__default['default'].createPropertyAccess(dirId, ts__default['default'].createIdentifier(fieldName));
+                            ts__default["default"].createElementAccess(dirId, ts__default["default"].createStringLiteral(fieldName)) :
+                            ts__default["default"].createPropertyAccess(dirId, ts__default["default"].createIdentifier(fieldName));
                     }
                     if (input.attribute.keySpan !== undefined) {
                         addParseSpanInfo(target, input.attribute.keySpan);
                     }
                     // Finally the assignment is extended by assigning it into the target expression.
-                    assignment = ts__default['default'].createBinary(target, ts__default['default'].SyntaxKind.EqualsToken, assignment);
+                    assignment = ts__default["default"].createBinary(target, ts__default["default"].SyntaxKind.EqualsToken, assignment);
                 }
                 addParseSpanInfo(assignment, input.attribute.sourceSpan);
                 // Ignore diagnostics for text attributes if configured to do so.
@@ -37299,7 +37297,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     input.attribute instanceof TextAttribute) {
                     markIgnoreDiagnostics(assignment);
                 }
-                this.scope.addStatement(ts__default['default'].createExpressionStatement(assignment));
+                this.scope.addStatement(ts__default["default"].createExpressionStatement(assignment));
             }
             return null;
         }
@@ -37332,7 +37330,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         execute() {
             const id = this.tcb.allocateId();
             const typeCtor = this.tcb.env.typeCtorFor(this.dir);
-            const circularPlaceholder = ts__default['default'].createCall(typeCtor, /* typeArguments */ undefined, [ts__default['default'].createNonNullExpression(ts__default['default'].createNull())]);
+            const circularPlaceholder = ts__default["default"].createCall(typeCtor, /* typeArguments */ undefined, [ts__default["default"].createNonNullExpression(ts__default["default"].createNull())]);
             this.scope.addStatement(tsCreateVariable(id, circularPlaceholder));
             return id;
         }
@@ -37431,7 +37429,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 else if (!this.tcb.env.config.strictNullInputBindings) {
                     // If strict null checks are disabled, erase `null` and `undefined` from the type by
                     // wrapping the expression in a non-null assertion.
-                    expr = ts__default['default'].createNonNullExpression(expr);
+                    expr = ts__default["default"].createNonNullExpression(expr);
                 }
                 if (this.tcb.env.config.checkTypeOfDomBindings && binding.type === 0 /* Property */) {
                     if (binding.name !== 'style' && binding.name !== 'class') {
@@ -37440,20 +37438,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                         }
                         // A direct binding to a property.
                         const propertyName = ATTR_TO_PROP[binding.name] || binding.name;
-                        const prop = ts__default['default'].createElementAccess(elId, ts__default['default'].createStringLiteral(propertyName));
-                        const stmt = ts__default['default'].createBinary(prop, ts__default['default'].SyntaxKind.EqualsToken, wrapForDiagnostics(expr));
+                        const prop = ts__default["default"].createElementAccess(elId, ts__default["default"].createStringLiteral(propertyName));
+                        const stmt = ts__default["default"].createBinary(prop, ts__default["default"].SyntaxKind.EqualsToken, wrapForDiagnostics(expr));
                         addParseSpanInfo(stmt, binding.sourceSpan);
-                        this.scope.addStatement(ts__default['default'].createExpressionStatement(stmt));
+                        this.scope.addStatement(ts__default["default"].createExpressionStatement(stmt));
                     }
                     else {
-                        this.scope.addStatement(ts__default['default'].createExpressionStatement(expr));
+                        this.scope.addStatement(ts__default["default"].createExpressionStatement(expr));
                     }
                 }
                 else {
                     // A binding to an animation, attribute, class or style. For now, only validate the right-
                     // hand side of the expression.
                     // TODO: properly check class and style bindings.
-                    this.scope.addStatement(ts__default['default'].createExpressionStatement(expr));
+                    this.scope.addStatement(ts__default["default"].createExpressionStatement(expr));
                 }
             }
             return null;
@@ -37492,17 +37490,17 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (dirId === null) {
                     dirId = this.scope.resolve(this.node, this.dir);
                 }
-                const outputField = ts__default['default'].createElementAccess(dirId, ts__default['default'].createStringLiteral(field));
+                const outputField = ts__default["default"].createElementAccess(dirId, ts__default["default"].createStringLiteral(field));
                 addParseSpanInfo(outputField, output.keySpan);
                 if (this.tcb.env.config.checkTypeOfOutputEvents) {
                     // For strict checking of directive events, generate a call to the `subscribe` method
                     // on the directive's output field to let type information flow into the handler function's
                     // `$event` parameter.
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 0 /* Infer */);
-                    const subscribeFn = ts__default['default'].createPropertyAccess(outputField, 'subscribe');
-                    const call = ts__default['default'].createCall(subscribeFn, /* typeArguments */ undefined, [handler]);
+                    const subscribeFn = ts__default["default"].createPropertyAccess(outputField, 'subscribe');
+                    const call = ts__default["default"].createCall(subscribeFn, /* typeArguments */ undefined, [handler]);
                     addParseSpanInfo(call, output.sourceSpan);
-                    this.scope.addStatement(ts__default['default'].createExpressionStatement(call));
+                    this.scope.addStatement(ts__default["default"].createExpressionStatement(call));
                 }
                 else {
                     // If strict checking of directive events is disabled:
@@ -37511,9 +37509,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                     //   of the `TemplateTypeChecker` can still find the node for the class member for the
                     //   output.
                     // * Emit a handler function where the `$event` parameter has an explicit `any` type.
-                    this.scope.addStatement(ts__default['default'].createExpressionStatement(outputField));
+                    this.scope.addStatement(ts__default["default"].createExpressionStatement(outputField));
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 1 /* Any */);
-                    this.scope.addStatement(ts__default['default'].createExpressionStatement(handler));
+                    this.scope.addStatement(ts__default["default"].createExpressionStatement(handler));
                 }
                 ExpressionSemanticVisitor.visit(output.handler, this.tcb.id, this.tcb.boundTarget, this.tcb.oobRecorder);
             }
@@ -37559,7 +37557,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         this.tcb.env.referenceExternalType('@angular/animations', 'AnimationEvent') :
                         1 /* Any */;
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, eventType);
-                    this.scope.addStatement(ts__default['default'].createExpressionStatement(handler));
+                    this.scope.addStatement(ts__default["default"].createExpressionStatement(handler));
                 }
                 else if (this.tcb.env.config.checkTypeOfDomEvents) {
                     // If strict checking of DOM events is enabled, generate a call to `addEventListener` on
@@ -37571,20 +37569,20 @@ Either add the @Injectable() decorator to '${provider.node.name
                     if (elId === null) {
                         elId = this.scope.resolve(this.element);
                     }
-                    const propertyAccess = ts__default['default'].createPropertyAccess(elId, 'addEventListener');
+                    const propertyAccess = ts__default["default"].createPropertyAccess(elId, 'addEventListener');
                     addParseSpanInfo(propertyAccess, output.keySpan);
-                    const call = ts__default['default'].createCall(
+                    const call = ts__default["default"].createCall(
                     /* expression */ propertyAccess, 
                     /* typeArguments */ undefined, 
-                    /* arguments */ [ts__default['default'].createStringLiteral(output.name), handler]);
+                    /* arguments */ [ts__default["default"].createStringLiteral(output.name), handler]);
                     addParseSpanInfo(call, output.sourceSpan);
-                    this.scope.addStatement(ts__default['default'].createExpressionStatement(call));
+                    this.scope.addStatement(ts__default["default"].createExpressionStatement(call));
                 }
                 else {
                     // If strict checking of DOM inputs is disabled, emit a handler function where the `$event`
                     // parameter has an explicit `any` type.
                     const handler = tcbCreateEventHandler(output, this.tcb, this.scope, 1 /* Any */);
-                    this.scope.addStatement(ts__default['default'].createExpressionStatement(handler));
+                    this.scope.addStatement(ts__default["default"].createExpressionStatement(handler));
                 }
                 ExpressionSemanticVisitor.visit(output.handler, this.tcb.id, this.tcb.boundTarget, this.tcb.oobRecorder);
             }
@@ -37605,11 +37603,11 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.optional = false;
         }
         execute() {
-            const ctx = ts__default['default'].createIdentifier('ctx');
-            const ctxDot = ts__default['default'].createPropertyAccess(ctx, '');
+            const ctx = ts__default["default"].createIdentifier('ctx');
+            const ctxDot = ts__default["default"].createPropertyAccess(ctx, '');
             markIgnoreDiagnostics(ctxDot);
             addExpressionIdentifier(ctxDot, ExpressionIdentifier.COMPONENT_COMPLETION);
-            this.scope.addStatement(ts__default['default'].createExpressionStatement(ctxDot));
+            this.scope.addStatement(ts__default["default"].createExpressionStatement(ctxDot));
             return null;
         }
     }
@@ -37620,7 +37618,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      * assertion of the null value (in TypeScript, the expression `null!`). This construction will infer
      * the least narrow type for whatever it's assigned to.
      */
-    const INFER_TYPE_FOR_CIRCULAR_OP_EXPR = ts__default['default'].createNonNullExpression(ts__default['default'].createNull());
+    const INFER_TYPE_FOR_CIRCULAR_OP_EXPR = ts__default["default"].createNonNullExpression(ts__default["default"].createNull());
     /**
      * Overall generation context for the type check block.
      *
@@ -37646,7 +37644,7 @@ Either add the @Injectable() decorator to '${provider.node.name
          * might change depending on the type of data being stored.
          */
         allocateId() {
-            return ts__default['default'].createIdentifier(`_t${this.nextId++}`);
+            return ts__default["default"].createIdentifier(`_t${this.nextId++}`);
         }
         getPipeByName(name) {
             if (!this.pipes.has(name)) {
@@ -37791,8 +37789,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 //
                 // In addition, returning a clone prevents the consumer of `Scope#resolve` from
                 // attaching comments at the declaration site.
-                const clone = ts__default['default'].getMutableClone(res);
-                ts__default['default'].setSyntheticTrailingComments(clone, []);
+                const clone = ts__default["default"].getMutableClone(res);
+                ts__default["default"].setSyntheticTrailingComments(clone, []);
                 return clone;
             }
             else if (this.parent !== null) {
@@ -37844,7 +37842,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Both the parent scope and this scope provide a guard, so create a combination of the two.
                 // It is important that the parent guard is used as left operand, given that it may provide
                 // narrowing that is required for this scope's guard to be valid.
-                return ts__default['default'].createBinary(parentGuards, ts__default['default'].SyntaxKind.AmpersandAmpersandToken, this.guard);
+                return ts__default["default"].createBinary(parentGuards, ts__default["default"].SyntaxKind.AmpersandAmpersandToken, this.guard);
             }
         }
         resolveLocal(ref, directive) {
@@ -38093,8 +38091,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Create the `ctx` parameter to the top-level TCB function, with the given generic type arguments.
      */
     function tcbCtxParam(node, name, typeArguments) {
-        const type = ts__default['default'].factory.createTypeReferenceNode(name, typeArguments);
-        return ts__default['default'].factory.createParameterDeclaration(
+        const type = ts__default["default"].factory.createTypeReferenceNode(name, typeArguments);
+        return ts__default["default"].factory.createParameterDeclaration(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* dotDotDotToken */ undefined, 
@@ -38142,7 +38140,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     return null;
                 }
                 const expr = this.translate(ast.value);
-                const result = ts__default['default'].createParen(ts__default['default'].createBinary(target, ts__default['default'].SyntaxKind.EqualsToken, expr));
+                const result = ts__default["default"].createParen(ts__default["default"].createBinary(target, ts__default["default"].SyntaxKind.EqualsToken, expr));
                 addParseSpanInfo(result, ast.sourceSpan);
                 return result;
             }
@@ -38159,7 +38157,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Therefore if `resolve` is called on an `ImplicitReceiver`, it's because no outer
                 // PropertyRead/Call resolved to a variable or reference, and therefore this is a
                 // property read or method call on the component context itself.
-                return ts__default['default'].createIdentifier('ctx');
+                return ts__default["default"].createIdentifier('ctx');
             }
             else if (ast instanceof BindingPipe) {
                 const expr = this.translate(ast.exp);
@@ -38176,12 +38174,12 @@ Either add the @Injectable() decorator to '${provider.node.name
                     pipe = this.tcb.env.pipeInst(pipeRef);
                 }
                 const args = ast.args.map(arg => this.translate(arg));
-                let methodAccess = ts__default['default'].factory.createPropertyAccessExpression(pipe, 'transform');
+                let methodAccess = ts__default["default"].factory.createPropertyAccessExpression(pipe, 'transform');
                 addParseSpanInfo(methodAccess, ast.nameSpan);
                 if (!this.tcb.env.config.checkTypeOfPipes) {
-                    methodAccess = ts__default['default'].factory.createAsExpression(methodAccess, ts__default['default'].factory.createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword));
+                    methodAccess = ts__default["default"].factory.createAsExpression(methodAccess, ts__default["default"].factory.createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword));
                 }
-                const result = ts__default['default'].createCall(
+                const result = ts__default["default"].createCall(
                 /* expression */ methodAccess, 
                 /* typeArguments */ undefined, 
                 /* argumentsArray */ [expr, ...args]);
@@ -38195,8 +38193,8 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // `$any(expr)` -> `expr as any`
                 if (ast.receiver.name === '$any' && ast.args.length === 1) {
                     const expr = this.translate(ast.args[0]);
-                    const exprAsAny = ts__default['default'].createAsExpression(expr, ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword));
-                    const result = ts__default['default'].createParen(exprAsAny);
+                    const exprAsAny = ts__default["default"].createAsExpression(expr, ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword));
+                    const result = ts__default["default"].createParen(exprAsAny);
                     addParseSpanInfo(result, ast.sourceSpan);
                     return result;
                 }
@@ -38211,7 +38209,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 const method = wrapForDiagnostics(receiver);
                 addParseSpanInfo(method, ast.receiver.nameSpan);
                 const args = ast.args.map(arg => this.translate(arg));
-                const node = ts__default['default'].createCall(method, undefined, args);
+                const node = ts__default["default"].createCall(method, undefined, args);
                 addParseSpanInfo(node, ast.sourceSpan);
                 return node;
             }
@@ -38243,7 +38241,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         const typeCtor = tcb.env.typeCtorFor(dir);
         // Construct an array of `ts.PropertyAssignment`s for each of the directive's inputs.
         const members = inputs.map(input => {
-            const propertyName = ts__default['default'].createStringLiteral(input.field);
+            const propertyName = ts__default["default"].createStringLiteral(input.field);
             if (input.type === 'binding') {
                 // For bound inputs, the property is assigned the binding expression.
                 let expr = input.expression;
@@ -38255,24 +38253,24 @@ Either add the @Injectable() decorator to '${provider.node.name
                 else if (!tcb.env.config.strictNullInputBindings) {
                     // If strict null checks are disabled, erase `null` and `undefined` from the type by
                     // wrapping the expression in a non-null assertion.
-                    expr = ts__default['default'].createNonNullExpression(expr);
+                    expr = ts__default["default"].createNonNullExpression(expr);
                 }
-                const assignment = ts__default['default'].createPropertyAssignment(propertyName, wrapForDiagnostics(expr));
+                const assignment = ts__default["default"].createPropertyAssignment(propertyName, wrapForDiagnostics(expr));
                 addParseSpanInfo(assignment, input.sourceSpan);
                 return assignment;
             }
             else {
                 // A type constructor is required to be called with all input properties, so any unset
                 // inputs are simply assigned a value of type `any` to ignore them.
-                return ts__default['default'].createPropertyAssignment(propertyName, NULL_AS_ANY);
+                return ts__default["default"].createPropertyAssignment(propertyName, NULL_AS_ANY);
             }
         });
         // Call the `ngTypeCtor` method on the directive class, with an object literal argument created
         // from the matched inputs.
-        return ts__default['default'].createCall(
+        return ts__default["default"].createCall(
         /* expression */ typeCtor, 
         /* typeArguments */ undefined, 
-        /* argumentsArray */ [ts__default['default'].createObjectLiteral(members)]);
+        /* argumentsArray */ [ts__default["default"].createObjectLiteral(members)]);
     }
     function getBoundInputs(directive, node, tcb) {
         const boundInputs = [];
@@ -38306,7 +38304,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         else {
             // For regular attributes with a static string value, use the represented string literal.
-            return ts__default['default'].createStringLiteral(attr.value);
+            return ts__default["default"].createStringLiteral(attr.value);
         }
     }
     const EVENT_PARAMETER = '$event';
@@ -38328,7 +38326,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             eventParamType = undefined;
         }
         else if (eventType === 1 /* Any */) {
-            eventParamType = ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword);
+            eventParamType = ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword);
         }
         else {
             eventParamType = eventType;
@@ -38336,12 +38334,12 @@ Either add the @Injectable() decorator to '${provider.node.name
         // Obtain all guards that have been applied to the scope and its parents, as they have to be
         // repeated within the handler function for their narrowing to be in effect within the handler.
         const guards = scope.guards();
-        let body = ts__default['default'].createExpressionStatement(handler);
+        let body = ts__default["default"].createExpressionStatement(handler);
         if (guards !== null) {
             // Wrap the body in an `if` statement containing all guards that have to be applied.
-            body = ts__default['default'].createIf(guards, body);
+            body = ts__default["default"].createIf(guards, body);
         }
-        const eventParam = ts__default['default'].createParameter(
+        const eventParam = ts__default["default"].createParameter(
         /* decorators */ undefined, 
         /* modifiers */ undefined, 
         /* dotDotDotToken */ undefined, 
@@ -38349,14 +38347,14 @@ Either add the @Injectable() decorator to '${provider.node.name
         /* questionToken */ undefined, 
         /* type */ eventParamType);
         addExpressionIdentifier(eventParam, ExpressionIdentifier.EVENT_PARAMETER);
-        return ts__default['default'].createFunctionExpression(
+        return ts__default["default"].createFunctionExpression(
         /* modifier */ undefined, 
         /* asteriskToken */ undefined, 
         /* name */ undefined, 
         /* typeParameters */ undefined, 
         /* parameters */ [eventParam], 
-        /* type */ ts__default['default'].createKeywordTypeNode(ts__default['default'].SyntaxKind.AnyKeyword), 
-        /* body */ ts__default['default'].createBlock([body]));
+        /* type */ ts__default["default"].createKeywordTypeNode(ts__default["default"].SyntaxKind.AnyKeyword), 
+        /* body */ ts__default["default"].createBlock([body]));
     }
     /**
      * Similar to `tcbExpression`, this function converts the provided `AST` expression into a
@@ -38397,7 +38395,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // parameter by its name.
             if (ast instanceof PropertyRead && ast.receiver instanceof ImplicitReceiver &&
                 !(ast.receiver instanceof ThisReceiver) && ast.name === EVENT_PARAMETER) {
-                const event = ts__default['default'].createIdentifier(EVENT_PARAMETER);
+                const event = ts__default["default"].createIdentifier(EVENT_PARAMETER);
                 addParseSpanInfo(event, ast.nameSpan);
                 return event;
             }
@@ -38422,13 +38420,13 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     class TypeCheckFile extends Environment {
         constructor(fileName, config, refEmitter, reflector, compilerHost) {
-            super(config, new ImportManager(new NoopImportRewriter(), 'i'), refEmitter, reflector, ts__default['default'].createSourceFile(compilerHost.getCanonicalFileName(fileName), '', ts__default['default'].ScriptTarget.Latest, true));
+            super(config, new ImportManager(new NoopImportRewriter(), 'i'), refEmitter, reflector, ts__default["default"].createSourceFile(compilerHost.getCanonicalFileName(fileName), '', ts__default["default"].ScriptTarget.Latest, true));
             this.fileName = fileName;
             this.nextTcbId = 1;
             this.tcbStatements = [];
         }
         addTypeCheckBlock(ref, meta, domSchemaChecker, oobRecorder, genericContextBehavior) {
-            const fnId = ts__default['default'].createIdentifier(`_tcb${this.nextTcbId++}`);
+            const fnId = ts__default["default"].createIdentifier(`_tcb${this.nextTcbId++}`);
             const fn = generateTypeCheckBlock(this, ref, fnId, meta, domSchemaChecker, oobRecorder, genericContextBehavior);
             this.tcbStatements.push(fn);
         }
@@ -38437,17 +38435,17 @@ Either add the @Injectable() decorator to '${provider.node.name
                 .map(i => `import * as ${i.qualifier.text} from '${i.specifier}';`)
                 .join('\n') +
                 '\n\n';
-            const printer = ts__default['default'].createPrinter({ removeComments });
+            const printer = ts__default["default"].createPrinter({ removeComments });
             source += '\n';
             for (const stmt of this.pipeInstStatements) {
-                source += printer.printNode(ts__default['default'].EmitHint.Unspecified, stmt, this.contextFile) + '\n';
+                source += printer.printNode(ts__default["default"].EmitHint.Unspecified, stmt, this.contextFile) + '\n';
             }
             for (const stmt of this.typeCtorStatements) {
-                source += printer.printNode(ts__default['default'].EmitHint.Unspecified, stmt, this.contextFile) + '\n';
+                source += printer.printNode(ts__default["default"].EmitHint.Unspecified, stmt, this.contextFile) + '\n';
             }
             source += '\n';
             for (const stmt of this.tcbStatements) {
-                source += printer.printNode(ts__default['default'].EmitHint.Unspecified, stmt, this.contextFile) + '\n';
+                source += printer.printNode(ts__default["default"].EmitHint.Unspecified, stmt, this.contextFile) + '\n';
             }
             // Ensure the template type-checking file is an ES module. Otherwise, it's interpreted as some
             // kind of global namespace in TS, which forces a full re-typecheck of the user's program that
@@ -38637,7 +38635,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const ops = this.opMap.get(sf).sort(orderOps);
             const textParts = splitStringAtPoints(sf.text, ops.map(op => op.splitPoint));
             // Use a `ts.Printer` to generate source code.
-            const printer = ts__default['default'].createPrinter({ omitTrailingSemicolon: true });
+            const printer = ts__default["default"].createPrinter({ omitTrailingSemicolon: true });
             // Begin with the intial section of the code text.
             let code = textParts[0];
             // Process each operation and use the printer to generate source code for it, inserting it into
@@ -38732,7 +38730,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // diagnostic.
                     span.end.offset++;
                 }
-                return makeTemplateDiagnostic(templateId, sourceMapping, span, ts__default['default'].DiagnosticCategory.Error, ngErrorCode(ErrorCode.TEMPLATE_PARSE_ERROR), error.msg);
+                return makeTemplateDiagnostic(templateId, sourceMapping, span, ts__default["default"].DiagnosticCategory.Error, ngErrorCode(ErrorCode.TEMPLATE_PARSE_ERROR), error.msg);
             });
         }
     }
@@ -38756,11 +38754,11 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute(im, sf, refEmitter, printer) {
             const env = new Environment(this.config, im, refEmitter, this.reflector, sf);
-            const fnName = ts__default['default'].createIdentifier(`_tcb_${this.ref.node.pos}`);
+            const fnName = ts__default["default"].createIdentifier(`_tcb_${this.ref.node.pos}`);
             // Inline TCBs should copy any generic type parameter nodes directly, as the TCB code is inlined
             // into the class in a context where that will always be legal.
             const fn = generateTypeCheckBlock(env, this.ref, fnName, this.meta, this.domSchemaChecker, this.oobRecorder, TcbGenericContextBehavior.CopyClassNodes);
-            return printer.printNode(ts__default['default'].EmitHint.Unspecified, fn, sf);
+            return printer.printNode(ts__default["default"].EmitHint.Unspecified, fn, sf);
         }
     }
     /**
@@ -38779,7 +38777,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         execute(im, sf, refEmitter, printer) {
             const tcb = generateInlineTypeCtor(this.ref.node, this.meta);
-            return printer.printNode(ts__default['default'].EmitHint.Unspecified, tcb, sf);
+            return printer.printNode(ts__default["default"].EmitHint.Unspecified, tcb, sf);
         }
     }
     /**
@@ -39000,7 +38998,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         }
         getSymbolOfElement(element) {
             const elementSourceSpan = element.startSourceSpan ?? element.sourceSpan;
-            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: ts__default['default'].isVariableDeclaration });
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: ts__default["default"].isVariableDeclaration });
             if (node === null) {
                 return null;
             }
@@ -39025,14 +39023,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             // directives could be either:
             // - var _t1: TestDir /*T:D*/ = (null!);
             // - var _t1 /*T:D*/ = _ctor1({});
-            const isDirectiveDeclaration = (node) => (ts__default['default'].isTypeNode(node) || ts__default['default'].isIdentifier(node)) && ts__default['default'].isVariableDeclaration(node.parent) &&
+            const isDirectiveDeclaration = (node) => (ts__default["default"].isTypeNode(node) || ts__default["default"].isIdentifier(node)) && ts__default["default"].isVariableDeclaration(node.parent) &&
                 hasExpressionIdentifier(tcbSourceFile, node, ExpressionIdentifier.DIRECTIVE);
             const nodes = findAllMatchingNodes(this.typeCheckBlock, { withSpan: elementSourceSpan, filter: isDirectiveDeclaration });
             return nodes
                 .map(node => {
                 const symbol = this.getSymbolOfTsNode(node.parent);
                 if (symbol === null || !isSymbolWithValueDeclaration(symbol.tsSymbol) ||
-                    !ts__default['default'].isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
+                    !ts__default["default"].isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
                     return null;
                 }
                 const meta = this.getDirectiveMeta(element, symbol.tsSymbol.valueDeclaration);
@@ -39116,11 +39114,11 @@ Either add the @Injectable() decorator to '${provider.node.name
                 if (!isAccessExpression(n)) {
                     return false;
                 }
-                if (ts__default['default'].isPropertyAccessExpression(n)) {
+                if (ts__default["default"].isPropertyAccessExpression(n)) {
                     return n.name.getText() === expectedAccess;
                 }
                 else {
-                    return ts__default['default'].isStringLiteral(n.argumentExpression) &&
+                    return ts__default["default"].isStringLiteral(n.argumentExpression) &&
                         n.argumentExpression.text === expectedAccess;
                 }
             }
@@ -39128,7 +39126,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const bindings = [];
             for (const outputFieldAccess of outputFieldAccesses) {
                 if (consumer instanceof Template || consumer instanceof Element$1) {
-                    if (!ts__default['default'].isPropertyAccessExpression(outputFieldAccess)) {
+                    if (!ts__default["default"].isPropertyAccessExpression(outputFieldAccess)) {
                         continue;
                     }
                     const addEventListener = outputFieldAccess.name;
@@ -39148,7 +39146,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     });
                 }
                 else {
-                    if (!ts__default['default'].isElementAccessExpression(outputFieldAccess)) {
+                    if (!ts__default["default"].isElementAccessExpression(outputFieldAccess)) {
                         continue;
                     }
                     const tsSymbol = this.getTypeChecker().getSymbolAtLocation(outputFieldAccess.argumentExpression);
@@ -39219,7 +39217,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return null;
             }
             const [declaration] = tsSymbol.declarations;
-            if (!ts__default['default'].isVariableDeclaration(declaration) ||
+            if (!ts__default["default"].isVariableDeclaration(declaration) ||
                 !hasExpressionIdentifier(
                 // The expression identifier could be on the type (for regular directives) or the name
                 // (for generic directives and the ctor op).
@@ -39228,7 +39226,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
             const symbol = this.getSymbolOfTsNode(declaration);
             if (symbol === null || !isSymbolWithValueDeclaration(symbol.tsSymbol) ||
-                !ts__default['default'].isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
+                !ts__default["default"].isClassDeclaration(symbol.tsSymbol.valueDeclaration)) {
                 return null;
             }
             const ngModule = this.getDirectiveModule(symbol.tsSymbol.valueDeclaration);
@@ -39244,7 +39242,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             };
         }
         getSymbolOfVariable(variable) {
-            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: variable.sourceSpan, filter: ts__default['default'].isVariableDeclaration });
+            const node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: variable.sourceSpan, filter: ts__default["default"].isVariableDeclaration });
             if (node === null || node.initializer === undefined) {
                 return null;
             }
@@ -39267,7 +39265,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         getSymbolOfReference(ref) {
             const target = this.templateData.boundTarget.getReferenceTarget(ref);
             // Find the node for the reference declaration, i.e. `var _t2 = _t1;`
-            let node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: ref.sourceSpan, filter: ts__default['default'].isVariableDeclaration });
+            let node = findFirstMatchingNode(this.typeCheckBlock, { withSpan: ref.sourceSpan, filter: ts__default["default"].isVariableDeclaration });
             if (node === null || target === null || node.initializer === undefined) {
                 return null;
             }
@@ -39275,8 +39273,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             // which are of the form var _t3 = (_t2 as any as i2.TemplateRef<any>)
             // TODO(atscott): Consider adding an `ExpressionIdentifier` to tag variable declaration
             // initializers as invalid for symbol retrieval.
-            const originalDeclaration = ts__default['default'].isParenthesizedExpression(node.initializer) &&
-                ts__default['default'].isAsExpression(node.initializer.expression) ?
+            const originalDeclaration = ts__default["default"].isParenthesizedExpression(node.initializer) &&
+                ts__default["default"].isAsExpression(node.initializer.expression) ?
                 this.getTypeChecker().getSymbolAtLocation(node.name) :
                 this.getTypeChecker().getSymbolAtLocation(node.initializer);
             if (originalDeclaration === undefined || originalDeclaration.valueDeclaration === undefined) {
@@ -39302,7 +39300,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 };
             }
             else {
-                if (!ts__default['default'].isClassDeclaration(target.directive.ref.node)) {
+                if (!ts__default["default"].isClassDeclaration(target.directive.ref.node)) {
                     return null;
                 }
                 return {
@@ -39317,7 +39315,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         getSymbolOfPipe(expression) {
-            const methodAccess = findFirstMatchingNode(this.typeCheckBlock, { withSpan: expression.nameSpan, filter: ts__default['default'].isPropertyAccessExpression });
+            const methodAccess = findFirstMatchingNode(this.typeCheckBlock, { withSpan: expression.nameSpan, filter: ts__default["default"].isPropertyAccessExpression });
             if (methodAccess === null) {
                 return null;
             }
@@ -39364,7 +39362,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // Property reads in templates usually map to a `PropertyAccessExpression`
             // (e.g. `ctx.foo`) so try looking for one first.
             if (expression instanceof PropertyRead) {
-                node = findFirstMatchingNode(this.typeCheckBlock, { withSpan, filter: ts__default['default'].isPropertyAccessExpression });
+                node = findFirstMatchingNode(this.typeCheckBlock, { withSpan, filter: ts__default["default"].isPropertyAccessExpression });
             }
             // Otherwise fall back to searching for any AST node.
             if (node === null) {
@@ -39373,7 +39371,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (node === null) {
                 return null;
             }
-            while (ts__default['default'].isParenthesizedExpression(node)) {
+            while (ts__default["default"].isParenthesizedExpression(node)) {
                 node = node.expression;
             }
             // - If we have safe property read ("a?.b") we want to get the Symbol for b, the `whenTrue`
@@ -39381,7 +39379,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             // - If our expression is a pipe binding ("a | test:b:c"), we want the Symbol for the
             // `transform` on the pipe.
             // - Otherwise, we retrieve the symbol for the node itself with no special considerations
-            if (expression instanceof SafePropertyRead && ts__default['default'].isConditionalExpression(node)) {
+            if (expression instanceof SafePropertyRead && ts__default["default"].isConditionalExpression(node)) {
                 const whenTrueSymbol = this.getSymbolOfTsNode(node.whenTrue);
                 if (whenTrueSymbol === null) {
                     return null;
@@ -39400,14 +39398,14 @@ Either add the @Injectable() decorator to '${provider.node.name
             }
         }
         getSymbolOfTsNode(node) {
-            while (ts__default['default'].isParenthesizedExpression(node)) {
+            while (ts__default["default"].isParenthesizedExpression(node)) {
                 node = node.expression;
             }
             let tsSymbol;
-            if (ts__default['default'].isPropertyAccessExpression(node)) {
+            if (ts__default["default"].isPropertyAccessExpression(node)) {
                 tsSymbol = this.getTypeChecker().getSymbolAtLocation(node.name);
             }
-            else if (ts__default['default'].isElementAccessExpression(node)) {
+            else if (ts__default["default"].isElementAccessExpression(node)) {
                 tsSymbol = this.getTypeChecker().getSymbolAtLocation(node.argumentExpression);
             }
             else {
@@ -39425,16 +39423,16 @@ Either add the @Injectable() decorator to '${provider.node.name
             };
         }
         getShimPositionForNode(node) {
-            if (ts__default['default'].isTypeReferenceNode(node)) {
+            if (ts__default["default"].isTypeReferenceNode(node)) {
                 return this.getShimPositionForNode(node.typeName);
             }
-            else if (ts__default['default'].isQualifiedName(node)) {
+            else if (ts__default["default"].isQualifiedName(node)) {
                 return node.right.getStart();
             }
-            else if (ts__default['default'].isPropertyAccessExpression(node)) {
+            else if (ts__default["default"].isPropertyAccessExpression(node)) {
                 return node.name.getStart();
             }
-            else if (ts__default['default'].isElementAccessExpression(node)) {
+            else if (ts__default["default"].isElementAccessExpression(node)) {
                 return node.argumentExpression.getStart();
             }
             else {
@@ -40187,7 +40185,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return [];
             const boundSyntax = node.sourceSpan.toString();
             const expectedBoundSyntax = boundSyntax.replace(`(${name})`, `[(${name.slice(1, -1)})]`);
-            const diagnostic = ctx.templateTypeChecker.makeTemplateDiagnostic(component, node.sourceSpan, ts__default['default'].DiagnosticCategory.Warning, ErrorCode.INVALID_BANANA_IN_BOX, `In the two-way binding syntax the parentheses should be inside the brackets, ex. '${expectedBoundSyntax}'.
+            const diagnostic = ctx.templateTypeChecker.makeTemplateDiagnostic(component, node.sourceSpan, ts__default["default"].DiagnosticCategory.Warning, ErrorCode.INVALID_BANANA_IN_BOX, `In the two-way binding syntax the parentheses should be inside the brackets, ex. '${expectedBoundSyntax}'.
         Find more at https://angular.io/guide/two-way-binding`);
             return [diagnostic];
         }
@@ -40229,7 +40227,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 return [];
             }
             const span = ctx.templateTypeChecker.getTemplateMappingAtShimLocation(symbol.shimLocation).span;
-            const diagnostic = ctx.templateTypeChecker.makeTemplateDiagnostic(component, span, ts__default['default'].DiagnosticCategory.Warning, ErrorCode.NULLISH_COALESCING_NOT_NULLABLE, `The left side of this nullish coalescing operation does not include 'null' or 'undefined' in its type, therefore the '??' operator can be safely removed.`);
+            const diagnostic = ctx.templateTypeChecker.makeTemplateDiagnostic(component, span, ts__default["default"].DiagnosticCategory.Warning, ErrorCode.NULLISH_COALESCING_NOT_NULLABLE, `The left side of this nullish coalescing operation does not include 'null' or 'undefined' in its type, therefore the '??' operator can be safely removed.`);
             return [diagnostic];
         }
     }
@@ -40363,7 +40361,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             this.closureCompilerEnabled = !!this.options.annotateForClosureCompiler;
             this.entryPoint =
                 adapter.entryPoint !== null ? getSourceFileOrNull(inputProgram, adapter.entryPoint) : null;
-            const moduleResolutionCache = ts__default['default'].createModuleResolutionCache(this.adapter.getCurrentDirectory(), 
+            const moduleResolutionCache = ts__default["default"].createModuleResolutionCache(this.adapter.getCurrentDirectory(), 
             // doen't retain a reference to `this`, if other closures in the constructor here reference
             // `this` internally then a closure created here would retain them. This can cause major
             // memory leak issues since the `moduleResolutionCache` is a long-lived object and finds its
@@ -40443,7 +40441,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 }
                 for (const clazz of classesToUpdate) {
                     this.compilation.traitCompiler.updateResources(clazz);
-                    if (!ts__default['default'].isClassDeclaration(clazz)) {
+                    if (!ts__default["default"].isClassDeclaration(clazz)) {
                         continue;
                     }
                     this.compilation.templateTypeChecker.invalidateClass(clazz);
@@ -41020,22 +41018,22 @@ Either add the @Injectable() decorator to '${provider.node.name
         // Look for the constant ITS_JUST_ANGULAR in that file.
         return r3Symbols.statements.some(stmt => {
             // The statement must be a variable declaration statement.
-            if (!ts__default['default'].isVariableStatement(stmt)) {
+            if (!ts__default["default"].isVariableStatement(stmt)) {
                 return false;
             }
             // It must be exported.
             if (stmt.modifiers === undefined ||
-                !stmt.modifiers.some(mod => mod.kind === ts__default['default'].SyntaxKind.ExportKeyword)) {
+                !stmt.modifiers.some(mod => mod.kind === ts__default["default"].SyntaxKind.ExportKeyword)) {
                 return false;
             }
             // It must declare ITS_JUST_ANGULAR.
             return stmt.declarationList.declarations.some(decl => {
                 // The declaration must match the name.
-                if (!ts__default['default'].isIdentifier(decl.name) || decl.name.text !== 'ITS_JUST_ANGULAR') {
+                if (!ts__default["default"].isIdentifier(decl.name) || decl.name.text !== 'ITS_JUST_ANGULAR') {
                     return false;
                 }
                 // It must initialize the variable to true.
-                if (decl.initializer === undefined || decl.initializer.kind !== ts__default['default'].SyntaxKind.TrueKeyword) {
+                if (decl.initializer === undefined || decl.initializer.kind !== ts__default["default"].SyntaxKind.TrueKeyword) {
                     return false;
                 }
                 // This definition matches.
@@ -41057,7 +41055,7 @@ Either add the @Injectable() decorator to '${provider.node.name
     function verifyCompatibleTypeCheckOptions(options) {
         if (options.fullTemplateTypeCheck === false && options.strictTemplates === true) {
             return {
-                category: ts__default['default'].DiagnosticCategory.Error,
+                category: ts__default["default"].DiagnosticCategory.Error,
                 code: ngErrorCode(ErrorCode.CONFIG_STRICT_TEMPLATES_IMPLIES_FULL_TEMPLATE_TYPECHECK),
                 file: undefined,
                 start: undefined,
@@ -41085,7 +41083,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             for (const { node } of references) {
                 let sourceFile = node.getSourceFile();
                 if (sourceFile === undefined) {
-                    sourceFile = ts__default['default'].getOriginalNode(node).getSourceFile();
+                    sourceFile = ts__default["default"].getOriginalNode(node).getSourceFile();
                 }
                 // Only record local references (not references into .d.ts files).
                 if (sourceFile === undefined || !isDtsPath(sourceFile.fileName)) {
@@ -41134,7 +41132,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * The currently used version of TypeScript, which can be adjusted for testing purposes using
      * `setTypeScriptVersionForTesting` and `restoreTypeScriptVersionForTesting` below.
      */
-    ts__default['default'].version;
+    ts__default["default"].version;
 
     /**
      * @license
@@ -41154,7 +41152,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function readConfiguration(project, existingOptions, host = getFileSystem()) {
         try {
             const fs = getFileSystem();
-            const readConfigFile = (configFile) => ts__default['default'].readConfigFile(configFile, file => host.readFile(host.resolve(file)));
+            const readConfigFile = (configFile) => ts__default["default"].readConfigFile(configFile, file => host.readFile(host.resolve(file)));
             const readAngularCompilerOptions = (configFile, parentOptions = {}) => {
                 const { config, error } = readConfigFile(configFile);
                 if (error) {
@@ -41192,7 +41190,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 ...existingOptions,
             };
             const parseConfigHost = createParseConfigHost(host, fs);
-            const { options, errors, fileNames: rootNames, projectReferences } = ts__default['default'].parseJsonConfigFileContent(config, parseConfigHost, basePath, existingCompilerOptions, configFileName);
+            const { options, errors, fileNames: rootNames, projectReferences } = ts__default["default"].parseJsonConfigFileContent(config, parseConfigHost, basePath, existingCompilerOptions, configFileName);
             // Coerce to boolean as `enableIvy` can be `ngtsc|true|false|undefined` here.
             options.enableIvy = !!(options.enableIvy ?? true);
             let emitFlags = EmitFlags.Default;
@@ -41206,7 +41204,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         }
         catch (e) {
             const errors = [{
-                    category: ts__default['default'].DiagnosticCategory.Error,
+                    category: ts__default["default"].DiagnosticCategory.Error,
                     messageText: e.stack,
                     file: undefined,
                     start: undefined,
@@ -41220,7 +41218,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function createParseConfigHost(host, fs = getFileSystem()) {
         return {
             fileExists: host.exists.bind(host),
-            readDirectory: ts__default['default'].sys.readDirectory,
+            readDirectory: ts__default["default"].sys.readDirectory,
             readFile: host.readFile.bind(host),
             useCaseSensitiveFileNames: fs.isCaseSensitive(),
         };
@@ -41245,7 +41243,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         else {
             const parseConfigHost = createParseConfigHost(host, fs);
             // Path isn't a rooted or relative path, resolve like a module.
-            const { resolvedModule, } = ts__default['default'].nodeModuleNameResolver(extendsValue, configFile, { moduleResolution: ts__default['default'].ModuleResolutionKind.NodeJs, resolveJsonModule: true }, parseConfigHost);
+            const { resolvedModule, } = ts__default["default"].nodeModuleNameResolver(extendsValue, configFile, { moduleResolution: ts__default["default"].ModuleResolutionKind.NodeJs, resolveJsonModule: true }, parseConfigHost);
             if (resolvedModule) {
                 return absoluteFrom(resolvedModule.resolvedFileName);
             }
@@ -41285,11 +41283,11 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * found in the LICENSE file at https://angular.io/license
      */
     // Reverse mappings of enum would generate strings
-    const ALIAS_NAME = ts__default['default'].SymbolDisplayPartKind[ts__default['default'].SymbolDisplayPartKind.aliasName];
-    const SYMBOL_INTERFACE = ts__default['default'].SymbolDisplayPartKind[ts__default['default'].SymbolDisplayPartKind.interfaceName];
-    const SYMBOL_PUNC = ts__default['default'].SymbolDisplayPartKind[ts__default['default'].SymbolDisplayPartKind.punctuation];
-    const SYMBOL_SPACE = ts__default['default'].SymbolDisplayPartKind[ts__default['default'].SymbolDisplayPartKind.space];
-    const SYMBOL_TEXT = ts__default['default'].SymbolDisplayPartKind[ts__default['default'].SymbolDisplayPartKind.text];
+    const ALIAS_NAME = ts__default["default"].SymbolDisplayPartKind[ts__default["default"].SymbolDisplayPartKind.aliasName];
+    const SYMBOL_INTERFACE = ts__default["default"].SymbolDisplayPartKind[ts__default["default"].SymbolDisplayPartKind.interfaceName];
+    const SYMBOL_PUNC = ts__default["default"].SymbolDisplayPartKind[ts__default["default"].SymbolDisplayPartKind.punctuation];
+    const SYMBOL_SPACE = ts__default["default"].SymbolDisplayPartKind[ts__default["default"].SymbolDisplayPartKind.space];
+    const SYMBOL_TEXT = ts__default["default"].SymbolDisplayPartKind[ts__default["default"].SymbolDisplayPartKind.text];
     /**
      * Label for various kinds of Angular entities for TS display info.
      */
@@ -41382,7 +41380,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function getDirectiveDisplayInfo(tsLS, dir) {
         const kind = dir.isComponent ? DisplayInfoKind.COMPONENT : DisplayInfoKind.DIRECTIVE;
-        const decl = dir.tsSymbol.declarations.find(ts__default['default'].isClassDeclaration);
+        const decl = dir.tsSymbol.declarations.find(ts__default["default"].isClassDeclaration);
         if (decl === undefined || decl.name === undefined) {
             return { kind, displayParts: [], documentation: [] };
         }
@@ -41400,9 +41398,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     function getTsSymbolDisplayInfo(tsLS, checker, symbol, kind, ownerName) {
         const decl = symbol.valueDeclaration;
         if (decl === undefined ||
-            (!ts__default['default'].isPropertyDeclaration(decl) && !ts__default['default'].isMethodDeclaration(decl) &&
+            (!ts__default["default"].isPropertyDeclaration(decl) && !ts__default["default"].isMethodDeclaration(decl) &&
                 !isNamedClassDeclaration(decl)) ||
-            !ts__default['default'].isIdentifier(decl.name)) {
+            !ts__default["default"].isIdentifier(decl.name)) {
             return null;
         }
         const res = tsLS.getQuickInfoAtPosition(decl.getSourceFile().fileName, decl.name.getStart());
@@ -41439,7 +41437,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
     }
     function getParentClassDeclaration(startNode) {
         while (startNode) {
-            if (ts__default['default'].isClassDeclaration(startNode)) {
+            if (ts__default["default"].isClassDeclaration(startNode)) {
                 return startNode;
             }
             startNode = startNode.parent;
@@ -41452,7 +41450,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      */
     function getPropertyAssignmentFromValue(value, key) {
         const propAssignment = value.parent;
-        if (!propAssignment || !ts__default['default'].isPropertyAssignment(propAssignment) ||
+        if (!propAssignment || !ts__default["default"].isPropertyAssignment(propAssignment) ||
             propAssignment.name.getText() !== key) {
             return null;
         }
@@ -41475,19 +41473,19 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * @param propAsgnNode property assignment
      */
     function getClassDeclFromDecoratorProp(propAsgnNode) {
-        if (!propAsgnNode.parent || !ts__default['default'].isObjectLiteralExpression(propAsgnNode.parent)) {
+        if (!propAsgnNode.parent || !ts__default["default"].isObjectLiteralExpression(propAsgnNode.parent)) {
             return;
         }
         const objLitExprNode = propAsgnNode.parent;
-        if (!objLitExprNode.parent || !ts__default['default'].isCallExpression(objLitExprNode.parent)) {
+        if (!objLitExprNode.parent || !ts__default["default"].isCallExpression(objLitExprNode.parent)) {
             return;
         }
         const callExprNode = objLitExprNode.parent;
-        if (!callExprNode.parent || !ts__default['default'].isDecorator(callExprNode.parent)) {
+        if (!callExprNode.parent || !ts__default["default"].isDecorator(callExprNode.parent)) {
             return;
         }
         const decorator = callExprNode.parent;
-        if (!decorator.parent || !ts__default['default'].isClassDeclaration(decorator.parent)) {
+        if (!decorator.parent || !ts__default["default"].isClassDeclaration(decorator.parent)) {
             return;
         }
         const classDeclNode = decorator.parent;
@@ -41500,7 +41498,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const members = [];
         const apparentProps = typeChecker.getTypeAtLocation(clazz).getApparentProperties();
         for (const prop of apparentProps) {
-            if (prop.valueDeclaration && ts__default['default'].isMethodDeclaration(prop.valueDeclaration)) {
+            if (prop.valueDeclaration && ts__default["default"].isMethodDeclaration(prop.valueDeclaration)) {
                 members.push(prop.valueDeclaration);
             }
         }
@@ -41614,7 +41612,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const components = compiler.getComponentsWithTemplateFile(fileName);
         const sortedComponents = Array.from(components).sort(tsDeclarationSortComparator);
         for (const component of sortedComponents) {
-            if (!ts__default['default'].isClassDeclaration(component)) {
+            if (!ts__default["default"].isClassDeclaration(component)) {
                 continue;
             }
             const template = templateTypeChecker.getTemplate(component);
@@ -42093,7 +42091,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             // element can be added to the completion table.
             for (const dirSymbol of symbol.directives) {
                 const directive = dirSymbol.tsSymbol.valueDeclaration;
-                if (!ts__default['default'].isClassDeclaration(directive)) {
+                if (!ts__default["default"].isClassDeclaration(directive)) {
                     continue;
                 }
                 presentDirectives.add(directive);
@@ -42134,7 +42132,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             for (const dirInScope of directivesInScope) {
                 const directive = dirInScope.tsSymbol.valueDeclaration;
                 // Skip directives that are present on the element.
-                if (!ts__default['default'].isClassDeclaration(directive) || presentDirectives.has(directive)) {
+                if (!ts__default["default"].isClassDeclaration(directive) || presentDirectives.has(directive)) {
                     continue;
                 }
                 const meta = checker.getDirectiveMetadata(directive);
@@ -43069,7 +43067,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                     name,
                     sortText: name,
                     replacementSpan,
-                    kindModifiers: ts__default['default'].ScriptElementKindModifier.none,
+                    kindModifiers: ts__default["default"].ScriptElementKindModifier.none,
                     kind: unsafeCastDisplayInfoKindToScriptElementKind(entity.kind === CompletionKind.Reference ? DisplayInfoKind.REFERENCE :
                         DisplayInfoKind.VARIABLE),
                 });
@@ -43106,7 +43104,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                 return {
                     kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
                     name: entryName,
-                    kindModifiers: ts__default['default'].ScriptElementKindModifier.none,
+                    kindModifiers: ts__default["default"].ScriptElementKindModifier.none,
                     displayParts,
                     documentation,
                 };
@@ -43206,7 +43204,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return {
                 kind: tagCompletionKind(directive),
                 name: entryName,
-                kindModifiers: ts__default['default'].ScriptElementKindModifier.none,
+                kindModifiers: ts__default["default"].ScriptElementKindModifier.none,
                 displayParts,
                 documentation,
             };
@@ -43396,7 +43394,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return {
                 name: entryName,
                 kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
-                kindModifiers: ts__default['default'].ScriptElementKindModifier.none,
+                kindModifiers: ts__default["default"].ScriptElementKindModifier.none,
                 displayParts,
                 documentation,
             };
@@ -43448,15 +43446,15 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
          * literals, `true`, `false`, `null`, and `undefined`.
          */
         isValidNodeContextCompletion(completion) {
-            if (completion.kind === ts__default['default'].ScriptElementKind.string) {
+            if (completion.kind === ts__default["default"].ScriptElementKind.string) {
                 // 'string' kind includes both string literals and number literals
                 return true;
             }
-            if (completion.kind === ts__default['default'].ScriptElementKind.keyword) {
+            if (completion.kind === ts__default["default"].ScriptElementKind.keyword) {
                 return completion.name === 'true' || completion.name === 'false' ||
                     completion.name === 'null';
             }
-            if (completion.kind === ts__default['default'].ScriptElementKind.variableElement) {
+            if (completion.kind === ts__default["default"].ScriptElementKind.variableElement) {
                 return completion.name === 'undefined';
             }
             return false;
@@ -43664,7 +43662,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const allDirectives = [];
         for (const dir of directives.values()) {
             const dirClass = dir.tsSymbol.valueDeclaration;
-            if (dirClass === undefined || !ts__default['default'].isClassDeclaration(dirClass) || dirClass.name === undefined) {
+            if (dirClass === undefined || !ts__default["default"].isClassDeclaration(dirClass) || dirClass.name === undefined) {
                 continue;
             }
             const { fileName } = dirClass.getSourceFile();
@@ -43857,8 +43855,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
                             definitions.push({
                                 name: symbol.declaration.name,
                                 containerName: '',
-                                containerKind: ts__default['default'].ScriptElementKind.unknown,
-                                kind: ts__default['default'].ScriptElementKind.variableElement,
+                                containerKind: ts__default["default"].ScriptElementKind.unknown,
+                                kind: ts__default["default"].ScriptElementKind.variableElement,
                                 textSpan: getTextSpanOfNode(symbol.declaration),
                                 contextSpan: toTextSpan(symbol.declaration.sourceSpan),
                                 fileName: mapping.templateUrl,
@@ -44051,9 +44049,9 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             return;
         }
         const templateDefinitions = [{
-                kind: ts__default['default'].ScriptElementKind.externalModuleName,
+                kind: ts__default["default"].ScriptElementKind.externalModuleName,
                 name: resourceForExpression.path,
-                containerKind: ts__default['default'].ScriptElementKind.unknown,
+                containerKind: ts__default["default"].ScriptElementKind.unknown,
                 containerName: '',
                 // Reading the template is expensive, so don't provide a preview.
                 // TODO(ayazhafiz): Consider providing an actual span:
@@ -44174,7 +44172,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             const kind = dir.isComponent ? DisplayInfoKind.COMPONENT : DisplayInfoKind.DIRECTIVE;
             const documentation = this.getDocumentationFromTypeDefAtLocation(dir.shimLocation);
             let containerName;
-            if (ts__default['default'].isClassDeclaration(dir.tsSymbol.valueDeclaration) && dir.ngModule !== null) {
+            if (ts__default["default"].isClassDeclaration(dir.tsSymbol.valueDeclaration) && dir.ngModule !== null) {
                 containerName = dir.ngModule.name.getText();
             }
             return createQuickInfo(this.typeChecker.typeToString(dir.tsType), kind, getTextSpanOfNode(this.node), containerName, undefined, documentation);
@@ -44257,7 +44255,7 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
         const displayParts = createDisplayParts(name, kind, containerName, type);
         return {
             kind: unsafeCastDisplayInfoKindToScriptElementKind(kind),
-            kindModifiers: ts__default['default'].ScriptElementKindModifier.none,
+            kindModifiers: ts__default["default"].ScriptElementKindModifier.none,
             textSpan: textSpan,
             displayParts,
             documentation,
@@ -44514,8 +44512,8 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
             }
         }
         buildPipeRenameRequest(meta) {
-            if (!ts__default['default'].isClassDeclaration(meta.ref.node) || meta.nameExpr === null ||
-                !ts__default['default'].isStringLiteral(meta.nameExpr)) {
+            if (!ts__default["default"].isClassDeclaration(meta.ref.node) || meta.nameExpr === null ||
+                !ts__default["default"].isStringLiteral(meta.nameExpr)) {
                 return null;
             }
             const typeChecker = this.driver.getProgram().getTypeChecker();
@@ -45338,5 +45336,5 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-});
+}));
 //# sourceMappingURL=language-service.js.map
