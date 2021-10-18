@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0-rc.0+20.sha-db57e39.with-local-changes
+ * @license Angular v13.0.0-rc.0+25.sha-fc6519c.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3550,12 +3550,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     /** Name of the i18n attributes **/
     const I18N_ATTR = 'i18n';
     const I18N_ATTR_PREFIX = 'i18n-';
-    /**
-     * Matches the prefix used when binding to an attribute rather than a property.
-     *
-     * For example: `[attr.title]="expression"`.
-     * */
-    const ATTR_BINDING_MATCHER = /^attr\./i;
     /** Prefix of var expressions used in ICUs */
     const I18N_ICU_VAR_PREFIX = 'VAR_';
     /** Prefix of ICU expressions for post processing */
@@ -7448,8 +7442,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 if (convertedArgs.length !== 1) {
                     throw new Error(`Invalid call to $any, expected 1 argument but received ${convertedArgs.length || 'none'}`);
                 }
-                return convertedArgs[0]
-                    .cast(DYNAMIC_TYPE, this.convertSourceSpan(ast.span));
+                return convertToStatementIfNeeded(mode, convertedArgs[0]
+                    .cast(DYNAMIC_TYPE, this.convertSourceSpan(ast.span)));
             }
             const leftMostSafe = this.leftMostSafeNode(ast);
             if (leftMostSafe) {
@@ -16836,7 +16830,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 const attrsMeta = {};
                 for (const attr of element.attrs) {
                     if (attr.name === I18N_ATTR) {
-                        // 'i18n' attribute that marks the element contents as an i18n message
+                        // root 'i18n' node attribute
                         const i18n = element.i18n || attr.value;
                         const message = this._generateI18nMessage(element.children, i18n, setI18nRefs);
                         // do not assign empty i18n meta
@@ -16862,9 +16856,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 // set i18n meta for attributes
                 if (Object.keys(attrsMeta).length) {
                     for (const attr of attrs) {
-                        // First try to match the metadata to the attribute name as-is.
-                        // If that cannot be found try removing any `attr.` prefix from the attribute name.
-                        const meta = attrsMeta[attr.name] ?? attrsMeta[attr.name.replace(ATTR_BINDING_MATCHER, '')];
+                        const meta = attrsMeta[attr.name];
                         // do not create translation for empty attributes
                         if (meta !== undefined && attr.value) {
                             attr.i18n = this._generateI18nMessage([attr], attr.i18n || meta);
@@ -17673,8 +17665,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             element.inputs.forEach(input => {
                 const stylingInputWasSet = stylingBuilder.registerBoundInput(input);
                 if (!stylingInputWasSet) {
-                    if ((input.type === 0 /* Property */ || input.type === 1 /* Attribute */) &&
-                        input.i18n) {
+                    if (input.type === 0 /* Property */ && input.i18n) {
                         boundI18nAttrs.push(input);
                     }
                     else {
@@ -20071,7 +20062,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.0-rc.0+20.sha-db57e39.with-local-changes');
+    new Version('13.0.0-rc.0+25.sha-fc6519c.with-local-changes');
 
     /**
      * @license
@@ -20700,7 +20691,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.0.0-rc.0+20.sha-db57e39.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-rc.0+25.sha-fc6519c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20740,7 +20731,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.0.0-rc.0+20.sha-db57e39.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-rc.0+25.sha-fc6519c.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20957,7 +20948,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.0.0-rc.0+20.sha-db57e39.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-rc.0+25.sha-fc6519c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20999,7 +20990,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.0.0-rc.0+20.sha-db57e39.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-rc.0+25.sha-fc6519c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21078,7 +21069,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.0.0-rc.0+20.sha-db57e39.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-rc.0+25.sha-fc6519c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21115,7 +21106,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.0.0-rc.0+20.sha-db57e39.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-rc.0+25.sha-fc6519c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21173,7 +21164,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.0.0-rc.0+20.sha-db57e39.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0-rc.0+25.sha-fc6519c.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21205,7 +21196,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.0-rc.0+20.sha-db57e39.with-local-changes');
+    new Version('13.0.0-rc.0+25.sha-fc6519c.with-local-changes');
 
     /**
      * @license
