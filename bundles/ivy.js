@@ -1,5 +1,5 @@
 /**
- * @license Angular v12.2.11+14.sha-8fcfd87.with-local-changes
+ * @license Angular v12.2.11+20.sha-515949e.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20074,7 +20074,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$1 = new Version('12.2.11+14.sha-8fcfd87.with-local-changes');
+    const VERSION$1 = new Version('12.2.11+20.sha-515949e.with-local-changes');
 
     /**
      * @license
@@ -20713,7 +20713,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal('12.2.11+14.sha-8fcfd87.with-local-changes'));
+        definitionMap.set('version', literal('12.2.11+20.sha-515949e.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20753,7 +20753,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal('12.2.11+14.sha-8fcfd87.with-local-changes'));
+        definitionMap.set('version', literal('12.2.11+20.sha-515949e.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20970,7 +20970,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal('12.2.11+14.sha-8fcfd87.with-local-changes'));
+        definitionMap.set('version', literal('12.2.11+20.sha-515949e.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21012,7 +21012,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal('12.2.11+14.sha-8fcfd87.with-local-changes'));
+        definitionMap.set('version', literal('12.2.11+20.sha-515949e.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21091,7 +21091,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal('12.2.11+14.sha-8fcfd87.with-local-changes'));
+        definitionMap.set('version', literal('12.2.11+20.sha-515949e.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21128,7 +21128,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal('12.2.11+14.sha-8fcfd87.with-local-changes'));
+        definitionMap.set('version', literal('12.2.11+20.sha-515949e.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21186,7 +21186,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal('12.2.11+14.sha-8fcfd87.with-local-changes'));
+        definitionMap.set('version', literal('12.2.11+20.sha-515949e.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21218,7 +21218,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const VERSION$2 = new Version('12.2.11+14.sha-8fcfd87.with-local-changes');
+    const VERSION$2 = new Version('12.2.11+20.sha-515949e.with-local-changes');
 
     /**
      * @license
@@ -21468,15 +21468,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          */
         ErrorCode[ErrorCode["SUGGEST_SUBOPTIMAL_TYPE_INFERENCE"] = 10002] = "SUGGEST_SUBOPTIMAL_TYPE_INFERENCE";
     })(ErrorCode || (ErrorCode = {}));
-
     /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
+     * @internal
+     * Base URL for the error details page.
+     * Keep this value in sync with a similar const in
+     * `packages/core/src/render3/error_code.ts`.
      */
+    const ERROR_DETAILS_PAGE_BASE_URL = 'https://angular.io/errors';
     /**
+     * @internal
      * Contains a set of error messages that have detailed guides at angular.io.
      * Full list of available error guides can be found at https://angular.io/errors
      */
@@ -21489,13 +21489,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         ErrorCode.MISSING_REFERENCE_TARGET,
         ErrorCode.COMPONENT_INVALID_SHADOW_DOM_SELECTOR,
     ]);
-
     /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
+     * @internal
      */
     function ngErrorCode(code) {
         return parseInt('-99' + code);
@@ -21546,22 +21541,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             messageText,
         };
     }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Base URL for the error details page.
-     *
-     * Keep the files below in full sync:
-     *  - packages/compiler-cli/src/ngtsc/diagnostics/src/error_details_base_url.ts
-     *  - packages/core/src/render3/error_details_base_url.ts
-     */
-    const ERROR_DETAILS_PAGE_BASE_URL = 'https://angular.io/errors';
 
     /**
      * @license
