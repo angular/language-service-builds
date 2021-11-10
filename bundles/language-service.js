@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.1.0-next.0+70.sha-ac7d5fa.with-local-changes
+ * @license Angular v13.1.0-next.0+74.sha-393efa5.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -3206,830 +3206,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * This is an R3 `Node`-like wrapper for a raw `html.Comment` node. We do not currently
-     * require the implementation of a visitor for Comments as they are only collected at
-     * the top-level of the R3 AST, and only if `Render3ParseOptions['collectCommentNodes']`
-     * is true.
-     */
-    class Comment$1 {
-        constructor(value, sourceSpan) {
-            this.value = value;
-            this.sourceSpan = sourceSpan;
-        }
-        visit(_visitor) {
-            throw new Error('visit() not implemented for Comment');
-        }
-    }
-    class Text$2 {
-        constructor(value, sourceSpan) {
-            this.value = value;
-            this.sourceSpan = sourceSpan;
-        }
-        visit(visitor) {
-            return visitor.visitText(this);
-        }
-    }
-    class BoundText {
-        constructor(value, sourceSpan, i18n) {
-            this.value = value;
-            this.sourceSpan = sourceSpan;
-            this.i18n = i18n;
-        }
-        visit(visitor) {
-            return visitor.visitBoundText(this);
-        }
-    }
-    /**
-     * Represents a text attribute in the template.
-     *
-     * `valueSpan` may not be present in cases where there is no value `<div a></div>`.
-     * `keySpan` may also not be present for synthetic attributes from ICU expansions.
-     */
-    class TextAttribute {
-        constructor(name, value, sourceSpan, keySpan, valueSpan, i18n) {
-            this.name = name;
-            this.value = value;
-            this.sourceSpan = sourceSpan;
-            this.keySpan = keySpan;
-            this.valueSpan = valueSpan;
-            this.i18n = i18n;
-        }
-        visit(visitor) {
-            return visitor.visitTextAttribute(this);
-        }
-    }
-    class BoundAttribute {
-        constructor(name, type, securityContext, value, unit, sourceSpan, keySpan, valueSpan, i18n) {
-            this.name = name;
-            this.type = type;
-            this.securityContext = securityContext;
-            this.value = value;
-            this.unit = unit;
-            this.sourceSpan = sourceSpan;
-            this.keySpan = keySpan;
-            this.valueSpan = valueSpan;
-            this.i18n = i18n;
-        }
-        static fromBoundElementProperty(prop, i18n) {
-            if (prop.keySpan === undefined) {
-                throw new Error(`Unexpected state: keySpan must be defined for bound attributes but was not for ${prop.name}: ${prop.sourceSpan}`);
-            }
-            return new BoundAttribute(prop.name, prop.type, prop.securityContext, prop.value, prop.unit, prop.sourceSpan, prop.keySpan, prop.valueSpan, i18n);
-        }
-        visit(visitor) {
-            return visitor.visitBoundAttribute(this);
-        }
-    }
-    class BoundEvent {
-        constructor(name, type, handler, target, phase, sourceSpan, handlerSpan, keySpan) {
-            this.name = name;
-            this.type = type;
-            this.handler = handler;
-            this.target = target;
-            this.phase = phase;
-            this.sourceSpan = sourceSpan;
-            this.handlerSpan = handlerSpan;
-            this.keySpan = keySpan;
-        }
-        static fromParsedEvent(event) {
-            const target = event.type === 0 /* Regular */ ? event.targetOrPhase : null;
-            const phase = event.type === 1 /* Animation */ ? event.targetOrPhase : null;
-            if (event.keySpan === undefined) {
-                throw new Error(`Unexpected state: keySpan must be defined for bound event but was not for ${event.name}: ${event.sourceSpan}`);
-            }
-            return new BoundEvent(event.name, event.type, event.handler, target, phase, event.sourceSpan, event.handlerSpan, event.keySpan);
-        }
-        visit(visitor) {
-            return visitor.visitBoundEvent(this);
-        }
-    }
-    class Element$1 {
-        constructor(name, attributes, inputs, outputs, children, references, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
-            this.name = name;
-            this.attributes = attributes;
-            this.inputs = inputs;
-            this.outputs = outputs;
-            this.children = children;
-            this.references = references;
-            this.sourceSpan = sourceSpan;
-            this.startSourceSpan = startSourceSpan;
-            this.endSourceSpan = endSourceSpan;
-            this.i18n = i18n;
-        }
-        visit(visitor) {
-            return visitor.visitElement(this);
-        }
-    }
-    class Template {
-        constructor(tagName, attributes, inputs, outputs, templateAttrs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
-            this.tagName = tagName;
-            this.attributes = attributes;
-            this.inputs = inputs;
-            this.outputs = outputs;
-            this.templateAttrs = templateAttrs;
-            this.children = children;
-            this.references = references;
-            this.variables = variables;
-            this.sourceSpan = sourceSpan;
-            this.startSourceSpan = startSourceSpan;
-            this.endSourceSpan = endSourceSpan;
-            this.i18n = i18n;
-        }
-        visit(visitor) {
-            return visitor.visitTemplate(this);
-        }
-    }
-    class Content {
-        constructor(selector, attributes, sourceSpan, i18n) {
-            this.selector = selector;
-            this.attributes = attributes;
-            this.sourceSpan = sourceSpan;
-            this.i18n = i18n;
-            this.name = 'ng-content';
-        }
-        visit(visitor) {
-            return visitor.visitContent(this);
-        }
-    }
-    class Variable {
-        constructor(name, value, sourceSpan, keySpan, valueSpan) {
-            this.name = name;
-            this.value = value;
-            this.sourceSpan = sourceSpan;
-            this.keySpan = keySpan;
-            this.valueSpan = valueSpan;
-        }
-        visit(visitor) {
-            return visitor.visitVariable(this);
-        }
-    }
-    class Reference$1 {
-        constructor(name, value, sourceSpan, keySpan, valueSpan) {
-            this.name = name;
-            this.value = value;
-            this.sourceSpan = sourceSpan;
-            this.keySpan = keySpan;
-            this.valueSpan = valueSpan;
-        }
-        visit(visitor) {
-            return visitor.visitReference(this);
-        }
-    }
-    class Icu$1 {
-        constructor(vars, placeholders, sourceSpan, i18n) {
-            this.vars = vars;
-            this.placeholders = placeholders;
-            this.sourceSpan = sourceSpan;
-            this.i18n = i18n;
-        }
-        visit(visitor) {
-            return visitor.visitIcu(this);
-        }
-    }
-    class RecursiveVisitor {
-        visitElement(element) {
-            visitAll$1(this, element.attributes);
-            visitAll$1(this, element.inputs);
-            visitAll$1(this, element.outputs);
-            visitAll$1(this, element.children);
-            visitAll$1(this, element.references);
-        }
-        visitTemplate(template) {
-            visitAll$1(this, template.attributes);
-            visitAll$1(this, template.inputs);
-            visitAll$1(this, template.outputs);
-            visitAll$1(this, template.children);
-            visitAll$1(this, template.references);
-            visitAll$1(this, template.variables);
-        }
-        visitContent(content) { }
-        visitVariable(variable) { }
-        visitReference(reference) { }
-        visitTextAttribute(attribute) { }
-        visitBoundAttribute(attribute) { }
-        visitBoundEvent(attribute) { }
-        visitText(text) { }
-        visitBoundText(text) { }
-        visitIcu(icu) { }
-    }
-    function visitAll$1(visitor, nodes) {
-        const result = [];
-        if (visitor.visit) {
-            for (const node of nodes) {
-                visitor.visit(node) || node.visit(visitor);
-            }
-        }
-        else {
-            for (const node of nodes) {
-                const newNode = node.visit(visitor);
-                if (newNode) {
-                    result.push(newNode);
-                }
-            }
-        }
-        return result;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class Message {
-        /**
-         * @param nodes message AST
-         * @param placeholders maps placeholder names to static content and their source spans
-         * @param placeholderToMessage maps placeholder names to messages (used for nested ICU messages)
-         * @param meaning
-         * @param description
-         * @param customId
-         */
-        constructor(nodes, placeholders, placeholderToMessage, meaning, description, customId) {
-            this.nodes = nodes;
-            this.placeholders = placeholders;
-            this.placeholderToMessage = placeholderToMessage;
-            this.meaning = meaning;
-            this.description = description;
-            this.customId = customId;
-            this.id = this.customId;
-            /** The ids to use if there are no custom id and if `i18nLegacyMessageIdFormat` is not empty */
-            this.legacyIds = [];
-            this.messageString = serializeMessage(this.nodes);
-            if (nodes.length) {
-                this.sources = [{
-                        filePath: nodes[0].sourceSpan.start.file.url,
-                        startLine: nodes[0].sourceSpan.start.line + 1,
-                        startCol: nodes[0].sourceSpan.start.col + 1,
-                        endLine: nodes[nodes.length - 1].sourceSpan.end.line + 1,
-                        endCol: nodes[0].sourceSpan.start.col + 1
-                    }];
-            }
-            else {
-                this.sources = [];
-            }
-        }
-    }
-    class Text$1 {
-        constructor(value, sourceSpan) {
-            this.value = value;
-            this.sourceSpan = sourceSpan;
-        }
-        visit(visitor, context) {
-            return visitor.visitText(this, context);
-        }
-    }
-    // TODO(vicb): do we really need this node (vs an array) ?
-    class Container {
-        constructor(children, sourceSpan) {
-            this.children = children;
-            this.sourceSpan = sourceSpan;
-        }
-        visit(visitor, context) {
-            return visitor.visitContainer(this, context);
-        }
-    }
-    class Icu {
-        constructor(expression, type, cases, sourceSpan) {
-            this.expression = expression;
-            this.type = type;
-            this.cases = cases;
-            this.sourceSpan = sourceSpan;
-        }
-        visit(visitor, context) {
-            return visitor.visitIcu(this, context);
-        }
-    }
-    class TagPlaceholder {
-        constructor(tag, attrs, startName, closeName, children, isVoid, 
-        // TODO sourceSpan should cover all (we need a startSourceSpan and endSourceSpan)
-        sourceSpan, startSourceSpan, endSourceSpan) {
-            this.tag = tag;
-            this.attrs = attrs;
-            this.startName = startName;
-            this.closeName = closeName;
-            this.children = children;
-            this.isVoid = isVoid;
-            this.sourceSpan = sourceSpan;
-            this.startSourceSpan = startSourceSpan;
-            this.endSourceSpan = endSourceSpan;
-        }
-        visit(visitor, context) {
-            return visitor.visitTagPlaceholder(this, context);
-        }
-    }
-    class Placeholder {
-        constructor(value, name, sourceSpan) {
-            this.value = value;
-            this.name = name;
-            this.sourceSpan = sourceSpan;
-        }
-        visit(visitor, context) {
-            return visitor.visitPlaceholder(this, context);
-        }
-    }
-    class IcuPlaceholder {
-        constructor(value, name, sourceSpan) {
-            this.value = value;
-            this.name = name;
-            this.sourceSpan = sourceSpan;
-        }
-        visit(visitor, context) {
-            return visitor.visitIcuPlaceholder(this, context);
-        }
-    }
-    /**
-     * Serialize the message to the Localize backtick string format that would appear in compiled code.
-     */
-    function serializeMessage(messageNodes) {
-        const visitor = new LocalizeMessageStringVisitor();
-        const str = messageNodes.map(n => n.visit(visitor)).join('');
-        return str;
-    }
-    class LocalizeMessageStringVisitor {
-        visitText(text) {
-            return text.value;
-        }
-        visitContainer(container) {
-            return container.children.map(child => child.visit(this)).join('');
-        }
-        visitIcu(icu) {
-            const strCases = Object.keys(icu.cases).map((k) => `${k} {${icu.cases[k].visit(this)}}`);
-            return `{${icu.expressionPlaceholder}, ${icu.type}, ${strCases.join(' ')}}`;
-        }
-        visitTagPlaceholder(ph) {
-            const children = ph.children.map(child => child.visit(this)).join('');
-            return `{$${ph.startName}}${children}{$${ph.closeName}}`;
-        }
-        visitPlaceholder(ph) {
-            return `{$${ph.name}}`;
-        }
-        visitIcuPlaceholder(ph) {
-            return `{$${ph.name}}`;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // XMB/XTB placeholders can only contain A-Z, 0-9 and _
-    function toPublicName(internalName) {
-        return internalName.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /* Closure variables holding messages must be named `MSG_[A-Z0-9]+` */
-    const CLOSURE_TRANSLATION_VAR_PREFIX = 'MSG_';
-    /**
-     * Prefix for non-`goog.getMsg` i18n-related vars.
-     * Note: the prefix uses lowercase characters intentionally due to a Closure behavior that
-     * considers variables like `I18N_0` as constants and throws an error when their value changes.
-     */
-    const TRANSLATION_VAR_PREFIX = 'i18n_';
-    /** Name of the i18n attributes **/
-    const I18N_ATTR = 'i18n';
-    const I18N_ATTR_PREFIX = 'i18n-';
-    /** Prefix of var expressions used in ICUs */
-    const I18N_ICU_VAR_PREFIX = 'VAR_';
-    /** Prefix of ICU expressions for post processing */
-    const I18N_ICU_MAPPING_PREFIX = 'I18N_EXP_';
-    /** Placeholder wrapper for i18n expressions **/
-    const I18N_PLACEHOLDER_SYMBOL = '�';
-    function isI18nAttribute(name) {
-        return name === I18N_ATTR || name.startsWith(I18N_ATTR_PREFIX);
-    }
-    function isI18nRootNode(meta) {
-        return meta instanceof Message;
-    }
-    function isSingleI18nIcu(meta) {
-        return isI18nRootNode(meta) && meta.nodes.length === 1 && meta.nodes[0] instanceof Icu;
-    }
-    function hasI18nMeta(node) {
-        return !!node.i18n;
-    }
-    function hasI18nAttrs(element) {
-        return element.attrs.some((attr) => isI18nAttribute(attr.name));
-    }
-    function icuFromI18nMessage(message) {
-        return message.nodes[0];
-    }
-    function wrapI18nPlaceholder(content, contextId = 0) {
-        const blockId = contextId > 0 ? `:${contextId}` : '';
-        return `${I18N_PLACEHOLDER_SYMBOL}${content}${blockId}${I18N_PLACEHOLDER_SYMBOL}`;
-    }
-    function assembleI18nBoundString(strings, bindingStartIndex = 0, contextId = 0) {
-        if (!strings.length)
-            return '';
-        let acc = '';
-        const lastIdx = strings.length - 1;
-        for (let i = 0; i < lastIdx; i++) {
-            acc += `${strings[i]}${wrapI18nPlaceholder(bindingStartIndex + i, contextId)}`;
-        }
-        acc += strings[lastIdx];
-        return acc;
-    }
-    function getSeqNumberGenerator(startsAt = 0) {
-        let current = startsAt;
-        return () => current++;
-    }
-    function placeholdersToParams(placeholders) {
-        const params = {};
-        placeholders.forEach((values, key) => {
-            params[key] = literal$1(values.length > 1 ? `[${values.join('|')}]` : values[0]);
-        });
-        return params;
-    }
-    function updatePlaceholderMap(map, name, ...values) {
-        const current = map.get(name) || [];
-        current.push(...values);
-        map.set(name, current);
-    }
-    function assembleBoundTextPlaceholders(meta, bindingStartIndex = 0, contextId = 0) {
-        const startIdx = bindingStartIndex;
-        const placeholders = new Map();
-        const node = meta instanceof Message ? meta.nodes.find(node => node instanceof Container) : meta;
-        if (node) {
-            node
-                .children
-                .filter((child) => child instanceof Placeholder)
-                .forEach((child, idx) => {
-                const content = wrapI18nPlaceholder(startIdx + idx, contextId);
-                updatePlaceholderMap(placeholders, child.name, content);
-            });
-        }
-        return placeholders;
-    }
-    /**
-     * Format the placeholder names in a map of placeholders to expressions.
-     *
-     * The placeholder names are converted from "internal" format (e.g. `START_TAG_DIV_1`) to "external"
-     * format (e.g. `startTagDiv_1`).
-     *
-     * @param params A map of placeholder names to expressions.
-     * @param useCamelCase whether to camelCase the placeholder name when formatting.
-     * @returns A new map of formatted placeholder names to expressions.
-     */
-    function i18nFormatPlaceholderNames(params = {}, useCamelCase) {
-        const _params = {};
-        if (params && Object.keys(params).length) {
-            Object.keys(params).forEach(key => _params[formatI18nPlaceholderName(key, useCamelCase)] = params[key]);
-        }
-        return _params;
-    }
-    /**
-     * Converts internal placeholder names to public-facing format
-     * (for example to use in goog.getMsg call).
-     * Example: `START_TAG_DIV_1` is converted to `startTagDiv_1`.
-     *
-     * @param name The placeholder name that should be formatted
-     * @returns Formatted placeholder name
-     */
-    function formatI18nPlaceholderName(name, useCamelCase = true) {
-        const publicName = toPublicName(name);
-        if (!useCamelCase) {
-            return publicName;
-        }
-        const chunks = publicName.split('_');
-        if (chunks.length === 1) {
-            // if no "_" found - just lowercase the value
-            return name.toLowerCase();
-        }
-        let postfix;
-        // eject last element if it's a number
-        if (/^\d+$/.test(chunks[chunks.length - 1])) {
-            postfix = chunks.pop();
-        }
-        let raw = chunks.shift().toLowerCase();
-        if (chunks.length) {
-            raw += chunks.map(c => c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()).join('');
-        }
-        return postfix ? `${raw}_${postfix}` : raw;
-    }
-    /**
-     * Generates a prefix for translation const name.
-     *
-     * @param extra Additional local prefix that should be injected into translation var name
-     * @returns Complete translation const prefix
-     */
-    function getTranslationConstPrefix(extra) {
-        return `${CLOSURE_TRANSLATION_VAR_PREFIX}${extra}`.toUpperCase();
-    }
-    /**
-     * Generate AST to declare a variable. E.g. `var I18N_1;`.
-     * @param variable the name of the variable to declare.
-     */
-    function declareI18nVariable(variable) {
-        return new DeclareVarStmt(variable.name, undefined, INFERRED_TYPE, undefined, variable.sourceSpan);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Checks whether an object key contains potentially unsafe chars, thus the key should be wrapped in
-     * quotes. Note: we do not wrap all keys into quotes, as it may have impact on minification and may
-     * bot work in some cases when object keys are mangled by minifier.
-     *
-     * TODO(FW-1136): this is a temporary solution, we need to come up with a better way of working with
-     * inputs that contain potentially unsafe chars.
-     */
-    const UNSAFE_OBJECT_KEY_NAME_REGEXP = /[-.]/;
-    /** Name of the temporary to use during data binding */
-    const TEMPORARY_NAME = '_t';
-    /** Name of the context parameter passed into a template function */
-    const CONTEXT_NAME = 'ctx';
-    /** Name of the RenderFlag passed into a template function */
-    const RENDER_FLAGS = 'rf';
-    /** The prefix reference variables */
-    const REFERENCE_PREFIX = '_r';
-    /** The name of the implicit context reference */
-    const IMPLICIT_REFERENCE = '$implicit';
-    /** Non bindable attribute name **/
-    const NON_BINDABLE_ATTR = 'ngNonBindable';
-    /** Name for the variable keeping track of the context returned by `ɵɵrestoreView`. */
-    const RESTORED_VIEW_CONTEXT_NAME = 'restoredCtx';
-    /**
-     * Creates an allocator for a temporary variable.
-     *
-     * A variable declaration is added to the statements the first time the allocator is invoked.
-     */
-    function temporaryAllocator(statements, name) {
-        let temp = null;
-        return () => {
-            if (!temp) {
-                statements.push(new DeclareVarStmt(TEMPORARY_NAME, undefined, DYNAMIC_TYPE));
-                temp = variable(name);
-            }
-            return temp;
-        };
-    }
-    function unsupported(feature) {
-        if (this) {
-            throw new Error(`Builder ${this.constructor.name} doesn't support ${feature} yet`);
-        }
-        throw new Error(`Feature ${feature} is not supported yet`);
-    }
-    function invalid(arg) {
-        throw new Error(`Invalid state: Visitor ${this.constructor.name} doesn't handle ${arg.constructor.name}`);
-    }
-    function asLiteral(value) {
-        if (Array.isArray(value)) {
-            return literalArr(value.map(asLiteral));
-        }
-        return literal$1(value, INFERRED_TYPE);
-    }
-    function conditionallyCreateMapObjectLiteral(keys, keepDeclared) {
-        if (Object.getOwnPropertyNames(keys).length > 0) {
-            return mapToExpression(keys, keepDeclared);
-        }
-        return null;
-    }
-    function mapToExpression(map, keepDeclared) {
-        return literalMap(Object.getOwnPropertyNames(map).map(key => {
-            // canonical syntax: `dirProp: publicProp`
-            // if there is no `:`, use dirProp = elProp
-            const value = map[key];
-            let declaredName;
-            let publicName;
-            let minifiedName;
-            let needsDeclaredName;
-            if (Array.isArray(value)) {
-                [publicName, declaredName] = value;
-                minifiedName = key;
-                needsDeclaredName = publicName !== declaredName;
-            }
-            else {
-                [declaredName, publicName] = splitAtColon(key, [key, value]);
-                minifiedName = declaredName;
-                // Only include the declared name if extracted from the key, i.e. the key contains a colon.
-                // Otherwise the declared name should be omitted even if it is different from the public name,
-                // as it may have already been minified.
-                needsDeclaredName = publicName !== declaredName && key.includes(':');
-            }
-            return {
-                key: minifiedName,
-                // put quotes around keys that contain potentially unsafe characters
-                quoted: UNSAFE_OBJECT_KEY_NAME_REGEXP.test(minifiedName),
-                value: (keepDeclared && needsDeclaredName) ?
-                    literalArr([asLiteral(publicName), asLiteral(declaredName)]) :
-                    asLiteral(publicName)
-            };
-        }));
-    }
-    /**
-     *  Remove trailing null nodes as they are implied.
-     */
-    function trimTrailingNulls(parameters) {
-        while (isNull(parameters[parameters.length - 1])) {
-            parameters.pop();
-        }
-        return parameters;
-    }
-    function getQueryPredicate(query, constantPool) {
-        if (Array.isArray(query.predicate)) {
-            let predicate = [];
-            query.predicate.forEach((selector) => {
-                // Each item in predicates array may contain strings with comma-separated refs
-                // (for ex. 'ref, ref1, ..., refN'), thus we extract individual refs and store them
-                // as separate array entities
-                const selectors = selector.split(',').map(token => literal$1(token.trim()));
-                predicate.push(...selectors);
-            });
-            return constantPool.getConstLiteral(literalArr(predicate), true);
-        }
-        else {
-            return query.predicate;
-        }
-    }
-    /**
-     * A representation for an object literal used during codegen of definition objects. The generic
-     * type `T` allows to reference a documented type of the generated structure, such that the
-     * property names that are set can be resolved to their documented declaration.
-     */
-    class DefinitionMap {
-        constructor() {
-            this.values = [];
-        }
-        set(key, value) {
-            if (value) {
-                this.values.push({ key: key, value, quoted: false });
-            }
-        }
-        toLiteralMap() {
-            return literalMap(this.values);
-        }
-    }
-    /**
-     * Extract a map of properties to values for a given element or template node, which can be used
-     * by the directive matching machinery.
-     *
-     * @param elOrTpl the element or template in question
-     * @return an object set up for directive matching. For attributes on the element/template, this
-     * object maps a property name to its (static) value. For any bindings, this map simply maps the
-     * property name to an empty string.
-     */
-    function getAttrsForDirectiveMatching(elOrTpl) {
-        const attributesMap = {};
-        if (elOrTpl instanceof Template && elOrTpl.tagName !== 'ng-template') {
-            elOrTpl.templateAttrs.forEach(a => attributesMap[a.name] = '');
-        }
-        else {
-            elOrTpl.attributes.forEach(a => {
-                if (!isI18nAttribute(a.name)) {
-                    attributesMap[a.name] = a.value;
-                }
-            });
-            elOrTpl.inputs.forEach(i => {
-                attributesMap[i.name] = '';
-            });
-            elOrTpl.outputs.forEach(o => {
-                attributesMap[o.name] = '';
-            });
-        }
-        return attributesMap;
-    }
-    /** Returns a call expression to a chained instruction, e.g. `property(params[0])(params[1])`. */
-    function chainedInstruction(reference, calls, span) {
-        let expression = importExpr(reference, null, span);
-        if (calls.length > 0) {
-            for (let i = 0; i < calls.length; i++) {
-                expression = expression.callFn(calls[i], span);
-            }
-        }
-        else {
-            // Add a blank invocation, in case the `calls` array is empty.
-            expression = expression.callFn([], span);
-        }
-        return expression;
-    }
-    /**
-     * Gets the number of arguments expected to be passed to a generated instruction in the case of
-     * interpolation instructions.
-     * @param interpolation An interpolation ast
-     */
-    function getInterpolationArgsLength(interpolation) {
-        const { expressions, strings } = interpolation;
-        if (expressions.length === 1 && strings.length === 2 && strings[0] === '' && strings[1] === '') {
-            // If the interpolation has one interpolated value, but the prefix and suffix are both empty
-            // strings, we only pass one argument, to a special instruction like `propertyInterpolate` or
-            // `textInterpolate`.
-            return 1;
-        }
-        else {
-            return expressions.length + strings.length;
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Creates an array literal expression from the given array, mapping all values to an expression
-     * using the provided mapping function. If the array is empty or null, then null is returned.
-     *
-     * @param values The array to transfer into literal array expression.
-     * @param mapper The logic to use for creating an expression for the array's values.
-     * @returns An array literal expression representing `values`, or null if `values` is empty or
-     * is itself null.
-     */
-    function toOptionalLiteralArray(values, mapper) {
-        if (values === null || values.length === 0) {
-            return null;
-        }
-        return literalArr(values.map(value => mapper(value)));
-    }
-    /**
-     * Creates an object literal expression from the given object, mapping all values to an expression
-     * using the provided mapping function. If the object has no keys, then null is returned.
-     *
-     * @param object The object to transfer into an object literal expression.
-     * @param mapper The logic to use for creating an expression for the object's values.
-     * @returns An object literal expression representing `object`, or null if `object` does not have
-     * any keys.
-     */
-    function toOptionalLiteralMap(object, mapper) {
-        const entries = Object.keys(object).map(key => {
-            const value = object[key];
-            return { key, value: mapper(value), quoted: true };
-        });
-        if (entries.length > 0) {
-            return literalMap(entries);
-        }
-        else {
-            return null;
-        }
-    }
-    function compileDependencies(deps) {
-        if (deps === 'invalid') {
-            // The `deps` can be set to the string "invalid"  by the `unwrapConstructorDependencies()`
-            // function, which tries to convert `ConstructorDeps` into `R3DependencyMetadata[]`.
-            return literal$1('invalid');
-        }
-        else if (deps === null) {
-            return literal$1(null);
-        }
-        else {
-            return literalArr(deps.map(compileDependency));
-        }
-    }
-    function compileDependency(dep) {
-        const depMeta = new DefinitionMap();
-        depMeta.set('token', dep.token);
-        if (dep.attributeNameType !== null) {
-            depMeta.set('attribute', literal$1(true));
-        }
-        if (dep.host) {
-            depMeta.set('host', literal$1(true));
-        }
-        if (dep.optional) {
-            depMeta.set('optional', literal$1(true));
-        }
-        if (dep.self) {
-            depMeta.set('self', literal$1(true));
-        }
-        if (dep.skipSelf) {
-            depMeta.set('skipSelf', literal$1(true));
-        }
-        return depMeta.toLiteralMap();
-    }
-    /**
-     * Generate an expression that has the given `expr` wrapped in the following form:
-     *
-     * ```
-     * forwardRef(() => expr)
-     * ```
-     */
-    function generateForwardRef(expr) {
-        return importExpr(Identifiers$1.forwardRef).callFn([fn([], [new ReturnStatement(expr)])]);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     // https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
     const VERSION = 3;
     const JS_B64_PREFIX = '# sourceMappingURL=data:application/json;base64,';
@@ -4778,6 +3954,39 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const values = literalArr(refs.map(ref => ref.value));
         return shouldForwardDeclare ? fn([], [new ReturnStatement(values)]) : values;
     }
+    function createMayBeForwardRefExpression(expression, forwardRef) {
+        return { expression, forwardRef };
+    }
+    /**
+     * Convert a `MaybeForwardRefExpression` to an `Expression`, possibly wrapping its expression in a
+     * `forwardRef()` call.
+     *
+     * If `MaybeForwardRefExpression.forwardRef` is `ForwardRefHandling.Unwrapped` then the expression
+     * was originally wrapped in a `forwardRef()` call to prevent the value from being eagerly evaluated
+     * in the code.
+     *
+     * See `packages/compiler-cli/src/ngtsc/annotations/src/injectable.ts` and
+     * `packages/compiler/src/jit_compiler_facade.ts` for more information.
+     */
+    function convertFromMaybeForwardRefExpression({ expression, forwardRef }) {
+        switch (forwardRef) {
+            case 0 /* None */:
+            case 1 /* Wrapped */:
+                return expression;
+            case 2 /* Unwrapped */:
+                return generateForwardRef(expression);
+        }
+    }
+    /**
+     * Generate an expression that has the given `expr` wrapped in the following form:
+     *
+     * ```
+     * forwardRef(() => expr)
+     * ```
+     */
+    function generateForwardRef(expr) {
+        return importExpr(Identifiers$1.forwardRef).callFn([fn([], [new ReturnStatement(expr)])]);
+    }
 
     var R3FactoryDelegateType;
     (function (R3FactoryDelegateType) {
@@ -4979,9 +4188,750 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    function createR3ProviderExpression(expression, isForwardRef) {
-        return { expression, isForwardRef };
+    /**
+     * This is an R3 `Node`-like wrapper for a raw `html.Comment` node. We do not currently
+     * require the implementation of a visitor for Comments as they are only collected at
+     * the top-level of the R3 AST, and only if `Render3ParseOptions['collectCommentNodes']`
+     * is true.
+     */
+    class Comment$1 {
+        constructor(value, sourceSpan) {
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(_visitor) {
+            throw new Error('visit() not implemented for Comment');
+        }
     }
+    class Text$2 {
+        constructor(value, sourceSpan) {
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(visitor) {
+            return visitor.visitText(this);
+        }
+    }
+    class BoundText {
+        constructor(value, sourceSpan, i18n) {
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+            this.i18n = i18n;
+        }
+        visit(visitor) {
+            return visitor.visitBoundText(this);
+        }
+    }
+    /**
+     * Represents a text attribute in the template.
+     *
+     * `valueSpan` may not be present in cases where there is no value `<div a></div>`.
+     * `keySpan` may also not be present for synthetic attributes from ICU expansions.
+     */
+    class TextAttribute {
+        constructor(name, value, sourceSpan, keySpan, valueSpan, i18n) {
+            this.name = name;
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
+            this.valueSpan = valueSpan;
+            this.i18n = i18n;
+        }
+        visit(visitor) {
+            return visitor.visitTextAttribute(this);
+        }
+    }
+    class BoundAttribute {
+        constructor(name, type, securityContext, value, unit, sourceSpan, keySpan, valueSpan, i18n) {
+            this.name = name;
+            this.type = type;
+            this.securityContext = securityContext;
+            this.value = value;
+            this.unit = unit;
+            this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
+            this.valueSpan = valueSpan;
+            this.i18n = i18n;
+        }
+        static fromBoundElementProperty(prop, i18n) {
+            if (prop.keySpan === undefined) {
+                throw new Error(`Unexpected state: keySpan must be defined for bound attributes but was not for ${prop.name}: ${prop.sourceSpan}`);
+            }
+            return new BoundAttribute(prop.name, prop.type, prop.securityContext, prop.value, prop.unit, prop.sourceSpan, prop.keySpan, prop.valueSpan, i18n);
+        }
+        visit(visitor) {
+            return visitor.visitBoundAttribute(this);
+        }
+    }
+    class BoundEvent {
+        constructor(name, type, handler, target, phase, sourceSpan, handlerSpan, keySpan) {
+            this.name = name;
+            this.type = type;
+            this.handler = handler;
+            this.target = target;
+            this.phase = phase;
+            this.sourceSpan = sourceSpan;
+            this.handlerSpan = handlerSpan;
+            this.keySpan = keySpan;
+        }
+        static fromParsedEvent(event) {
+            const target = event.type === 0 /* Regular */ ? event.targetOrPhase : null;
+            const phase = event.type === 1 /* Animation */ ? event.targetOrPhase : null;
+            if (event.keySpan === undefined) {
+                throw new Error(`Unexpected state: keySpan must be defined for bound event but was not for ${event.name}: ${event.sourceSpan}`);
+            }
+            return new BoundEvent(event.name, event.type, event.handler, target, phase, event.sourceSpan, event.handlerSpan, event.keySpan);
+        }
+        visit(visitor) {
+            return visitor.visitBoundEvent(this);
+        }
+    }
+    class Element$1 {
+        constructor(name, attributes, inputs, outputs, children, references, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
+            this.name = name;
+            this.attributes = attributes;
+            this.inputs = inputs;
+            this.outputs = outputs;
+            this.children = children;
+            this.references = references;
+            this.sourceSpan = sourceSpan;
+            this.startSourceSpan = startSourceSpan;
+            this.endSourceSpan = endSourceSpan;
+            this.i18n = i18n;
+        }
+        visit(visitor) {
+            return visitor.visitElement(this);
+        }
+    }
+    class Template {
+        constructor(tagName, attributes, inputs, outputs, templateAttrs, children, references, variables, sourceSpan, startSourceSpan, endSourceSpan, i18n) {
+            this.tagName = tagName;
+            this.attributes = attributes;
+            this.inputs = inputs;
+            this.outputs = outputs;
+            this.templateAttrs = templateAttrs;
+            this.children = children;
+            this.references = references;
+            this.variables = variables;
+            this.sourceSpan = sourceSpan;
+            this.startSourceSpan = startSourceSpan;
+            this.endSourceSpan = endSourceSpan;
+            this.i18n = i18n;
+        }
+        visit(visitor) {
+            return visitor.visitTemplate(this);
+        }
+    }
+    class Content {
+        constructor(selector, attributes, sourceSpan, i18n) {
+            this.selector = selector;
+            this.attributes = attributes;
+            this.sourceSpan = sourceSpan;
+            this.i18n = i18n;
+            this.name = 'ng-content';
+        }
+        visit(visitor) {
+            return visitor.visitContent(this);
+        }
+    }
+    class Variable {
+        constructor(name, value, sourceSpan, keySpan, valueSpan) {
+            this.name = name;
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
+            this.valueSpan = valueSpan;
+        }
+        visit(visitor) {
+            return visitor.visitVariable(this);
+        }
+    }
+    class Reference$1 {
+        constructor(name, value, sourceSpan, keySpan, valueSpan) {
+            this.name = name;
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+            this.keySpan = keySpan;
+            this.valueSpan = valueSpan;
+        }
+        visit(visitor) {
+            return visitor.visitReference(this);
+        }
+    }
+    class Icu$1 {
+        constructor(vars, placeholders, sourceSpan, i18n) {
+            this.vars = vars;
+            this.placeholders = placeholders;
+            this.sourceSpan = sourceSpan;
+            this.i18n = i18n;
+        }
+        visit(visitor) {
+            return visitor.visitIcu(this);
+        }
+    }
+    class RecursiveVisitor {
+        visitElement(element) {
+            visitAll$1(this, element.attributes);
+            visitAll$1(this, element.inputs);
+            visitAll$1(this, element.outputs);
+            visitAll$1(this, element.children);
+            visitAll$1(this, element.references);
+        }
+        visitTemplate(template) {
+            visitAll$1(this, template.attributes);
+            visitAll$1(this, template.inputs);
+            visitAll$1(this, template.outputs);
+            visitAll$1(this, template.children);
+            visitAll$1(this, template.references);
+            visitAll$1(this, template.variables);
+        }
+        visitContent(content) { }
+        visitVariable(variable) { }
+        visitReference(reference) { }
+        visitTextAttribute(attribute) { }
+        visitBoundAttribute(attribute) { }
+        visitBoundEvent(attribute) { }
+        visitText(text) { }
+        visitBoundText(text) { }
+        visitIcu(icu) { }
+    }
+    function visitAll$1(visitor, nodes) {
+        const result = [];
+        if (visitor.visit) {
+            for (const node of nodes) {
+                visitor.visit(node) || node.visit(visitor);
+            }
+        }
+        else {
+            for (const node of nodes) {
+                const newNode = node.visit(visitor);
+                if (newNode) {
+                    result.push(newNode);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class Message {
+        /**
+         * @param nodes message AST
+         * @param placeholders maps placeholder names to static content and their source spans
+         * @param placeholderToMessage maps placeholder names to messages (used for nested ICU messages)
+         * @param meaning
+         * @param description
+         * @param customId
+         */
+        constructor(nodes, placeholders, placeholderToMessage, meaning, description, customId) {
+            this.nodes = nodes;
+            this.placeholders = placeholders;
+            this.placeholderToMessage = placeholderToMessage;
+            this.meaning = meaning;
+            this.description = description;
+            this.customId = customId;
+            this.id = this.customId;
+            /** The ids to use if there are no custom id and if `i18nLegacyMessageIdFormat` is not empty */
+            this.legacyIds = [];
+            this.messageString = serializeMessage(this.nodes);
+            if (nodes.length) {
+                this.sources = [{
+                        filePath: nodes[0].sourceSpan.start.file.url,
+                        startLine: nodes[0].sourceSpan.start.line + 1,
+                        startCol: nodes[0].sourceSpan.start.col + 1,
+                        endLine: nodes[nodes.length - 1].sourceSpan.end.line + 1,
+                        endCol: nodes[0].sourceSpan.start.col + 1
+                    }];
+            }
+            else {
+                this.sources = [];
+            }
+        }
+    }
+    class Text$1 {
+        constructor(value, sourceSpan) {
+            this.value = value;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(visitor, context) {
+            return visitor.visitText(this, context);
+        }
+    }
+    // TODO(vicb): do we really need this node (vs an array) ?
+    class Container {
+        constructor(children, sourceSpan) {
+            this.children = children;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(visitor, context) {
+            return visitor.visitContainer(this, context);
+        }
+    }
+    class Icu {
+        constructor(expression, type, cases, sourceSpan) {
+            this.expression = expression;
+            this.type = type;
+            this.cases = cases;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(visitor, context) {
+            return visitor.visitIcu(this, context);
+        }
+    }
+    class TagPlaceholder {
+        constructor(tag, attrs, startName, closeName, children, isVoid, 
+        // TODO sourceSpan should cover all (we need a startSourceSpan and endSourceSpan)
+        sourceSpan, startSourceSpan, endSourceSpan) {
+            this.tag = tag;
+            this.attrs = attrs;
+            this.startName = startName;
+            this.closeName = closeName;
+            this.children = children;
+            this.isVoid = isVoid;
+            this.sourceSpan = sourceSpan;
+            this.startSourceSpan = startSourceSpan;
+            this.endSourceSpan = endSourceSpan;
+        }
+        visit(visitor, context) {
+            return visitor.visitTagPlaceholder(this, context);
+        }
+    }
+    class Placeholder {
+        constructor(value, name, sourceSpan) {
+            this.value = value;
+            this.name = name;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(visitor, context) {
+            return visitor.visitPlaceholder(this, context);
+        }
+    }
+    class IcuPlaceholder {
+        constructor(value, name, sourceSpan) {
+            this.value = value;
+            this.name = name;
+            this.sourceSpan = sourceSpan;
+        }
+        visit(visitor, context) {
+            return visitor.visitIcuPlaceholder(this, context);
+        }
+    }
+    /**
+     * Serialize the message to the Localize backtick string format that would appear in compiled code.
+     */
+    function serializeMessage(messageNodes) {
+        const visitor = new LocalizeMessageStringVisitor();
+        const str = messageNodes.map(n => n.visit(visitor)).join('');
+        return str;
+    }
+    class LocalizeMessageStringVisitor {
+        visitText(text) {
+            return text.value;
+        }
+        visitContainer(container) {
+            return container.children.map(child => child.visit(this)).join('');
+        }
+        visitIcu(icu) {
+            const strCases = Object.keys(icu.cases).map((k) => `${k} {${icu.cases[k].visit(this)}}`);
+            return `{${icu.expressionPlaceholder}, ${icu.type}, ${strCases.join(' ')}}`;
+        }
+        visitTagPlaceholder(ph) {
+            const children = ph.children.map(child => child.visit(this)).join('');
+            return `{$${ph.startName}}${children}{$${ph.closeName}}`;
+        }
+        visitPlaceholder(ph) {
+            return `{$${ph.name}}`;
+        }
+        visitIcuPlaceholder(ph) {
+            return `{$${ph.name}}`;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // XMB/XTB placeholders can only contain A-Z, 0-9 and _
+    function toPublicName(internalName) {
+        return internalName.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /* Closure variables holding messages must be named `MSG_[A-Z0-9]+` */
+    const CLOSURE_TRANSLATION_VAR_PREFIX = 'MSG_';
+    /**
+     * Prefix for non-`goog.getMsg` i18n-related vars.
+     * Note: the prefix uses lowercase characters intentionally due to a Closure behavior that
+     * considers variables like `I18N_0` as constants and throws an error when their value changes.
+     */
+    const TRANSLATION_VAR_PREFIX = 'i18n_';
+    /** Name of the i18n attributes **/
+    const I18N_ATTR = 'i18n';
+    const I18N_ATTR_PREFIX = 'i18n-';
+    /** Prefix of var expressions used in ICUs */
+    const I18N_ICU_VAR_PREFIX = 'VAR_';
+    /** Prefix of ICU expressions for post processing */
+    const I18N_ICU_MAPPING_PREFIX = 'I18N_EXP_';
+    /** Placeholder wrapper for i18n expressions **/
+    const I18N_PLACEHOLDER_SYMBOL = '�';
+    function isI18nAttribute(name) {
+        return name === I18N_ATTR || name.startsWith(I18N_ATTR_PREFIX);
+    }
+    function isI18nRootNode(meta) {
+        return meta instanceof Message;
+    }
+    function isSingleI18nIcu(meta) {
+        return isI18nRootNode(meta) && meta.nodes.length === 1 && meta.nodes[0] instanceof Icu;
+    }
+    function hasI18nMeta(node) {
+        return !!node.i18n;
+    }
+    function hasI18nAttrs(element) {
+        return element.attrs.some((attr) => isI18nAttribute(attr.name));
+    }
+    function icuFromI18nMessage(message) {
+        return message.nodes[0];
+    }
+    function wrapI18nPlaceholder(content, contextId = 0) {
+        const blockId = contextId > 0 ? `:${contextId}` : '';
+        return `${I18N_PLACEHOLDER_SYMBOL}${content}${blockId}${I18N_PLACEHOLDER_SYMBOL}`;
+    }
+    function assembleI18nBoundString(strings, bindingStartIndex = 0, contextId = 0) {
+        if (!strings.length)
+            return '';
+        let acc = '';
+        const lastIdx = strings.length - 1;
+        for (let i = 0; i < lastIdx; i++) {
+            acc += `${strings[i]}${wrapI18nPlaceholder(bindingStartIndex + i, contextId)}`;
+        }
+        acc += strings[lastIdx];
+        return acc;
+    }
+    function getSeqNumberGenerator(startsAt = 0) {
+        let current = startsAt;
+        return () => current++;
+    }
+    function placeholdersToParams(placeholders) {
+        const params = {};
+        placeholders.forEach((values, key) => {
+            params[key] = literal$1(values.length > 1 ? `[${values.join('|')}]` : values[0]);
+        });
+        return params;
+    }
+    function updatePlaceholderMap(map, name, ...values) {
+        const current = map.get(name) || [];
+        current.push(...values);
+        map.set(name, current);
+    }
+    function assembleBoundTextPlaceholders(meta, bindingStartIndex = 0, contextId = 0) {
+        const startIdx = bindingStartIndex;
+        const placeholders = new Map();
+        const node = meta instanceof Message ? meta.nodes.find(node => node instanceof Container) : meta;
+        if (node) {
+            node
+                .children
+                .filter((child) => child instanceof Placeholder)
+                .forEach((child, idx) => {
+                const content = wrapI18nPlaceholder(startIdx + idx, contextId);
+                updatePlaceholderMap(placeholders, child.name, content);
+            });
+        }
+        return placeholders;
+    }
+    /**
+     * Format the placeholder names in a map of placeholders to expressions.
+     *
+     * The placeholder names are converted from "internal" format (e.g. `START_TAG_DIV_1`) to "external"
+     * format (e.g. `startTagDiv_1`).
+     *
+     * @param params A map of placeholder names to expressions.
+     * @param useCamelCase whether to camelCase the placeholder name when formatting.
+     * @returns A new map of formatted placeholder names to expressions.
+     */
+    function i18nFormatPlaceholderNames(params = {}, useCamelCase) {
+        const _params = {};
+        if (params && Object.keys(params).length) {
+            Object.keys(params).forEach(key => _params[formatI18nPlaceholderName(key, useCamelCase)] = params[key]);
+        }
+        return _params;
+    }
+    /**
+     * Converts internal placeholder names to public-facing format
+     * (for example to use in goog.getMsg call).
+     * Example: `START_TAG_DIV_1` is converted to `startTagDiv_1`.
+     *
+     * @param name The placeholder name that should be formatted
+     * @returns Formatted placeholder name
+     */
+    function formatI18nPlaceholderName(name, useCamelCase = true) {
+        const publicName = toPublicName(name);
+        if (!useCamelCase) {
+            return publicName;
+        }
+        const chunks = publicName.split('_');
+        if (chunks.length === 1) {
+            // if no "_" found - just lowercase the value
+            return name.toLowerCase();
+        }
+        let postfix;
+        // eject last element if it's a number
+        if (/^\d+$/.test(chunks[chunks.length - 1])) {
+            postfix = chunks.pop();
+        }
+        let raw = chunks.shift().toLowerCase();
+        if (chunks.length) {
+            raw += chunks.map(c => c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()).join('');
+        }
+        return postfix ? `${raw}_${postfix}` : raw;
+    }
+    /**
+     * Generates a prefix for translation const name.
+     *
+     * @param extra Additional local prefix that should be injected into translation var name
+     * @returns Complete translation const prefix
+     */
+    function getTranslationConstPrefix(extra) {
+        return `${CLOSURE_TRANSLATION_VAR_PREFIX}${extra}`.toUpperCase();
+    }
+    /**
+     * Generate AST to declare a variable. E.g. `var I18N_1;`.
+     * @param variable the name of the variable to declare.
+     */
+    function declareI18nVariable(variable) {
+        return new DeclareVarStmt(variable.name, undefined, INFERRED_TYPE, undefined, variable.sourceSpan);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Checks whether an object key contains potentially unsafe chars, thus the key should be wrapped in
+     * quotes. Note: we do not wrap all keys into quotes, as it may have impact on minification and may
+     * bot work in some cases when object keys are mangled by minifier.
+     *
+     * TODO(FW-1136): this is a temporary solution, we need to come up with a better way of working with
+     * inputs that contain potentially unsafe chars.
+     */
+    const UNSAFE_OBJECT_KEY_NAME_REGEXP = /[-.]/;
+    /** Name of the temporary to use during data binding */
+    const TEMPORARY_NAME = '_t';
+    /** Name of the context parameter passed into a template function */
+    const CONTEXT_NAME = 'ctx';
+    /** Name of the RenderFlag passed into a template function */
+    const RENDER_FLAGS = 'rf';
+    /** The prefix reference variables */
+    const REFERENCE_PREFIX = '_r';
+    /** The name of the implicit context reference */
+    const IMPLICIT_REFERENCE = '$implicit';
+    /** Non bindable attribute name **/
+    const NON_BINDABLE_ATTR = 'ngNonBindable';
+    /** Name for the variable keeping track of the context returned by `ɵɵrestoreView`. */
+    const RESTORED_VIEW_CONTEXT_NAME = 'restoredCtx';
+    /**
+     * Creates an allocator for a temporary variable.
+     *
+     * A variable declaration is added to the statements the first time the allocator is invoked.
+     */
+    function temporaryAllocator(statements, name) {
+        let temp = null;
+        return () => {
+            if (!temp) {
+                statements.push(new DeclareVarStmt(TEMPORARY_NAME, undefined, DYNAMIC_TYPE));
+                temp = variable(name);
+            }
+            return temp;
+        };
+    }
+    function unsupported(feature) {
+        if (this) {
+            throw new Error(`Builder ${this.constructor.name} doesn't support ${feature} yet`);
+        }
+        throw new Error(`Feature ${feature} is not supported yet`);
+    }
+    function invalid(arg) {
+        throw new Error(`Invalid state: Visitor ${this.constructor.name} doesn't handle ${arg.constructor.name}`);
+    }
+    function asLiteral(value) {
+        if (Array.isArray(value)) {
+            return literalArr(value.map(asLiteral));
+        }
+        return literal$1(value, INFERRED_TYPE);
+    }
+    function conditionallyCreateMapObjectLiteral(keys, keepDeclared) {
+        if (Object.getOwnPropertyNames(keys).length > 0) {
+            return mapToExpression(keys, keepDeclared);
+        }
+        return null;
+    }
+    function mapToExpression(map, keepDeclared) {
+        return literalMap(Object.getOwnPropertyNames(map).map(key => {
+            // canonical syntax: `dirProp: publicProp`
+            // if there is no `:`, use dirProp = elProp
+            const value = map[key];
+            let declaredName;
+            let publicName;
+            let minifiedName;
+            let needsDeclaredName;
+            if (Array.isArray(value)) {
+                [publicName, declaredName] = value;
+                minifiedName = key;
+                needsDeclaredName = publicName !== declaredName;
+            }
+            else {
+                [declaredName, publicName] = splitAtColon(key, [key, value]);
+                minifiedName = declaredName;
+                // Only include the declared name if extracted from the key, i.e. the key contains a colon.
+                // Otherwise the declared name should be omitted even if it is different from the public name,
+                // as it may have already been minified.
+                needsDeclaredName = publicName !== declaredName && key.includes(':');
+            }
+            return {
+                key: minifiedName,
+                // put quotes around keys that contain potentially unsafe characters
+                quoted: UNSAFE_OBJECT_KEY_NAME_REGEXP.test(minifiedName),
+                value: (keepDeclared && needsDeclaredName) ?
+                    literalArr([asLiteral(publicName), asLiteral(declaredName)]) :
+                    asLiteral(publicName)
+            };
+        }));
+    }
+    /**
+     *  Remove trailing null nodes as they are implied.
+     */
+    function trimTrailingNulls(parameters) {
+        while (isNull(parameters[parameters.length - 1])) {
+            parameters.pop();
+        }
+        return parameters;
+    }
+    function getQueryPredicate(query, constantPool) {
+        if (Array.isArray(query.predicate)) {
+            let predicate = [];
+            query.predicate.forEach((selector) => {
+                // Each item in predicates array may contain strings with comma-separated refs
+                // (for ex. 'ref, ref1, ..., refN'), thus we extract individual refs and store them
+                // as separate array entities
+                const selectors = selector.split(',').map(token => literal$1(token.trim()));
+                predicate.push(...selectors);
+            });
+            return constantPool.getConstLiteral(literalArr(predicate), true);
+        }
+        else {
+            // The original predicate may have been wrapped in a `forwardRef()` call.
+            switch (query.predicate.forwardRef) {
+                case 0 /* None */:
+                case 2 /* Unwrapped */:
+                    return query.predicate.expression;
+                case 1 /* Wrapped */:
+                    return importExpr(Identifiers$1.resolveForwardRef).callFn([query.predicate.expression]);
+            }
+        }
+    }
+    /**
+     * A representation for an object literal used during codegen of definition objects. The generic
+     * type `T` allows to reference a documented type of the generated structure, such that the
+     * property names that are set can be resolved to their documented declaration.
+     */
+    class DefinitionMap {
+        constructor() {
+            this.values = [];
+        }
+        set(key, value) {
+            if (value) {
+                this.values.push({ key: key, value, quoted: false });
+            }
+        }
+        toLiteralMap() {
+            return literalMap(this.values);
+        }
+    }
+    /**
+     * Extract a map of properties to values for a given element or template node, which can be used
+     * by the directive matching machinery.
+     *
+     * @param elOrTpl the element or template in question
+     * @return an object set up for directive matching. For attributes on the element/template, this
+     * object maps a property name to its (static) value. For any bindings, this map simply maps the
+     * property name to an empty string.
+     */
+    function getAttrsForDirectiveMatching(elOrTpl) {
+        const attributesMap = {};
+        if (elOrTpl instanceof Template && elOrTpl.tagName !== 'ng-template') {
+            elOrTpl.templateAttrs.forEach(a => attributesMap[a.name] = '');
+        }
+        else {
+            elOrTpl.attributes.forEach(a => {
+                if (!isI18nAttribute(a.name)) {
+                    attributesMap[a.name] = a.value;
+                }
+            });
+            elOrTpl.inputs.forEach(i => {
+                attributesMap[i.name] = '';
+            });
+            elOrTpl.outputs.forEach(o => {
+                attributesMap[o.name] = '';
+            });
+        }
+        return attributesMap;
+    }
+    /** Returns a call expression to a chained instruction, e.g. `property(params[0])(params[1])`. */
+    function chainedInstruction(reference, calls, span) {
+        let expression = importExpr(reference, null, span);
+        if (calls.length > 0) {
+            for (let i = 0; i < calls.length; i++) {
+                expression = expression.callFn(calls[i], span);
+            }
+        }
+        else {
+            // Add a blank invocation, in case the `calls` array is empty.
+            expression = expression.callFn([], span);
+        }
+        return expression;
+    }
+    /**
+     * Gets the number of arguments expected to be passed to a generated instruction in the case of
+     * interpolation instructions.
+     * @param interpolation An interpolation ast
+     */
+    function getInterpolationArgsLength(interpolation) {
+        const { expressions, strings } = interpolation;
+        if (expressions.length === 1 && strings.length === 2 && strings[0] === '' && strings[1] === '') {
+            // If the interpolation has one interpolated value, but the prefix and suffix are both empty
+            // strings, we only pass one argument, to a special instruction like `propertyInterpolate` or
+            // `textInterpolate`.
+            return 1;
+        }
+        else {
+            return expressions.length + strings.length;
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     function compileInjectable(meta, resolveForwardRefs) {
         let result = null;
         const factoryMeta = {
@@ -5067,8 +5017,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         injectableProps.set('factory', result.expression);
         // Only generate providedIn property if it has a non-null value
         if (meta.providedIn.expression.value !== null) {
-            injectableProps.set('providedIn', meta.providedIn.isForwardRef ? generateForwardRef(meta.providedIn.expression) :
-                meta.providedIn.expression);
+            injectableProps.set('providedIn', convertFromMaybeForwardRefExpression(meta.providedIn));
         }
         const expression = importExpr(Identifiers$1.ɵɵdefineInjectable)
             .callFn([injectableProps.toLiteralMap()], undefined, true);
@@ -19842,8 +19791,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function convertToR3QueryMetadata(facade) {
         return {
             ...facade,
-            predicate: Array.isArray(facade.predicate) ? facade.predicate :
-                new WrappedNodeExpr(facade.predicate),
+            predicate: convertQueryPredicate(facade.predicate),
             read: facade.read ? new WrappedNodeExpr(facade.read) : null,
             static: facade.static,
             emitDistinctChangesOnly: facade.emitDistinctChangesOnly,
@@ -19853,13 +19801,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         return {
             propertyName: declaration.propertyName,
             first: declaration.first ?? false,
-            predicate: Array.isArray(declaration.predicate) ? declaration.predicate :
-                new WrappedNodeExpr(declaration.predicate),
+            predicate: convertQueryPredicate(declaration.predicate),
             descendants: declaration.descendants ?? false,
             read: declaration.read ? new WrappedNodeExpr(declaration.read) : null,
             static: declaration.static ?? false,
             emitDistinctChangesOnly: declaration.emitDistinctChangesOnly ?? true,
         };
+    }
+    function convertQueryPredicate(predicate) {
+        return Array.isArray(predicate) ?
+            // The predicate is an array of strings so pass it through.
+            predicate :
+            // The predicate is a type - assume that we will need to unwrap any `forwardRef()` calls.
+            createMayBeForwardRefExpression(new WrappedNodeExpr(predicate), 1 /* Wrapped */);
     }
     function convertDirectiveFacadeToMetadata(facade) {
         const inputsFromMetadata = parseInputOutputs(facade.inputs || []);
@@ -19995,11 +19949,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * In JIT mode we do not want the compiler to wrap the expression in a `forwardRef()` call because,
      * if it is referencing a type that has not yet been defined, it will have already been wrapped in
      * a `forwardRef()` - either by the application developer or during partial-compilation. Thus we can
-     * set `isForwardRef` to `false`.
+     * use `ForwardRefHandling.None`.
      */
     function convertToProviderExpression(obj, property) {
         if (obj.hasOwnProperty(property)) {
-            return createR3ProviderExpression(new WrappedNodeExpr(obj[property]), /* isForwardRef */ false);
+            return createMayBeForwardRefExpression(new WrappedNodeExpr(obj[property]), 0 /* None */);
         }
         else {
             return undefined;
@@ -20016,8 +19970,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function computeProvidedIn(providedIn) {
         const expression = typeof providedIn === 'function' ? new WrappedNodeExpr(providedIn) :
             new LiteralExpr(providedIn ?? null);
-        // See `convertToProviderExpression()` for why `isForwardRef` is false.
-        return createR3ProviderExpression(expression, /* isForwardRef */ false);
+        // See `convertToProviderExpression()` for why this uses `ForwardRefHandling.None`.
+        return createMayBeForwardRefExpression(expression, 0 /* None */);
     }
     function convertR3DependencyMetadataArray(facades) {
         return facades == null ? null : facades.map(convertR3DependencyMetadata);
@@ -20123,7 +20077,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes');
+    new Version('13.1.0-next.0+74.sha-393efa5.with-local-changes');
 
     /**
      * @license
@@ -20752,13 +20706,90 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.0+74.sha-393efa5.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
         definitionMap.set('ctorParameters', metadata.ctorParameters);
         definitionMap.set('propDecorators', metadata.propDecorators);
         return importExpr(Identifiers$1.declareClassMetadata).callFn([definitionMap.toLiteralMap()]);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * Creates an array literal expression from the given array, mapping all values to an expression
+     * using the provided mapping function. If the array is empty or null, then null is returned.
+     *
+     * @param values The array to transfer into literal array expression.
+     * @param mapper The logic to use for creating an expression for the array's values.
+     * @returns An array literal expression representing `values`, or null if `values` is empty or
+     * is itself null.
+     */
+    function toOptionalLiteralArray(values, mapper) {
+        if (values === null || values.length === 0) {
+            return null;
+        }
+        return literalArr(values.map(value => mapper(value)));
+    }
+    /**
+     * Creates an object literal expression from the given object, mapping all values to an expression
+     * using the provided mapping function. If the object has no keys, then null is returned.
+     *
+     * @param object The object to transfer into an object literal expression.
+     * @param mapper The logic to use for creating an expression for the object's values.
+     * @returns An object literal expression representing `object`, or null if `object` does not have
+     * any keys.
+     */
+    function toOptionalLiteralMap(object, mapper) {
+        const entries = Object.keys(object).map(key => {
+            const value = object[key];
+            return { key, value: mapper(value), quoted: true };
+        });
+        if (entries.length > 0) {
+            return literalMap(entries);
+        }
+        else {
+            return null;
+        }
+    }
+    function compileDependencies(deps) {
+        if (deps === 'invalid') {
+            // The `deps` can be set to the string "invalid"  by the `unwrapConstructorDependencies()`
+            // function, which tries to convert `ConstructorDeps` into `R3DependencyMetadata[]`.
+            return literal$1('invalid');
+        }
+        else if (deps === null) {
+            return literal$1(null);
+        }
+        else {
+            return literalArr(deps.map(compileDependency));
+        }
+    }
+    function compileDependency(dep) {
+        const depMeta = new DefinitionMap();
+        depMeta.set('token', dep.token);
+        if (dep.attributeNameType !== null) {
+            depMeta.set('attribute', literal$1(true));
+        }
+        if (dep.host) {
+            depMeta.set('host', literal$1(true));
+        }
+        if (dep.optional) {
+            depMeta.set('optional', literal$1(true));
+        }
+        if (dep.self) {
+            depMeta.set('self', literal$1(true));
+        }
+        if (dep.skipSelf) {
+            depMeta.set('skipSelf', literal$1(true));
+        }
+        return depMeta.toLiteralMap();
     }
 
     /**
@@ -20792,7 +20823,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.0+74.sha-393efa5.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20831,7 +20862,8 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         if (query.first) {
             meta.set('first', literal$1(true));
         }
-        meta.set('predicate', Array.isArray(query.predicate) ? asLiteral(query.predicate) : query.predicate);
+        meta.set('predicate', Array.isArray(query.predicate) ? asLiteral(query.predicate) :
+            convertFromMaybeForwardRefExpression(query.predicate));
         if (!query.emitDistinctChangesOnly) {
             // `emitDistinctChangesOnly` is special because we expect it to be `true`.
             // Therefore we explicitly emit the field, and explicitly place it only when it's `false`.
@@ -21009,7 +21041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.0+74.sha-393efa5.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21051,24 +21083,24 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.0+74.sha-393efa5.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
         if (meta.providedIn !== undefined) {
-            const providedIn = convertFromProviderExpression(meta.providedIn);
+            const providedIn = convertFromMaybeForwardRefExpression(meta.providedIn);
             if (providedIn.value !== null) {
                 definitionMap.set('providedIn', providedIn);
             }
         }
         if (meta.useClass !== undefined) {
-            definitionMap.set('useClass', convertFromProviderExpression(meta.useClass));
+            definitionMap.set('useClass', convertFromMaybeForwardRefExpression(meta.useClass));
         }
         if (meta.useExisting !== undefined) {
-            definitionMap.set('useExisting', convertFromProviderExpression(meta.useExisting));
+            definitionMap.set('useExisting', convertFromMaybeForwardRefExpression(meta.useExisting));
         }
         if (meta.useValue !== undefined) {
-            definitionMap.set('useValue', convertFromProviderExpression(meta.useValue));
+            definitionMap.set('useValue', convertFromMaybeForwardRefExpression(meta.useValue));
         }
         // Factories do not contain `ForwardRef`s since any types are already wrapped in a function call
         // so the types will not be eagerly evaluated. Therefore we do not need to process this expression
@@ -21080,27 +21112,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             definitionMap.set('deps', literalArr(meta.deps.map(compileDependency)));
         }
         return definitionMap;
-    }
-    /**
-     * Convert an `R3ProviderExpression` to an `Expression`, possibly wrapping its expression in a
-     * `forwardRef()` call.
-     *
-     * If `R3ProviderExpression.isForwardRef` is true then the expression was originally wrapped in a
-     * `forwardRef()` call to prevent the value from being eagerly evaluated in the code.
-     *
-     * Normally, the linker will statically process the code, putting the `expression` inside a factory
-     * function so the `forwardRef()` wrapper is not evaluated before it has been defined. But if the
-     * partial declaration is evaluated by the JIT compiler the `forwardRef()` call is still needed to
-     * prevent eager evaluation of the `expression`.
-     *
-     * So in partial declarations, expressions that could be forward-refs are wrapped in `forwardRef()`
-     * calls, and this is then unwrapped in the linker as necessary.
-     *
-     * See `packages/compiler-cli/src/ngtsc/annotations/src/injectable.ts` and
-     * `packages/compiler/src/jit_compiler_facade.ts` for more information.
-     */
-    function convertFromProviderExpression({ expression, isForwardRef }) {
-        return isForwardRef ? generateForwardRef(expression) : expression;
     }
 
     /**
@@ -21130,7 +21141,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.0+74.sha-393efa5.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21167,7 +21178,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.0+74.sha-393efa5.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21225,7 +21236,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.0+74.sha-393efa5.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21257,7 +21268,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.0+70.sha-ac7d5fa.with-local-changes');
+    new Version('13.1.0-next.0+74.sha-393efa5.with-local-changes');
 
     /**
      * @license
@@ -29506,7 +29517,8 @@ Either add the @Injectable() decorator to '${provider.node.name
             throw new FatalDiagnosticError(ErrorCode.DECORATOR_ARITY_WRONG, exprNode, `@${name} must have arguments`);
         }
         const first = name === 'ViewChild' || name === 'ContentChild';
-        const node = tryUnwrapForwardRef(args[0], reflector) ?? args[0];
+        const forwardReferenceTarget = tryUnwrapForwardRef(args[0], reflector);
+        const node = forwardReferenceTarget ?? args[0];
         const arg = evaluator.evaluate(node);
         /** Whether or not this query should collect only static results (see view/api.ts)  */
         let isStatic = false;
@@ -29514,7 +29526,7 @@ Either add the @Injectable() decorator to '${provider.node.name
         let predicate = null;
         if (arg instanceof Reference || arg instanceof DynamicValue) {
             // References and predicates that could not be evaluated statically are emitted as is.
-            predicate = new WrappedNodeExpr(node);
+            predicate = createMayBeForwardRefExpression(new WrappedNodeExpr(node), forwardReferenceTarget !== null ? 2 /* Unwrapped */ : 0 /* None */);
         }
         else if (typeof arg === 'string') {
             predicate = [arg];
@@ -31580,7 +31592,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                 type,
                 typeArgumentCount,
                 internalType,
-                providedIn: createR3ProviderExpression(new LiteralExpr(null), false),
+                providedIn: createMayBeForwardRefExpression(new LiteralExpr(null), 0 /* None */),
             };
         }
         else if (decorator.args.length === 1) {
@@ -31595,7 +31607,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const meta = reflectObjectLiteral(metaNode);
             const providedIn = meta.has('providedIn') ?
                 getProviderExpression(meta.get('providedIn'), reflector) :
-                createR3ProviderExpression(new LiteralExpr(null), false);
+                createMayBeForwardRefExpression(new LiteralExpr(null), 0 /* None */);
             let deps = undefined;
             if ((meta.has('useClass') || meta.has('useFactory')) && meta.has('deps')) {
                 const depsExpr = meta.get('deps');
@@ -31634,7 +31646,7 @@ Either add the @Injectable() decorator to '${provider.node.name
      */
     function getProviderExpression(expression, reflector) {
         const forwardRefValue = tryUnwrapForwardRef(expression, reflector);
-        return createR3ProviderExpression(new WrappedNodeExpr(forwardRefValue ?? expression), forwardRefValue !== null);
+        return createMayBeForwardRefExpression(new WrappedNodeExpr(forwardRefValue ?? expression), forwardRefValue !== null ? 2 /* Unwrapped */ : 0 /* None */);
     }
     function extractInjectableCtorDeps(clazz, meta, decorator, reflector, isCore, strictCtorDeps) {
         if (decorator.args === null) {
