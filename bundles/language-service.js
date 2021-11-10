@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.0+54.sha-5eac434.with-local-changes
+ * @license Angular v13.0.0+68.sha-30a27ad.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20061,7 +20061,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.0+54.sha-5eac434.with-local-changes');
+    new Version('13.0.0+68.sha-30a27ad.with-local-changes');
 
     /**
      * @license
@@ -20690,7 +20690,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.0.0+54.sha-5eac434.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0+68.sha-30a27ad.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20730,7 +20730,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.0.0+54.sha-5eac434.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0+68.sha-30a27ad.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20947,7 +20947,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.0.0+54.sha-5eac434.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0+68.sha-30a27ad.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -20989,7 +20989,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.0.0+54.sha-5eac434.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0+68.sha-30a27ad.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21068,7 +21068,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.0.0+54.sha-5eac434.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0+68.sha-30a27ad.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21105,7 +21105,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.0.0+54.sha-5eac434.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0+68.sha-30a27ad.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21163,7 +21163,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.0.0+54.sha-5eac434.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.0+68.sha-30a27ad.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21195,7 +21195,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.0+54.sha-5eac434.with-local-changes');
+    new Version('13.0.0+68.sha-30a27ad.with-local-changes');
 
     /**
      * @license
@@ -37231,17 +37231,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const inputs = getBoundInputs(this.dir, this.node, this.tcb);
             for (const input of inputs) {
                 // For bound inputs, the property is assigned the binding expression.
-                let expr = translateInput(input.attribute, this.tcb, this.scope);
-                if (!this.tcb.env.config.checkTypeOfInputBindings) {
-                    // If checking the type of bindings is disabled, cast the resulting expression to 'any'
-                    // before the assignment.
-                    expr = tsCastToAny(expr);
-                }
-                else if (!this.tcb.env.config.strictNullInputBindings) {
-                    // If strict null checks are disabled, erase `null` and `undefined` from the type by
-                    // wrapping the expression in a non-null assertion.
-                    expr = ts__default["default"].createNonNullExpression(expr);
-                }
+                const expr = widenBinding(translateInput(input.attribute, this.tcb, this.scope), this.tcb);
                 let assignment = wrapForDiagnostics(expr);
                 for (const fieldName of input.fieldNames) {
                     let target;
@@ -37430,17 +37420,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                     // Skip this binding as it was claimed by a directive.
                     continue;
                 }
-                let expr = tcbExpression(binding.value, this.tcb, this.scope);
-                if (!this.tcb.env.config.checkTypeOfInputBindings) {
-                    // If checking the type of bindings is disabled, cast the resulting expression to 'any'
-                    // before the assignment.
-                    expr = tsCastToAny(expr);
-                }
-                else if (!this.tcb.env.config.strictNullInputBindings) {
-                    // If strict null checks are disabled, erase `null` and `undefined` from the type by
-                    // wrapping the expression in a non-null assertion.
-                    expr = ts__default["default"].createNonNullExpression(expr);
-                }
+                const expr = widenBinding(tcbExpression(binding.value, this.tcb, this.scope), this.tcb);
                 if (this.tcb.env.config.checkTypeOfDomBindings && binding.type === 0 /* Property */) {
                     if (binding.name !== 'style' && binding.name !== 'class') {
                         if (elId === null) {
@@ -38254,17 +38234,7 @@ Either add the @Injectable() decorator to '${provider.node.name
             const propertyName = ts__default["default"].createStringLiteral(input.field);
             if (input.type === 'binding') {
                 // For bound inputs, the property is assigned the binding expression.
-                let expr = input.expression;
-                if (!tcb.env.config.checkTypeOfInputBindings) {
-                    // If checking the type of bindings is disabled, cast the resulting expression to 'any'
-                    // before the assignment.
-                    expr = tsCastToAny(expr);
-                }
-                else if (!tcb.env.config.strictNullInputBindings) {
-                    // If strict null checks are disabled, erase `null` and `undefined` from the type by
-                    // wrapping the expression in a non-null assertion.
-                    expr = ts__default["default"].createNonNullExpression(expr);
-                }
+                const expr = widenBinding(input.expression, tcb);
                 const assignment = ts__default["default"].createPropertyAssignment(propertyName, wrapForDiagnostics(expr));
                 addParseSpanInfo(assignment, input.sourceSpan);
                 return assignment;
@@ -38315,6 +38285,33 @@ Either add the @Injectable() decorator to '${provider.node.name
         else {
             // For regular attributes with a static string value, use the represented string literal.
             return ts__default["default"].createStringLiteral(attr.value);
+        }
+    }
+    /**
+     * Potentially widens the type of `expr` according to the type-checking configuration.
+     */
+    function widenBinding(expr, tcb) {
+        if (!tcb.env.config.checkTypeOfInputBindings) {
+            // If checking the type of bindings is disabled, cast the resulting expression to 'any'
+            // before the assignment.
+            return tsCastToAny(expr);
+        }
+        else if (!tcb.env.config.strictNullInputBindings) {
+            if (ts__default["default"].isObjectLiteralExpression(expr) || ts__default["default"].isArrayLiteralExpression(expr)) {
+                // Object literals and array literals should not be wrapped in non-null assertions as that
+                // would cause literals to be prematurely widened, resulting in type errors when assigning
+                // into a literal type.
+                return expr;
+            }
+            else {
+                // If strict null checks are disabled, erase `null` and `undefined` from the type by
+                // wrapping the expression in a non-null assertion.
+                return ts__default["default"].createNonNullExpression(expr);
+            }
+        }
+        else {
+            // No widening is requested, use the expression as is.
+            return expr;
         }
     }
     const EVENT_PARAMETER = '$event';
@@ -45347,7 +45344,7 @@ https://angular.io/guide/ivy for more information.
             if (scriptInfo.scriptKind === ts__namespace.ScriptKind.External) {
                 // script info for typecheck file is marked as external, see
                 // getOrCreateTypeCheckScriptInfo() in
-                // packages/language-service/ivy/language_service.ts
+                // packages/language-service/src/language_service.ts
                 typecheckFiles.push(scriptInfo.fileName);
             }
         }
