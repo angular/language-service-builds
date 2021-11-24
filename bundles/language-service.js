@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.1.0-next.2+49.sha-83bbbd3.with-local-changes
+ * @license Angular v13.1.0-next.2+52.sha-d8e6577.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20077,7 +20077,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.2+49.sha-83bbbd3.with-local-changes');
+    new Version('13.1.0-next.2+52.sha-d8e6577.with-local-changes');
 
     /**
      * @license
@@ -20706,7 +20706,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.1.0-next.2+49.sha-83bbbd3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+52.sha-d8e6577.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20823,7 +20823,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.1.0-next.2+49.sha-83bbbd3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+52.sha-d8e6577.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21041,7 +21041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.1.0-next.2+49.sha-83bbbd3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+52.sha-d8e6577.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21083,7 +21083,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.1.0-next.2+49.sha-83bbbd3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+52.sha-d8e6577.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21141,7 +21141,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.1.0-next.2+49.sha-83bbbd3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+52.sha-d8e6577.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21178,7 +21178,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.1.0-next.2+49.sha-83bbbd3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+52.sha-d8e6577.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21236,7 +21236,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.1.0-next.2+49.sha-83bbbd3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+52.sha-d8e6577.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21268,7 +21268,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.2+49.sha-83bbbd3.with-local-changes');
+    new Version('13.1.0-next.2+52.sha-d8e6577.with-local-changes');
 
     /**
      * @license
@@ -34428,120 +34428,6 @@ Either add the @Injectable() decorator to '${provider.node.name
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const IVY_SWITCH_PRE_SUFFIX = '__PRE_R3__';
-    const IVY_SWITCH_POST_SUFFIX = '__POST_R3__';
-    function ivySwitchTransform(_) {
-        return flipIvySwitchInFile;
-    }
-    function flipIvySwitchInFile(sf) {
-        // To replace the statements array, it must be copied. This only needs to happen if a statement
-        // must actually be replaced within the array, so the newStatements array is lazily initialized.
-        let newStatements = undefined;
-        // Iterate over the statements in the file.
-        for (let i = 0; i < sf.statements.length; i++) {
-            const statement = sf.statements[i];
-            // Skip over everything that isn't a variable statement.
-            if (!ts__default["default"].isVariableStatement(statement) || !hasIvySwitches(statement)) {
-                continue;
-            }
-            // This statement needs to be replaced. Check if the newStatements array needs to be lazily
-            // initialized to a copy of the original statements.
-            if (newStatements === undefined) {
-                newStatements = [...sf.statements];
-            }
-            // Flip any switches in the VariableStatement. If there were any, a new statement will be
-            // returned; otherwise the old statement will be.
-            newStatements[i] = flipIvySwitchesInVariableStatement(statement, sf.statements);
-        }
-        // Only update the statements in the SourceFile if any have changed.
-        if (newStatements !== undefined) {
-            return ts__default["default"].updateSourceFileNode(sf, newStatements);
-        }
-        return sf;
-    }
-    /**
-     * Look for the ts.Identifier of a ts.Declaration with this name.
-     *
-     * The real identifier is needed (rather than fabricating one) as TypeScript decides how to
-     * reference this identifier based on information stored against its node in the AST, which a
-     * synthetic node would not have. In particular, since the post-switch variable is often exported,
-     * TypeScript needs to know this so it can write `exports.VAR` instead of just `VAR` when emitting
-     * code.
-     *
-     * Only variable, function, and class declarations are currently searched.
-     */
-    function findPostSwitchIdentifier(statements, name) {
-        for (const stmt of statements) {
-            if (ts__default["default"].isVariableStatement(stmt)) {
-                const decl = stmt.declarationList.declarations.find(decl => ts__default["default"].isIdentifier(decl.name) && decl.name.text === name);
-                if (decl !== undefined) {
-                    return decl.name;
-                }
-            }
-            else if (ts__default["default"].isFunctionDeclaration(stmt) || ts__default["default"].isClassDeclaration(stmt)) {
-                if (stmt.name !== undefined && ts__default["default"].isIdentifier(stmt.name) && stmt.name.text === name) {
-                    return stmt.name;
-                }
-            }
-        }
-        return null;
-    }
-    /**
-     * Flip any Ivy switches which are discovered in the given ts.VariableStatement.
-     */
-    function flipIvySwitchesInVariableStatement(stmt, statements) {
-        // Build a new list of variable declarations. Specific declarations that are initialized to a
-        // pre-switch identifier will be replaced with a declaration initialized to the post-switch
-        // identifier.
-        const newDeclarations = [...stmt.declarationList.declarations];
-        for (let i = 0; i < newDeclarations.length; i++) {
-            const decl = newDeclarations[i];
-            // Skip declarations that aren't initialized to an identifier.
-            if (decl.initializer === undefined || !ts__default["default"].isIdentifier(decl.initializer)) {
-                continue;
-            }
-            // Skip declarations that aren't Ivy switches.
-            if (!decl.initializer.text.endsWith(IVY_SWITCH_PRE_SUFFIX)) {
-                continue;
-            }
-            // Determine the name of the post-switch variable.
-            const postSwitchName = decl.initializer.text.replace(IVY_SWITCH_PRE_SUFFIX, IVY_SWITCH_POST_SUFFIX);
-            // Find the post-switch variable identifier. If one can't be found, it's an error. This is
-            // reported as a thrown error and not a diagnostic as transformers cannot output diagnostics.
-            const newIdentifier = findPostSwitchIdentifier(statements, postSwitchName);
-            if (newIdentifier === null) {
-                throw new Error(`Unable to find identifier ${postSwitchName} in ${stmt.getSourceFile().fileName} for the Ivy switch.`);
-            }
-            newDeclarations[i] = ts__default["default"].updateVariableDeclaration(
-            /* node */ decl, 
-            /* name */ decl.name, 
-            /* type */ decl.type, 
-            /* initializer */ newIdentifier);
-        }
-        const newDeclList = ts__default["default"].updateVariableDeclarationList(
-        /* declarationList */ stmt.declarationList, 
-        /* declarations */ newDeclarations);
-        const newStmt = ts__default["default"].updateVariableStatement(
-        /* statement */ stmt, 
-        /* modifiers */ stmt.modifiers, 
-        /* declarationList */ newDeclList);
-        return newStmt;
-    }
-    /**
-     * Check whether the given VariableStatement has any Ivy switch variables.
-     */
-    function hasIvySwitches(stmt) {
-        return stmt.declarationList.declarations.some(decl => decl.initializer !== undefined && ts__default["default"].isIdentifier(decl.initializer) &&
-            decl.initializer.text.endsWith(IVY_SWITCH_PRE_SUFFIX));
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /**
      * Describes the scope of the caller's interest in template type-checking results.
      */
@@ -40748,7 +40634,6 @@ Either add the @Injectable() decorator to '${provider.node.name
             if (this.adapter.factoryTracker !== null) {
                 before.push(generatedFactoryTransform(this.adapter.factoryTracker.sourceInfo, importRewriter));
             }
-            before.push(ivySwitchTransform);
             return { transformers: { before, afterDeclarations } };
         }
         /**
