@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.1.0-next.2+65.sha-ef140a7.with-local-changes
+ * @license Angular v13.1.0-next.2+67.sha-3aafa76.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20077,7 +20077,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.2+65.sha-ef140a7.with-local-changes');
+    new Version('13.1.0-next.2+67.sha-3aafa76.with-local-changes');
 
     /**
      * @license
@@ -20706,7 +20706,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.1.0-next.2+65.sha-ef140a7.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+67.sha-3aafa76.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20823,7 +20823,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.1.0-next.2+65.sha-ef140a7.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+67.sha-3aafa76.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21041,7 +21041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.1.0-next.2+65.sha-ef140a7.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+67.sha-3aafa76.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21083,7 +21083,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.1.0-next.2+65.sha-ef140a7.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+67.sha-3aafa76.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21141,7 +21141,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.1.0-next.2+65.sha-ef140a7.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+67.sha-3aafa76.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21178,7 +21178,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.1.0-next.2+65.sha-ef140a7.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+67.sha-3aafa76.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21236,7 +21236,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.1.0-next.2+65.sha-ef140a7.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+67.sha-3aafa76.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21268,7 +21268,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.2+65.sha-ef140a7.with-local-changes');
+    new Version('13.1.0-next.2+67.sha-3aafa76.with-local-changes');
 
     /**
      * @license
@@ -41629,15 +41629,20 @@ https://angular.io/guide/ivy for more information.
         return undefined;
     }
     /**
-     * Given an attribute node, converts it to string form.
+     * Given an attribute node, converts it to string form for use as a CSS selector.
      */
-    function toAttributeString(attribute) {
+    function toAttributeCssSelector(attribute) {
+        let selector;
         if (attribute instanceof BoundEvent || attribute instanceof BoundAttribute) {
-            return `[${attribute.name}]`;
+            selector = `[${attribute.name}]`;
         }
         else {
-            return `[${attribute.name}=${attribute.valueSpan?.toString() ?? ''}]`;
+            selector = `[${attribute.name}=${attribute.valueSpan?.toString() ?? ''}]`;
         }
+        // Any dollar signs that appear in the attribute name and/or value need to be escaped because they
+        // need to be taken as literal characters rather than special selector behavior of dollar signs in
+        // CSS.
+        return selector.replace('$', '\\$');
     }
     function getNodeName(node) {
         return node instanceof Template ? node.tagName : node.name;
@@ -41678,14 +41683,14 @@ https://angular.io/guide/ivy for more information.
     // TODO(atscott): Add unit tests for this and the one for attributes
     function getDirectiveMatchesForElementTag(element, directives) {
         const attributes = getAttributes(element);
-        const allAttrs = attributes.map(toAttributeString);
+        const allAttrs = attributes.map(toAttributeCssSelector);
         const allDirectiveMatches = getDirectiveMatchesForSelector(directives, getNodeName(element) + allAttrs.join(''));
         const matchesWithoutElement = getDirectiveMatchesForSelector(directives, allAttrs.join(''));
         return difference(allDirectiveMatches, matchesWithoutElement);
     }
     function makeElementSelector(element) {
         const attributes = getAttributes(element);
-        const allAttrs = attributes.map(toAttributeString);
+        const allAttrs = attributes.map(toAttributeCssSelector);
         return getNodeName(element) + allAttrs.join('');
     }
     /**
@@ -41701,9 +41706,9 @@ https://angular.io/guide/ivy for more information.
      */
     function getDirectiveMatchesForAttribute(name, hostNode, directives) {
         const attributes = getAttributes(hostNode);
-        const allAttrs = attributes.map(toAttributeString);
+        const allAttrs = attributes.map(toAttributeCssSelector);
         const allDirectiveMatches = getDirectiveMatchesForSelector(directives, getNodeName(hostNode) + allAttrs.join(''));
-        const attrsExcludingName = attributes.filter(a => a.name !== name).map(toAttributeString);
+        const attrsExcludingName = attributes.filter(a => a.name !== name).map(toAttributeCssSelector);
         const matchesWithoutAttr = getDirectiveMatchesForSelector(directives, getNodeName(hostNode) + attrsExcludingName.join(''));
         return difference(allDirectiveMatches, matchesWithoutAttr);
     }
@@ -41712,18 +41717,25 @@ https://angular.io/guide/ivy for more information.
      * for the selector.
      */
     function getDirectiveMatchesForSelector(directives, selector) {
-        const selectors = CssSelector.parse(selector);
-        if (selectors.length === 0) {
+        try {
+            const selectors = CssSelector.parse(selector);
+            if (selectors.length === 0) {
+                return new Set();
+            }
+            return new Set(directives.filter((dir) => {
+                if (dir.selector === null) {
+                    return false;
+                }
+                const matcher = new SelectorMatcher();
+                matcher.addSelectables(CssSelector.parse(dir.selector));
+                return selectors.some(selector => matcher.match(selector, null));
+            }));
+        }
+        catch {
+            // An invalid selector may throw an error. There would be no directive matches for an invalid
+            // selector.
             return new Set();
         }
-        return new Set(directives.filter((dir) => {
-            if (dir.selector === null) {
-                return false;
-            }
-            const matcher = new SelectorMatcher();
-            matcher.addSelectables(CssSelector.parse(dir.selector));
-            return selectors.some(selector => matcher.match(selector, null));
-        }));
     }
     /**
      * Returns a new `ts.SymbolDisplayPart` array which has the alias imports from the tcb filtered
