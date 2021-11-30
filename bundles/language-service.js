@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.1.0-next.2+74.sha-0fcf18d.with-local-changes
+ * @license Angular v13.1.0-next.2+75.sha-d56e3f4.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -20077,7 +20077,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.2+74.sha-0fcf18d.with-local-changes');
+    new Version('13.1.0-next.2+75.sha-d56e3f4.with-local-changes');
 
     /**
      * @license
@@ -20706,7 +20706,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.1.0-next.2+74.sha-0fcf18d.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+75.sha-d56e3f4.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20823,7 +20823,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.1.0-next.2+74.sha-0fcf18d.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+75.sha-d56e3f4.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21041,7 +21041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.1.0-next.2+74.sha-0fcf18d.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+75.sha-d56e3f4.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21083,7 +21083,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.1.0-next.2+74.sha-0fcf18d.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+75.sha-d56e3f4.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21141,7 +21141,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.1.0-next.2+74.sha-0fcf18d.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+75.sha-d56e3f4.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21178,7 +21178,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.1.0-next.2+74.sha-0fcf18d.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+75.sha-d56e3f4.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21236,7 +21236,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.1.0-next.2+74.sha-0fcf18d.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+75.sha-d56e3f4.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21268,7 +21268,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.2+74.sha-0fcf18d.with-local-changes');
+    new Version('13.1.0-next.2+75.sha-d56e3f4.with-local-changes');
 
     /**
      * @license
@@ -21596,6 +21596,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * found in the LICENSE file at https://angular.io/license
      */
     const D_TS = /\.d\.ts$/i;
+    const PARSED_TS_VERSION = parseFloat(ts__default["default"].versionMajorMinor);
     function isSymbolWithValueDeclaration(symbol) {
         // If there is a value declaration set, then the `declarations` property is never undefined. We
         // still check for the property to exist as this matches with the type that `symbol` is narrowed
@@ -21708,6 +21709,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return sf;
         }
         return redirectInfo.unredirected;
+    }
+    /**
+     * Backwards-compatible version of `ts.createExportSpecifier`
+     * to handle a breaking change between 4.4 and 4.5.
+     */
+    function createExportSpecifier(propertyName, name, isTypeOnly = false) {
+        return PARSED_TS_VERSION > 4.4 ?
+            // TODO(crisbeto): the function is cast to `any` here since g3 is still on TS 4.4.
+            // Should be cleaned up when g3 has been updated.
+            ts__default["default"].createExportSpecifier(isTypeOnly, propertyName, name) :
+            // TODO(crisbeto): backwards-compatibility layer for TS 4.4.
+            // Should be cleaned up when we drop support for it.
+            ts__default["default"].createExportSpecifier(propertyName, name);
     }
 
     /**
@@ -23040,8 +23054,15 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 //   import {Foo} from 'foo';
                 // or
                 //   import {Foo as Bar} from 'foo';
+                // TODO(crisbeto): the cast to `any` is here since g3 is still on TS 4.4.
+                // Should be cleaned up when g3 has been updated.
+                if (firstDecl.isTypeOnly) {
+                    // The import specifier can't be type-only (e.g. `import {type Foo} from '...')`.
+                    return typeOnlyImport(typeNode, firstDecl);
+                }
                 if (firstDecl.parent.parent.isTypeOnly) {
-                    // Type-only imports cannot be represented as value.
+                    // The import specifier can't be inside a type-only import clause
+                    // (e.g. `import type {Foo} from '...')`.
                     return typeOnlyImport(typeNode, firstDecl.parent.parent);
                 }
                 // Determine the name to import (`Foo`) from the import specifier, as the symbol names of
@@ -23109,10 +23130,10 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             reason: { kind: 1 /* NO_VALUE_DECLARATION */, typeNode, decl },
         };
     }
-    function typeOnlyImport(typeNode, importClause) {
+    function typeOnlyImport(typeNode, node) {
         return {
             kind: 2 /* UNAVAILABLE */,
-            reason: { kind: 2 /* TYPE_ONLY_IMPORT */, typeNode, importClause },
+            reason: { kind: 2 /* TYPE_ONLY_IMPORT */, typeNode, node },
         };
     }
     function unknownReference(typeNode) {
@@ -26293,9 +26314,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     const stmt = ts__default["default"].createExportDeclaration(
                     /* decorators */ undefined, 
                     /* modifiers */ undefined, 
-                    /* exportClause */ ts__default["default"].createNamedExports([ts__default["default"].createExportSpecifier(
-                        /* propertyName */ symbolName, 
-                        /* name */ aliasName)]), 
+                    /* exportClause */ ts__default["default"].createNamedExports([createExportSpecifier(symbolName, aliasName)]), 
                     /* moduleSpecifier */ ts__default["default"].createStringLiteral(moduleName));
                     statements.push(stmt);
                 });
@@ -28537,7 +28556,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                     'Consider changing the type-only import to a regular import, or use the @Inject decorator to specify an injection token.';
                 hints = [
                     makeRelatedInformation(reason.typeNode, 'This type is imported using a type-only import, which prevents it from being usable as an injection token.'),
-                    makeRelatedInformation(reason.importClause, 'The type-only import occurs here.'),
+                    makeRelatedInformation(reason.node, 'The type-only import occurs here.'),
                 ];
                 break;
             case 4 /* NAMESPACE */:
@@ -32132,7 +32151,7 @@ Either add the @Injectable() decorator to '${provider.node.name
                         continue;
                     }
                     if (ts__default["default"].isImportDeclaration(stmt) && stmt.importClause !== undefined &&
-                        stmt.importClause.isTypeOnly) {
+                        isTypeOnlyImportClause(stmt.importClause)) {
                         // Exclude type-only imports as they are always elided, so they don't contribute to
                         // cycles.
                         continue;
@@ -32154,6 +32173,20 @@ Either add the @Injectable() decorator to '${provider.node.name
     }
     function isLocalFile(sf) {
         return !sf.isDeclarationFile;
+    }
+    function isTypeOnlyImportClause(node) {
+        // The clause itself is type-only (e.g. `import type {foo} from '...'`).
+        if (node.isTypeOnly) {
+            return true;
+        }
+        // All the specifiers in the cause are type-only (e.g. `import {type a, type b} from '...'`).
+        if (node.namedBindings !== undefined && ts__default["default"].isNamedImports(node.namedBindings) &&
+            // TODO(crisbeto): the cast to `any` is here since g3 is still on TS 4.4.
+            // Should be cleaned up when g3 has been updated.
+            node.namedBindings.elements.every(specifier => specifier.isTypeOnly)) {
+            return true;
+        }
+        return false;
     }
     /**
      * A helper class to track which SourceFiles are being processed when searching for a path in
@@ -32475,7 +32508,9 @@ Either add the @Injectable() decorator to '${provider.node.name
                 // Update the import path to point to the correct file using the ImportRewriter.
                 const rewrittenModuleSpecifier = importRewriter.rewriteSpecifier('@angular/core', sourceFilePath);
                 if (rewrittenModuleSpecifier !== stmt.moduleSpecifier.text) {
-                    transformedStatements.push(ts__default["default"].updateImportDeclaration(stmt, stmt.decorators, stmt.modifiers, stmt.importClause, ts__default["default"].createStringLiteral(rewrittenModuleSpecifier)));
+                    // TODO(crisbeto): the cast to `any` is here since g3 is still on TS 4.4.
+                    // Should be cleaned up when g3 has been updated.
+                    transformedStatements.push(ts__default["default"].updateImportDeclaration(stmt, stmt.decorators, stmt.modifiers, stmt.importClause, ts__default["default"].createStringLiteral(rewrittenModuleSpecifier), undefined));
                     // Record the identifier by which this imported module goes, so references to its symbols
                     // can be discovered later.
                     if (stmt.importClause !== undefined && stmt.importClause.namedBindings !== undefined &&
@@ -33647,6 +33682,8 @@ Either add the @Injectable() decorator to '${provider.node.name
      * marker and does not go to the filesystem for these requests, as they are known not to exist.
      */
     function createLookupResolutionHost(adapter) {
+        // TODO(crisbeto): the cast to `any` is here since g3 is still on TS 4.4.
+        // Should be cleaned up when g3 has been updated.
         return {
             directoryExists(directoryName) {
                 if (directoryName.includes(RESOURCE_MARKER)) {
@@ -33674,6 +33711,9 @@ Either add the @Injectable() decorator to '${provider.node.name
             getDirectories: adapter.getDirectories?.bind(adapter),
             realpath: adapter.realpath?.bind(adapter),
             trace: adapter.trace?.bind(adapter),
+            useCaseSensitiveFileNames: typeof adapter.useCaseSensitiveFileNames === 'function' ?
+                adapter.useCaseSensitiveFileNames.bind(adapter) :
+                adapter.useCaseSensitiveFileNames
         };
     }
 
