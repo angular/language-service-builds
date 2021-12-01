@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.1.0-next.2+86.sha-3f6d8f3.with-local-changes
+ * @license Angular v13.1.0-next.2+89.sha-1922032.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -27,7 +27,7 @@ module.exports = function(provided) {
   return results;
 };
 
-define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', 'module', 'path', 'url'], (function (exports, ts$1, os, ts, fs$1, module, path, url) { 'use strict';
+define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', 'module', 'path', 'url'], (function (exports, ts$1, os, ts, fs$1, module, p, url) { 'use strict';
 
     function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -53,7 +53,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     var ts__default = /*#__PURE__*/_interopDefaultLegacy(ts);
     var fs__namespace = /*#__PURE__*/_interopNamespace(fs$1);
     var module__default = /*#__PURE__*/_interopDefaultLegacy(module);
-    var path__namespace = /*#__PURE__*/_interopNamespace(path);
+    var p__namespace = /*#__PURE__*/_interopNamespace(p);
 
     /**
      * The default `FileSystem` that will always fail.
@@ -342,28 +342,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             process.chdir(dir);
         }
         resolve(...paths) {
-            return this.normalize(path__namespace.resolve(...paths));
+            return this.normalize(p__namespace.resolve(...paths));
         }
         dirname(file) {
-            return this.normalize(path__namespace.dirname(file));
+            return this.normalize(p__namespace.dirname(file));
         }
         join(basePath, ...paths) {
-            return this.normalize(path__namespace.join(basePath, ...paths));
+            return this.normalize(p__namespace.join(basePath, ...paths));
         }
         isRoot(path) {
             return this.dirname(path) === this.normalize(path);
         }
         isRooted(path) {
-            return path__namespace.isAbsolute(path);
+            return p__namespace.isAbsolute(path);
         }
         relative(from, to) {
-            return this.normalize(path__namespace.relative(from, to));
+            return this.normalize(p__namespace.relative(from, to));
         }
         basename(filePath, extension) {
-            return path__namespace.basename(filePath, extension);
+            return p__namespace.basename(filePath, extension);
         }
         extname(path) {
-            return path__namespace.extname(path);
+            return p__namespace.extname(path);
         }
         normalize(path) {
             // Convert backslashes to forward slashes
@@ -20077,7 +20077,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes');
+    new Version('13.1.0-next.2+89.sha-1922032.with-local-changes');
 
     /**
      * @license
@@ -20706,7 +20706,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+89.sha-1922032.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20823,7 +20823,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+89.sha-1922032.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -21041,7 +21041,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+89.sha-1922032.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21083,7 +21083,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+89.sha-1922032.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21141,7 +21141,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+89.sha-1922032.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21178,7 +21178,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+89.sha-1922032.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21236,7 +21236,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes'));
+        definitionMap.set('version', literal$1('13.1.0-next.2+89.sha-1922032.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21268,18 +21268,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.1.0-next.2+86.sha-3f6d8f3.with-local-changes');
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // In TypeScript 2.1 the spread element kind was renamed.
-    ts__default["default"].SyntaxKind.SpreadElement || ts__default["default"].SyntaxKind.SpreadElementExpression;
-    ts__default["default"].createNodeArray();
+    new Version('13.1.0-next.2+89.sha-1922032.with-local-changes');
 
     /**
      * @license
@@ -21299,6 +21288,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         EmitFlags[EmitFlags["Default"] = 19] = "Default";
         EmitFlags[EmitFlags["All"] = 31] = "All";
     })(EmitFlags || (EmitFlags = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * The currently used version of TypeScript, which can be adjusted for testing purposes using
+     * `setTypeScriptVersionForTesting` and `restoreTypeScriptVersionForTesting` below.
+     */
+    ts__default["default"].version;
 
     /**
      * @license
@@ -41159,19 +41161,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * The currently used version of TypeScript, which can be adjusted for testing purposes using
-     * `setTypeScriptVersionForTesting` and `restoreTypeScriptVersionForTesting` below.
-     */
-    ts__default["default"].version;
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     /** Error message to show when attempting to build View Engine. */
 `
 This compilation is using the View Engine compiler which is no longer supported by the Angular team
@@ -41900,7 +41889,7 @@ https://angular.io/guide/ivy for more information.
             // same name instead. That way, we can provide go-to-definition for the pre-compiled files which
             // would generally be the desired behavior.
             if (url.endsWith('.css')) {
-                const styleUrl = path__namespace.resolve(fromFile, '..', url);
+                const styleUrl = p__namespace.resolve(fromFile, '..', url);
                 for (const ext of PRE_COMPILED_STYLE_EXTENSIONS) {
                     const precompiledFileUrl = styleUrl.replace(/\.css$/, ext);
                     if (this.fileExists(precompiledFileUrl)) {
@@ -42005,16 +41994,16 @@ https://angular.io/guide/ivy for more information.
             return this.serverHost.getCurrentDirectory();
         }
         extname(path) {
-            return path__namespace.extname(path);
+            return p__namespace.extname(path);
         }
         resolve(...paths) {
-            return path__namespace.resolve(...paths);
+            return p__namespace.resolve(...paths);
         }
         dirname(file) {
-            return path__namespace.dirname(file);
+            return p__namespace.dirname(file);
         }
         join(basePath, ...paths) {
-            return path__namespace.join(basePath, ...paths);
+            return p__namespace.join(basePath, ...paths);
         }
     }
 
