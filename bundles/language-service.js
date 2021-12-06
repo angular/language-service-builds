@@ -1,5 +1,5 @@
 /**
- * @license Angular v13.0.3+7.sha-e8e21ac.with-local-changes
+ * @license Angular v13.0.3+11.sha-d06e546.with-local-changes
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -27,7 +27,7 @@ module.exports = function(provided) {
   return results;
 };
 
-define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', 'module', 'path', 'url'], (function (exports, ts$1, os, ts, fs$1, module, path, url) { 'use strict';
+define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', 'module', 'path', 'url'], (function (exports, ts$1, os, ts, fs$1, module, p, url) { 'use strict';
 
     function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
@@ -53,7 +53,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     var ts__default = /*#__PURE__*/_interopDefaultLegacy(ts);
     var fs__namespace = /*#__PURE__*/_interopNamespace(fs$1);
     var module__default = /*#__PURE__*/_interopDefaultLegacy(module);
-    var path__namespace = /*#__PURE__*/_interopNamespace(path);
+    var p__namespace = /*#__PURE__*/_interopNamespace(p);
 
     /**
      * The default `FileSystem` that will always fail.
@@ -342,28 +342,28 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             process.chdir(dir);
         }
         resolve(...paths) {
-            return this.normalize(path__namespace.resolve(...paths));
+            return this.normalize(p__namespace.resolve(...paths));
         }
         dirname(file) {
-            return this.normalize(path__namespace.dirname(file));
+            return this.normalize(p__namespace.dirname(file));
         }
         join(basePath, ...paths) {
-            return this.normalize(path__namespace.join(basePath, ...paths));
+            return this.normalize(p__namespace.join(basePath, ...paths));
         }
         isRoot(path) {
             return this.dirname(path) === this.normalize(path);
         }
         isRooted(path) {
-            return path__namespace.isAbsolute(path);
+            return p__namespace.isAbsolute(path);
         }
         relative(from, to) {
-            return this.normalize(path__namespace.relative(from, to));
+            return this.normalize(p__namespace.relative(from, to));
         }
         basename(filePath, extension) {
-            return path__namespace.basename(filePath, extension);
+            return p__namespace.basename(filePath, extension);
         }
         extname(path) {
-            return path__namespace.extname(path);
+            return p__namespace.extname(path);
         }
         normalize(path) {
             // Convert backslashes to forward slashes
@@ -5066,31 +5066,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * A token representing the a reference to a static type.
-     *
-     * This token is unique for a filePath and name and can be used as a hash table key.
-     */
-    class StaticSymbol {
-        constructor(filePath, name, members) {
-            this.filePath = filePath;
-            this.name = name;
-            this.members = members;
-        }
-        assertNoMembers() {
-            if (this.members.length) {
-                throw new Error(`Illegal state: symbol without members expected, but got ${JSON.stringify(this)}.`);
-            }
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     const $EOF = 0;
     const $BSPACE = 8;
     const $TAB = 9;
@@ -5341,9 +5316,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return null;
         }
         const ref = compileIdentifier.reference;
-        if (ref instanceof StaticSymbol) {
-            return ref.name;
-        }
         if (ref['__anonymousType']) {
             return ref['__anonymousType'];
         }
@@ -5692,13 +5664,13 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
          *
          * @param sourceUrl The URL of the generated code.
          * @param statements An array of Angular statement AST nodes to be evaluated.
-         * @param reflector A helper used when converting the statements to executable code.
+         * @param refResolver Resolves `o.ExternalReference`s into values.
          * @param createSourceMaps If true then create a source-map for the generated code and include it
          * inline as a source-map comment.
          * @returns A map of all the variables in the generated code.
          */
-        evaluateStatements(sourceUrl, statements, reflector, createSourceMaps) {
-            const converter = new JitEmitterVisitor(reflector);
+        evaluateStatements(sourceUrl, statements, refResolver, createSourceMaps) {
+            const converter = new JitEmitterVisitor(refResolver);
             const ctx = EmitterVisitorContext.createRoot();
             // Ensure generated code is in strict mode
             if (statements.length > 0 && !isUseStrictStatement(statements[0])) {
@@ -5760,9 +5732,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * An Angular AST visitor that converts AST nodes into executable JavaScript code.
      */
     class JitEmitterVisitor extends AbstractJsEmitterVisitor {
-        constructor(reflector) {
+        constructor(refResolver) {
             super();
-            this.reflector = reflector;
+            this.refResolver = refResolver;
             this._evalArgNames = [];
             this._evalArgValues = [];
             this._evalExportedVars = [];
@@ -5779,7 +5751,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             return result;
         }
         visitExternalExpr(ast, ctx) {
-            this._emitReferenceToExternal(ast, this.reflector.resolveExternalReference(ast.value), ctx);
+            this._emitReferenceToExternal(ast, this.refResolver.resolveExternalReference(ast.value), ctx);
             return null;
         }
         visitWrappedNodeExpr(ast, ctx) {
@@ -5868,30 +5840,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
                 throw new Error(`No value provided for @angular/core symbol '${ref.name}'.`);
             }
             return this.context[ref.name];
-        }
-        parameters(typeOrFunc) {
-            throw new Error('Not implemented.');
-        }
-        annotations(typeOrFunc) {
-            throw new Error('Not implemented.');
-        }
-        shallowAnnotations(typeOrFunc) {
-            throw new Error('Not implemented.');
-        }
-        tryAnnotations(typeOrFunc) {
-            throw new Error('Not implemented.');
-        }
-        propMetadata(typeOrFunc) {
-            throw new Error('Not implemented.');
-        }
-        hasLifecycleHook(type, lcProperty) {
-            throw new Error('Not implemented.');
-        }
-        guards(typeOrFunc) {
-            throw new Error('Not implemented.');
-        }
-        componentModuleUrl(type, cmpMetadata) {
-            throw new Error('Not implemented.');
         }
     }
 
@@ -6870,20 +6818,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     Identifiers.EMPTY_ARRAY = { name: 'ɵEMPTY_ARRAY', moduleName: CORE };
     Identifiers.EMPTY_MAP = { name: 'ɵEMPTY_MAP', moduleName: CORE };
     Identifiers.Renderer = { name: 'Renderer', moduleName: CORE };
-    Identifiers.viewDef = { name: 'ɵvid', moduleName: CORE };
-    Identifiers.elementDef = { name: 'ɵeld', moduleName: CORE };
-    Identifiers.anchorDef = { name: 'ɵand', moduleName: CORE };
-    Identifiers.textDef = { name: 'ɵted', moduleName: CORE };
-    Identifiers.directiveDef = { name: 'ɵdid', moduleName: CORE };
-    Identifiers.providerDef = { name: 'ɵprd', moduleName: CORE };
-    Identifiers.queryDef = { name: 'ɵqud', moduleName: CORE };
-    Identifiers.pureArrayDef = { name: 'ɵpad', moduleName: CORE };
-    Identifiers.pureObjectDef = { name: 'ɵpod', moduleName: CORE };
-    Identifiers.purePipeDef = { name: 'ɵppd', moduleName: CORE };
-    Identifiers.pipeDef = { name: 'ɵpid', moduleName: CORE };
-    Identifiers.nodeValue = { name: 'ɵnov', moduleName: CORE };
-    Identifiers.ngContentDef = { name: 'ɵncd', moduleName: CORE };
-    Identifiers.createRendererType2 = { name: 'ɵcrt', moduleName: CORE };
     // type only
     Identifiers.RendererType2 = {
         name: 'RendererType2',
@@ -8472,18 +8406,629 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    var CompileSummaryKind;
-    (function (CompileSummaryKind) {
-        CompileSummaryKind[CompileSummaryKind["Pipe"] = 0] = "Pipe";
-        CompileSummaryKind[CompileSummaryKind["Directive"] = 1] = "Directive";
-        CompileSummaryKind[CompileSummaryKind["NgModule"] = 2] = "NgModule";
-        CompileSummaryKind[CompileSummaryKind["Injectable"] = 3] = "Injectable";
-    })(CompileSummaryKind || (CompileSummaryKind = {}));
-    function flatten(list) {
-        return list.reduce((flat, item) => {
-            const flatItem = Array.isArray(item) ? flatten(item) : item;
-            return flat.concat(flatItem);
-        }, []);
+    /**
+     * Parses string representation of a style and converts it into object literal.
+     *
+     * @param value string representation of style as used in the `style` attribute in HTML.
+     *   Example: `color: red; height: auto`.
+     * @returns An array of style property name and value pairs, e.g. `['color', 'red', 'height',
+     * 'auto']`
+     */
+    function parse(value) {
+        // we use a string array here instead of a string map
+        // because a string-map is not guaranteed to retain the
+        // order of the entries whereas a string array can be
+        // constructed in a [key, value, key, value] format.
+        const styles = [];
+        let i = 0;
+        let parenDepth = 0;
+        let quote = 0 /* QuoteNone */;
+        let valueStart = 0;
+        let propStart = 0;
+        let currentProp = null;
+        let valueHasQuotes = false;
+        while (i < value.length) {
+            const token = value.charCodeAt(i++);
+            switch (token) {
+                case 40 /* OpenParen */:
+                    parenDepth++;
+                    break;
+                case 41 /* CloseParen */:
+                    parenDepth--;
+                    break;
+                case 39 /* QuoteSingle */:
+                    // valueStart needs to be there since prop values don't
+                    // have quotes in CSS
+                    valueHasQuotes = valueHasQuotes || valueStart > 0;
+                    if (quote === 0 /* QuoteNone */) {
+                        quote = 39 /* QuoteSingle */;
+                    }
+                    else if (quote === 39 /* QuoteSingle */ && value.charCodeAt(i - 1) !== 92 /* BackSlash */) {
+                        quote = 0 /* QuoteNone */;
+                    }
+                    break;
+                case 34 /* QuoteDouble */:
+                    // same logic as above
+                    valueHasQuotes = valueHasQuotes || valueStart > 0;
+                    if (quote === 0 /* QuoteNone */) {
+                        quote = 34 /* QuoteDouble */;
+                    }
+                    else if (quote === 34 /* QuoteDouble */ && value.charCodeAt(i - 1) !== 92 /* BackSlash */) {
+                        quote = 0 /* QuoteNone */;
+                    }
+                    break;
+                case 58 /* Colon */:
+                    if (!currentProp && parenDepth === 0 && quote === 0 /* QuoteNone */) {
+                        currentProp = hyphenate(value.substring(propStart, i - 1).trim());
+                        valueStart = i;
+                    }
+                    break;
+                case 59 /* Semicolon */:
+                    if (currentProp && valueStart > 0 && parenDepth === 0 && quote === 0 /* QuoteNone */) {
+                        const styleVal = value.substring(valueStart, i - 1).trim();
+                        styles.push(currentProp, valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal);
+                        propStart = i;
+                        valueStart = 0;
+                        currentProp = null;
+                        valueHasQuotes = false;
+                    }
+                    break;
+            }
+        }
+        if (currentProp && valueStart) {
+            const styleVal = value.substr(valueStart).trim();
+            styles.push(currentProp, valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal);
+        }
+        return styles;
+    }
+    function stripUnnecessaryQuotes(value) {
+        const qS = value.charCodeAt(0);
+        const qE = value.charCodeAt(value.length - 1);
+        if (qS == qE && (qS == 39 /* QuoteSingle */ || qS == 34 /* QuoteDouble */)) {
+            const tempValue = value.substring(1, value.length - 1);
+            // special case to avoid using a multi-quoted string that was just chomped
+            // (e.g. `font-family: "Verdana", "sans-serif"`)
+            if (tempValue.indexOf('\'') == -1 && tempValue.indexOf('"') == -1) {
+                value = tempValue;
+            }
+        }
+        return value;
+    }
+    function hyphenate(value) {
+        return value
+            .replace(/[a-z][A-Z]/g, v => {
+            return v.charAt(0) + '-' + v.charAt(1);
+        })
+            .toLowerCase();
+    }
+
+    const IMPORTANT_FLAG = '!important';
+    /**
+     * Minimum amount of binding slots required in the runtime for style/class bindings.
+     *
+     * Styling in Angular uses up two slots in the runtime LView/TData data structures to
+     * record binding data, property information and metadata.
+     *
+     * When a binding is registered it will place the following information in the `LView`:
+     *
+     * slot 1) binding value
+     * slot 2) cached value (all other values collected before it in string form)
+     *
+     * When a binding is registered it will place the following information in the `TData`:
+     *
+     * slot 1) prop name
+     * slot 2) binding index that points to the previous style/class binding (and some extra config
+     * values)
+     *
+     * Let's imagine we have a binding that looks like so:
+     *
+     * ```
+     * <div [style.width]="x" [style.height]="y">
+     * ```
+     *
+     * Our `LView` and `TData` data-structures look like so:
+     *
+     * ```typescript
+     * LView = [
+     *   // ...
+     *   x, // value of x
+     *   "width: x",
+     *
+     *   y, // value of y
+     *   "width: x; height: y",
+     *   // ...
+     * ];
+     *
+     * TData = [
+     *   // ...
+     *   "width", // binding slot 20
+     *   0,
+     *
+     *   "height",
+     *   20,
+     *   // ...
+     * ];
+     * ```
+     *
+     * */
+    const MIN_STYLING_BINDING_SLOTS_REQUIRED = 2;
+    /**
+     * Produces creation/update instructions for all styling bindings (class and style)
+     *
+     * It also produces the creation instruction to register all initial styling values
+     * (which are all the static class="..." and style="..." attribute values that exist
+     * on an element within a template).
+     *
+     * The builder class below handles producing instructions for the following cases:
+     *
+     * - Static style/class attributes (style="..." and class="...")
+     * - Dynamic style/class map bindings ([style]="map" and [class]="map|string")
+     * - Dynamic style/class property bindings ([style.prop]="exp" and [class.name]="exp")
+     *
+     * Due to the complex relationship of all of these cases, the instructions generated
+     * for these attributes/properties/bindings must be done so in the correct order. The
+     * order which these must be generated is as follows:
+     *
+     * if (createMode) {
+     *   styling(...)
+     * }
+     * if (updateMode) {
+     *   styleMap(...)
+     *   classMap(...)
+     *   styleProp(...)
+     *   classProp(...)
+     * }
+     *
+     * The creation/update methods within the builder class produce these instructions.
+     */
+    class StylingBuilder {
+        constructor(_directiveExpr) {
+            this._directiveExpr = _directiveExpr;
+            /** Whether or not there are any static styling values present */
+            this._hasInitialValues = false;
+            /**
+             *  Whether or not there are any styling bindings present
+             *  (i.e. `[style]`, `[class]`, `[style.prop]` or `[class.name]`)
+             */
+            this.hasBindings = false;
+            this.hasBindingsWithPipes = false;
+            /** the input for [class] (if it exists) */
+            this._classMapInput = null;
+            /** the input for [style] (if it exists) */
+            this._styleMapInput = null;
+            /** an array of each [style.prop] input */
+            this._singleStyleInputs = null;
+            /** an array of each [class.name] input */
+            this._singleClassInputs = null;
+            this._lastStylingInput = null;
+            this._firstStylingInput = null;
+            // maps are used instead of hash maps because a Map will
+            // retain the ordering of the keys
+            /**
+             * Represents the location of each style binding in the template
+             * (e.g. `<div [style.width]="w" [style.height]="h">` implies
+             * that `width=0` and `height=1`)
+             */
+            this._stylesIndex = new Map();
+            /**
+             * Represents the location of each class binding in the template
+             * (e.g. `<div [class.big]="b" [class.hidden]="h">` implies
+             * that `big=0` and `hidden=1`)
+             */
+            this._classesIndex = new Map();
+            this._initialStyleValues = [];
+            this._initialClassValues = [];
+        }
+        /**
+         * Registers a given input to the styling builder to be later used when producing AOT code.
+         *
+         * The code below will only accept the input if it is somehow tied to styling (whether it be
+         * style/class bindings or static style/class attributes).
+         */
+        registerBoundInput(input) {
+            // [attr.style] or [attr.class] are skipped in the code below,
+            // they should not be treated as styling-based bindings since
+            // they are intended to be written directly to the attr and
+            // will therefore skip all style/class resolution that is present
+            // with style="", [style]="" and [style.prop]="", class="",
+            // [class.prop]="". [class]="" assignments
+            let binding = null;
+            let name = input.name;
+            switch (input.type) {
+                case 0 /* Property */:
+                    binding = this.registerInputBasedOnName(name, input.value, input.sourceSpan);
+                    break;
+                case 3 /* Style */:
+                    binding = this.registerStyleInput(name, false, input.value, input.sourceSpan, input.unit);
+                    break;
+                case 2 /* Class */:
+                    binding = this.registerClassInput(name, false, input.value, input.sourceSpan);
+                    break;
+            }
+            return binding ? true : false;
+        }
+        registerInputBasedOnName(name, expression, sourceSpan) {
+            let binding = null;
+            const prefix = name.substring(0, 6);
+            const isStyle = name === 'style' || prefix === 'style.' || prefix === 'style!';
+            const isClass = !isStyle && (name === 'class' || prefix === 'class.' || prefix === 'class!');
+            if (isStyle || isClass) {
+                const isMapBased = name.charAt(5) !== '.'; // style.prop or class.prop makes this a no
+                const property = name.substr(isMapBased ? 5 : 6); // the dot explains why there's a +1
+                if (isStyle) {
+                    binding = this.registerStyleInput(property, isMapBased, expression, sourceSpan);
+                }
+                else {
+                    binding = this.registerClassInput(property, isMapBased, expression, sourceSpan);
+                }
+            }
+            return binding;
+        }
+        registerStyleInput(name, isMapBased, value, sourceSpan, suffix) {
+            if (isEmptyExpression(value)) {
+                return null;
+            }
+            // CSS custom properties are case-sensitive so we shouldn't normalize them.
+            // See: https://www.w3.org/TR/css-variables-1/#defining-variables
+            if (!isCssCustomProperty(name)) {
+                name = hyphenate(name);
+            }
+            const { property, hasOverrideFlag, suffix: bindingSuffix } = parseProperty(name);
+            suffix = typeof suffix === 'string' && suffix.length !== 0 ? suffix : bindingSuffix;
+            const entry = { name: property, suffix: suffix, value, sourceSpan, hasOverrideFlag };
+            if (isMapBased) {
+                this._styleMapInput = entry;
+            }
+            else {
+                (this._singleStyleInputs = this._singleStyleInputs || []).push(entry);
+                registerIntoMap(this._stylesIndex, property);
+            }
+            this._lastStylingInput = entry;
+            this._firstStylingInput = this._firstStylingInput || entry;
+            this._checkForPipes(value);
+            this.hasBindings = true;
+            return entry;
+        }
+        registerClassInput(name, isMapBased, value, sourceSpan) {
+            if (isEmptyExpression(value)) {
+                return null;
+            }
+            const { property, hasOverrideFlag } = parseProperty(name);
+            const entry = { name: property, value, sourceSpan, hasOverrideFlag, suffix: null };
+            if (isMapBased) {
+                this._classMapInput = entry;
+            }
+            else {
+                (this._singleClassInputs = this._singleClassInputs || []).push(entry);
+                registerIntoMap(this._classesIndex, property);
+            }
+            this._lastStylingInput = entry;
+            this._firstStylingInput = this._firstStylingInput || entry;
+            this._checkForPipes(value);
+            this.hasBindings = true;
+            return entry;
+        }
+        _checkForPipes(value) {
+            if ((value instanceof ASTWithSource) && (value.ast instanceof BindingPipe)) {
+                this.hasBindingsWithPipes = true;
+            }
+        }
+        /**
+         * Registers the element's static style string value to the builder.
+         *
+         * @param value the style string (e.g. `width:100px; height:200px;`)
+         */
+        registerStyleAttr(value) {
+            this._initialStyleValues = parse(value);
+            this._hasInitialValues = true;
+        }
+        /**
+         * Registers the element's static class string value to the builder.
+         *
+         * @param value the className string (e.g. `disabled gold zoom`)
+         */
+        registerClassAttr(value) {
+            this._initialClassValues = value.trim().split(/\s+/g);
+            this._hasInitialValues = true;
+        }
+        /**
+         * Appends all styling-related expressions to the provided attrs array.
+         *
+         * @param attrs an existing array where each of the styling expressions
+         * will be inserted into.
+         */
+        populateInitialStylingAttrs(attrs) {
+            // [CLASS_MARKER, 'foo', 'bar', 'baz' ...]
+            if (this._initialClassValues.length) {
+                attrs.push(literal$1(1 /* Classes */));
+                for (let i = 0; i < this._initialClassValues.length; i++) {
+                    attrs.push(literal$1(this._initialClassValues[i]));
+                }
+            }
+            // [STYLE_MARKER, 'width', '200px', 'height', '100px', ...]
+            if (this._initialStyleValues.length) {
+                attrs.push(literal$1(2 /* Styles */));
+                for (let i = 0; i < this._initialStyleValues.length; i += 2) {
+                    attrs.push(literal$1(this._initialStyleValues[i]), literal$1(this._initialStyleValues[i + 1]));
+                }
+            }
+        }
+        /**
+         * Builds an instruction with all the expressions and parameters for `elementHostAttrs`.
+         *
+         * The instruction generation code below is used for producing the AOT statement code which is
+         * responsible for registering initial styles (within a directive hostBindings' creation block),
+         * as well as any of the provided attribute values, to the directive host element.
+         */
+        assignHostAttrs(attrs, definitionMap) {
+            if (this._directiveExpr && (attrs.length || this._hasInitialValues)) {
+                this.populateInitialStylingAttrs(attrs);
+                definitionMap.set('hostAttrs', literalArr(attrs));
+            }
+        }
+        /**
+         * Builds an instruction with all the expressions and parameters for `classMap`.
+         *
+         * The instruction data will contain all expressions for `classMap` to function
+         * which includes the `[class]` expression params.
+         */
+        buildClassMapInstruction(valueConverter) {
+            if (this._classMapInput) {
+                return this._buildMapBasedInstruction(valueConverter, true, this._classMapInput);
+            }
+            return null;
+        }
+        /**
+         * Builds an instruction with all the expressions and parameters for `styleMap`.
+         *
+         * The instruction data will contain all expressions for `styleMap` to function
+         * which includes the `[style]` expression params.
+         */
+        buildStyleMapInstruction(valueConverter) {
+            if (this._styleMapInput) {
+                return this._buildMapBasedInstruction(valueConverter, false, this._styleMapInput);
+            }
+            return null;
+        }
+        _buildMapBasedInstruction(valueConverter, isClassBased, stylingInput) {
+            // each styling binding value is stored in the LView
+            // map-based bindings allocate two slots: one for the
+            // previous binding value and another for the previous
+            // className or style attribute value.
+            let totalBindingSlotsRequired = MIN_STYLING_BINDING_SLOTS_REQUIRED;
+            // these values must be outside of the update block so that they can
+            // be evaluated (the AST visit call) during creation time so that any
+            // pipes can be picked up in time before the template is built
+            const mapValue = stylingInput.value.visit(valueConverter);
+            let reference;
+            if (mapValue instanceof Interpolation) {
+                totalBindingSlotsRequired += mapValue.expressions.length;
+                reference = isClassBased ? getClassMapInterpolationExpression(mapValue) :
+                    getStyleMapInterpolationExpression(mapValue);
+            }
+            else {
+                reference = isClassBased ? Identifiers$1.classMap : Identifiers$1.styleMap;
+            }
+            return {
+                reference,
+                calls: [{
+                        supportsInterpolation: true,
+                        sourceSpan: stylingInput.sourceSpan,
+                        allocateBindingSlots: totalBindingSlotsRequired,
+                        params: (convertFn) => {
+                            const convertResult = convertFn(mapValue);
+                            const params = Array.isArray(convertResult) ? convertResult : [convertResult];
+                            return params;
+                        }
+                    }]
+            };
+        }
+        _buildSingleInputs(reference, inputs, valueConverter, getInterpolationExpressionFn, isClassBased) {
+            const instructions = [];
+            inputs.forEach(input => {
+                const previousInstruction = instructions[instructions.length - 1];
+                const value = input.value.visit(valueConverter);
+                let referenceForCall = reference;
+                // each styling binding value is stored in the LView
+                // but there are two values stored for each binding:
+                //   1) the value itself
+                //   2) an intermediate value (concatenation of style up to this point).
+                //      We need to store the intermediate value so that we don't allocate
+                //      the strings on each CD.
+                let totalBindingSlotsRequired = MIN_STYLING_BINDING_SLOTS_REQUIRED;
+                if (value instanceof Interpolation) {
+                    totalBindingSlotsRequired += value.expressions.length;
+                    if (getInterpolationExpressionFn) {
+                        referenceForCall = getInterpolationExpressionFn(value);
+                    }
+                }
+                const call = {
+                    sourceSpan: input.sourceSpan,
+                    allocateBindingSlots: totalBindingSlotsRequired,
+                    supportsInterpolation: !!getInterpolationExpressionFn,
+                    params: (convertFn) => {
+                        // params => stylingProp(propName, value, suffix)
+                        const params = [];
+                        params.push(literal$1(input.name));
+                        const convertResult = convertFn(value);
+                        if (Array.isArray(convertResult)) {
+                            params.push(...convertResult);
+                        }
+                        else {
+                            params.push(convertResult);
+                        }
+                        // [style.prop] bindings may use suffix values (e.g. px, em, etc...), therefore,
+                        // if that is detected then we need to pass that in as an optional param.
+                        if (!isClassBased && input.suffix !== null) {
+                            params.push(literal$1(input.suffix));
+                        }
+                        return params;
+                    }
+                };
+                // If we ended up generating a call to the same instruction as the previous styling property
+                // we can chain the calls together safely to save some bytes, otherwise we have to generate
+                // a separate instruction call. This is primarily a concern with interpolation instructions
+                // where we may start off with one `reference`, but end up using another based on the
+                // number of interpolations.
+                if (previousInstruction && previousInstruction.reference === referenceForCall) {
+                    previousInstruction.calls.push(call);
+                }
+                else {
+                    instructions.push({ reference: referenceForCall, calls: [call] });
+                }
+            });
+            return instructions;
+        }
+        _buildClassInputs(valueConverter) {
+            if (this._singleClassInputs) {
+                return this._buildSingleInputs(Identifiers$1.classProp, this._singleClassInputs, valueConverter, null, true);
+            }
+            return [];
+        }
+        _buildStyleInputs(valueConverter) {
+            if (this._singleStyleInputs) {
+                return this._buildSingleInputs(Identifiers$1.styleProp, this._singleStyleInputs, valueConverter, getStylePropInterpolationExpression, false);
+            }
+            return [];
+        }
+        /**
+         * Constructs all instructions which contain the expressions that will be placed
+         * into the update block of a template function or a directive hostBindings function.
+         */
+        buildUpdateLevelInstructions(valueConverter) {
+            const instructions = [];
+            if (this.hasBindings) {
+                const styleMapInstruction = this.buildStyleMapInstruction(valueConverter);
+                if (styleMapInstruction) {
+                    instructions.push(styleMapInstruction);
+                }
+                const classMapInstruction = this.buildClassMapInstruction(valueConverter);
+                if (classMapInstruction) {
+                    instructions.push(classMapInstruction);
+                }
+                instructions.push(...this._buildStyleInputs(valueConverter));
+                instructions.push(...this._buildClassInputs(valueConverter));
+            }
+            return instructions;
+        }
+    }
+    function registerIntoMap(map, key) {
+        if (!map.has(key)) {
+            map.set(key, map.size);
+        }
+    }
+    function parseProperty(name) {
+        let hasOverrideFlag = false;
+        const overrideIndex = name.indexOf(IMPORTANT_FLAG);
+        if (overrideIndex !== -1) {
+            name = overrideIndex > 0 ? name.substring(0, overrideIndex) : '';
+            hasOverrideFlag = true;
+        }
+        let suffix = null;
+        let property = name;
+        const unitIndex = name.lastIndexOf('.');
+        if (unitIndex > 0) {
+            suffix = name.substr(unitIndex + 1);
+            property = name.substring(0, unitIndex);
+        }
+        return { property, suffix, hasOverrideFlag };
+    }
+    /**
+     * Gets the instruction to generate for an interpolated class map.
+     * @param interpolation An Interpolation AST
+     */
+    function getClassMapInterpolationExpression(interpolation) {
+        switch (getInterpolationArgsLength(interpolation)) {
+            case 1:
+                return Identifiers$1.classMap;
+            case 3:
+                return Identifiers$1.classMapInterpolate1;
+            case 5:
+                return Identifiers$1.classMapInterpolate2;
+            case 7:
+                return Identifiers$1.classMapInterpolate3;
+            case 9:
+                return Identifiers$1.classMapInterpolate4;
+            case 11:
+                return Identifiers$1.classMapInterpolate5;
+            case 13:
+                return Identifiers$1.classMapInterpolate6;
+            case 15:
+                return Identifiers$1.classMapInterpolate7;
+            case 17:
+                return Identifiers$1.classMapInterpolate8;
+            default:
+                return Identifiers$1.classMapInterpolateV;
+        }
+    }
+    /**
+     * Gets the instruction to generate for an interpolated style map.
+     * @param interpolation An Interpolation AST
+     */
+    function getStyleMapInterpolationExpression(interpolation) {
+        switch (getInterpolationArgsLength(interpolation)) {
+            case 1:
+                return Identifiers$1.styleMap;
+            case 3:
+                return Identifiers$1.styleMapInterpolate1;
+            case 5:
+                return Identifiers$1.styleMapInterpolate2;
+            case 7:
+                return Identifiers$1.styleMapInterpolate3;
+            case 9:
+                return Identifiers$1.styleMapInterpolate4;
+            case 11:
+                return Identifiers$1.styleMapInterpolate5;
+            case 13:
+                return Identifiers$1.styleMapInterpolate6;
+            case 15:
+                return Identifiers$1.styleMapInterpolate7;
+            case 17:
+                return Identifiers$1.styleMapInterpolate8;
+            default:
+                return Identifiers$1.styleMapInterpolateV;
+        }
+    }
+    /**
+     * Gets the instruction to generate for an interpolated style prop.
+     * @param interpolation An Interpolation AST
+     */
+    function getStylePropInterpolationExpression(interpolation) {
+        switch (getInterpolationArgsLength(interpolation)) {
+            case 1:
+                return Identifiers$1.styleProp;
+            case 3:
+                return Identifiers$1.stylePropInterpolate1;
+            case 5:
+                return Identifiers$1.stylePropInterpolate2;
+            case 7:
+                return Identifiers$1.stylePropInterpolate3;
+            case 9:
+                return Identifiers$1.stylePropInterpolate4;
+            case 11:
+                return Identifiers$1.stylePropInterpolate5;
+            case 13:
+                return Identifiers$1.stylePropInterpolate6;
+            case 15:
+                return Identifiers$1.stylePropInterpolate7;
+            case 17:
+                return Identifiers$1.stylePropInterpolate8;
+            default:
+                return Identifiers$1.stylePropInterpolateV;
+        }
+    }
+    /**
+     * Checks whether property name is a custom CSS property.
+     * See: https://www.w3.org/TR/css-variables-1
+     */
+    function isCssCustomProperty(name) {
+        return name.startsWith('--');
+    }
+    function isEmptyExpression(ast) {
+        if (ast instanceof ASTWithSource) {
+            ast = ast.ast;
+        }
+        return ast instanceof EmptyExpr;
     }
 
     /**
@@ -8493,9 +9038,1650 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const COMPONENT_VARIABLE = '%COMP%';
-    const HOST_ATTR = `_nghost-${COMPONENT_VARIABLE}`;
-    const CONTENT_ATTR = `_ngcontent-${COMPONENT_VARIABLE}`;
+    var TokenType;
+    (function (TokenType) {
+        TokenType[TokenType["Character"] = 0] = "Character";
+        TokenType[TokenType["Identifier"] = 1] = "Identifier";
+        TokenType[TokenType["PrivateIdentifier"] = 2] = "PrivateIdentifier";
+        TokenType[TokenType["Keyword"] = 3] = "Keyword";
+        TokenType[TokenType["String"] = 4] = "String";
+        TokenType[TokenType["Operator"] = 5] = "Operator";
+        TokenType[TokenType["Number"] = 6] = "Number";
+        TokenType[TokenType["Error"] = 7] = "Error";
+    })(TokenType || (TokenType = {}));
+    const KEYWORDS = ['var', 'let', 'as', 'null', 'undefined', 'true', 'false', 'if', 'else', 'this'];
+    class Lexer {
+        tokenize(text) {
+            const scanner = new _Scanner(text);
+            const tokens = [];
+            let token = scanner.scanToken();
+            while (token != null) {
+                tokens.push(token);
+                token = scanner.scanToken();
+            }
+            return tokens;
+        }
+    }
+    class Token {
+        constructor(index, end, type, numValue, strValue) {
+            this.index = index;
+            this.end = end;
+            this.type = type;
+            this.numValue = numValue;
+            this.strValue = strValue;
+        }
+        isCharacter(code) {
+            return this.type == TokenType.Character && this.numValue == code;
+        }
+        isNumber() {
+            return this.type == TokenType.Number;
+        }
+        isString() {
+            return this.type == TokenType.String;
+        }
+        isOperator(operator) {
+            return this.type == TokenType.Operator && this.strValue == operator;
+        }
+        isIdentifier() {
+            return this.type == TokenType.Identifier;
+        }
+        isPrivateIdentifier() {
+            return this.type == TokenType.PrivateIdentifier;
+        }
+        isKeyword() {
+            return this.type == TokenType.Keyword;
+        }
+        isKeywordLet() {
+            return this.type == TokenType.Keyword && this.strValue == 'let';
+        }
+        isKeywordAs() {
+            return this.type == TokenType.Keyword && this.strValue == 'as';
+        }
+        isKeywordNull() {
+            return this.type == TokenType.Keyword && this.strValue == 'null';
+        }
+        isKeywordUndefined() {
+            return this.type == TokenType.Keyword && this.strValue == 'undefined';
+        }
+        isKeywordTrue() {
+            return this.type == TokenType.Keyword && this.strValue == 'true';
+        }
+        isKeywordFalse() {
+            return this.type == TokenType.Keyword && this.strValue == 'false';
+        }
+        isKeywordThis() {
+            return this.type == TokenType.Keyword && this.strValue == 'this';
+        }
+        isError() {
+            return this.type == TokenType.Error;
+        }
+        toNumber() {
+            return this.type == TokenType.Number ? this.numValue : -1;
+        }
+        toString() {
+            switch (this.type) {
+                case TokenType.Character:
+                case TokenType.Identifier:
+                case TokenType.Keyword:
+                case TokenType.Operator:
+                case TokenType.PrivateIdentifier:
+                case TokenType.String:
+                case TokenType.Error:
+                    return this.strValue;
+                case TokenType.Number:
+                    return this.numValue.toString();
+                default:
+                    return null;
+            }
+        }
+    }
+    function newCharacterToken(index, end, code) {
+        return new Token(index, end, TokenType.Character, code, String.fromCharCode(code));
+    }
+    function newIdentifierToken(index, end, text) {
+        return new Token(index, end, TokenType.Identifier, 0, text);
+    }
+    function newPrivateIdentifierToken(index, end, text) {
+        return new Token(index, end, TokenType.PrivateIdentifier, 0, text);
+    }
+    function newKeywordToken(index, end, text) {
+        return new Token(index, end, TokenType.Keyword, 0, text);
+    }
+    function newOperatorToken(index, end, text) {
+        return new Token(index, end, TokenType.Operator, 0, text);
+    }
+    function newStringToken(index, end, text) {
+        return new Token(index, end, TokenType.String, 0, text);
+    }
+    function newNumberToken(index, end, n) {
+        return new Token(index, end, TokenType.Number, n, '');
+    }
+    function newErrorToken(index, end, message) {
+        return new Token(index, end, TokenType.Error, 0, message);
+    }
+    const EOF = new Token(-1, -1, TokenType.Character, 0, '');
+    class _Scanner {
+        constructor(input) {
+            this.input = input;
+            this.peek = 0;
+            this.index = -1;
+            this.length = input.length;
+            this.advance();
+        }
+        advance() {
+            this.peek = ++this.index >= this.length ? $EOF : this.input.charCodeAt(this.index);
+        }
+        scanToken() {
+            const input = this.input, length = this.length;
+            let peek = this.peek, index = this.index;
+            // Skip whitespace.
+            while (peek <= $SPACE) {
+                if (++index >= length) {
+                    peek = $EOF;
+                    break;
+                }
+                else {
+                    peek = input.charCodeAt(index);
+                }
+            }
+            this.peek = peek;
+            this.index = index;
+            if (index >= length) {
+                return null;
+            }
+            // Handle identifiers and numbers.
+            if (isIdentifierStart(peek))
+                return this.scanIdentifier();
+            if (isDigit(peek))
+                return this.scanNumber(index);
+            const start = index;
+            switch (peek) {
+                case $PERIOD:
+                    this.advance();
+                    return isDigit(this.peek) ? this.scanNumber(start) :
+                        newCharacterToken(start, this.index, $PERIOD);
+                case $LPAREN:
+                case $RPAREN:
+                case $LBRACE:
+                case $RBRACE:
+                case $LBRACKET:
+                case $RBRACKET:
+                case $COMMA:
+                case $COLON:
+                case $SEMICOLON:
+                    return this.scanCharacter(start, peek);
+                case $SQ:
+                case $DQ:
+                    return this.scanString();
+                case $HASH:
+                    return this.scanPrivateIdentifier();
+                case $PLUS:
+                case $MINUS:
+                case $STAR:
+                case $SLASH:
+                case $PERCENT:
+                case $CARET:
+                    return this.scanOperator(start, String.fromCharCode(peek));
+                case $QUESTION:
+                    return this.scanQuestion(start);
+                case $LT:
+                case $GT:
+                    return this.scanComplexOperator(start, String.fromCharCode(peek), $EQ, '=');
+                case $BANG:
+                case $EQ:
+                    return this.scanComplexOperator(start, String.fromCharCode(peek), $EQ, '=', $EQ, '=');
+                case $AMPERSAND:
+                    return this.scanComplexOperator(start, '&', $AMPERSAND, '&');
+                case $BAR:
+                    return this.scanComplexOperator(start, '|', $BAR, '|');
+                case $NBSP:
+                    while (isWhitespace(this.peek))
+                        this.advance();
+                    return this.scanToken();
+            }
+            this.advance();
+            return this.error(`Unexpected character [${String.fromCharCode(peek)}]`, 0);
+        }
+        scanCharacter(start, code) {
+            this.advance();
+            return newCharacterToken(start, this.index, code);
+        }
+        scanOperator(start, str) {
+            this.advance();
+            return newOperatorToken(start, this.index, str);
+        }
+        /**
+         * Tokenize a 2/3 char long operator
+         *
+         * @param start start index in the expression
+         * @param one first symbol (always part of the operator)
+         * @param twoCode code point for the second symbol
+         * @param two second symbol (part of the operator when the second code point matches)
+         * @param threeCode code point for the third symbol
+         * @param three third symbol (part of the operator when provided and matches source expression)
+         */
+        scanComplexOperator(start, one, twoCode, two, threeCode, three) {
+            this.advance();
+            let str = one;
+            if (this.peek == twoCode) {
+                this.advance();
+                str += two;
+            }
+            if (threeCode != null && this.peek == threeCode) {
+                this.advance();
+                str += three;
+            }
+            return newOperatorToken(start, this.index, str);
+        }
+        scanIdentifier() {
+            const start = this.index;
+            this.advance();
+            while (isIdentifierPart(this.peek))
+                this.advance();
+            const str = this.input.substring(start, this.index);
+            return KEYWORDS.indexOf(str) > -1 ? newKeywordToken(start, this.index, str) :
+                newIdentifierToken(start, this.index, str);
+        }
+        /** Scans an ECMAScript private identifier. */
+        scanPrivateIdentifier() {
+            const start = this.index;
+            this.advance();
+            if (!isIdentifierStart(this.peek)) {
+                return this.error('Invalid character [#]', -1);
+            }
+            while (isIdentifierPart(this.peek))
+                this.advance();
+            const identifierName = this.input.substring(start, this.index);
+            return newPrivateIdentifierToken(start, this.index, identifierName);
+        }
+        scanNumber(start) {
+            let simple = (this.index === start);
+            let hasSeparators = false;
+            this.advance(); // Skip initial digit.
+            while (true) {
+                if (isDigit(this.peek)) ;
+                else if (this.peek === $_) {
+                    // Separators are only valid when they're surrounded by digits. E.g. `1_0_1` is
+                    // valid while `_101` and `101_` are not. The separator can't be next to the decimal
+                    // point or another separator either. Note that it's unlikely that we'll hit a case where
+                    // the underscore is at the start, because that's a valid identifier and it will be picked
+                    // up earlier in the parsing. We validate for it anyway just in case.
+                    if (!isDigit(this.input.charCodeAt(this.index - 1)) ||
+                        !isDigit(this.input.charCodeAt(this.index + 1))) {
+                        return this.error('Invalid numeric separator', 0);
+                    }
+                    hasSeparators = true;
+                }
+                else if (this.peek === $PERIOD) {
+                    simple = false;
+                }
+                else if (isExponentStart(this.peek)) {
+                    this.advance();
+                    if (isExponentSign(this.peek))
+                        this.advance();
+                    if (!isDigit(this.peek))
+                        return this.error('Invalid exponent', -1);
+                    simple = false;
+                }
+                else {
+                    break;
+                }
+                this.advance();
+            }
+            let str = this.input.substring(start, this.index);
+            if (hasSeparators) {
+                str = str.replace(/_/g, '');
+            }
+            const value = simple ? parseIntAutoRadix(str) : parseFloat(str);
+            return newNumberToken(start, this.index, value);
+        }
+        scanString() {
+            const start = this.index;
+            const quote = this.peek;
+            this.advance(); // Skip initial quote.
+            let buffer = '';
+            let marker = this.index;
+            const input = this.input;
+            while (this.peek != quote) {
+                if (this.peek == $BACKSLASH) {
+                    buffer += input.substring(marker, this.index);
+                    this.advance();
+                    let unescapedCode;
+                    // Workaround for TS2.1-introduced type strictness
+                    this.peek = this.peek;
+                    if (this.peek == $u) {
+                        // 4 character hex code for unicode character.
+                        const hex = input.substring(this.index + 1, this.index + 5);
+                        if (/^[0-9a-f]+$/i.test(hex)) {
+                            unescapedCode = parseInt(hex, 16);
+                        }
+                        else {
+                            return this.error(`Invalid unicode escape [\\u${hex}]`, 0);
+                        }
+                        for (let i = 0; i < 5; i++) {
+                            this.advance();
+                        }
+                    }
+                    else {
+                        unescapedCode = unescape(this.peek);
+                        this.advance();
+                    }
+                    buffer += String.fromCharCode(unescapedCode);
+                    marker = this.index;
+                }
+                else if (this.peek == $EOF) {
+                    return this.error('Unterminated quote', 0);
+                }
+                else {
+                    this.advance();
+                }
+            }
+            const last = input.substring(marker, this.index);
+            this.advance(); // Skip terminating quote.
+            return newStringToken(start, this.index, buffer + last);
+        }
+        scanQuestion(start) {
+            this.advance();
+            let str = '?';
+            // Either `a ?? b` or 'a?.b'.
+            if (this.peek === $QUESTION || this.peek === $PERIOD) {
+                str += this.peek === $PERIOD ? '.' : '?';
+                this.advance();
+            }
+            return newOperatorToken(start, this.index, str);
+        }
+        error(message, offset) {
+            const position = this.index + offset;
+            return newErrorToken(position, this.index, `Lexer Error: ${message} at column ${position} in expression [${this.input}]`);
+        }
+    }
+    function isIdentifierStart(code) {
+        return ($a <= code && code <= $z) || ($A <= code && code <= $Z) ||
+            (code == $_) || (code == $$);
+    }
+    function isIdentifier$1(input) {
+        if (input.length == 0)
+            return false;
+        const scanner = new _Scanner(input);
+        if (!isIdentifierStart(scanner.peek))
+            return false;
+        scanner.advance();
+        while (scanner.peek !== $EOF) {
+            if (!isIdentifierPart(scanner.peek))
+                return false;
+            scanner.advance();
+        }
+        return true;
+    }
+    function isIdentifierPart(code) {
+        return isAsciiLetter(code) || isDigit(code) || (code == $_) ||
+            (code == $$);
+    }
+    function isExponentStart(code) {
+        return code == $e || code == $E;
+    }
+    function isExponentSign(code) {
+        return code == $MINUS || code == $PLUS;
+    }
+    function unescape(code) {
+        switch (code) {
+            case $n:
+                return $LF;
+            case $f:
+                return $FF;
+            case $r:
+                return $CR;
+            case $t:
+                return $TAB;
+            case $v:
+                return $VTAB;
+            default:
+                return code;
+        }
+    }
+    function parseIntAutoRadix(text) {
+        const result = parseInt(text);
+        if (isNaN(result)) {
+            throw new Error('Invalid integer literal when parsing ' + text);
+        }
+        return result;
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    class SplitInterpolation {
+        constructor(strings, expressions, offsets) {
+            this.strings = strings;
+            this.expressions = expressions;
+            this.offsets = offsets;
+        }
+    }
+    class TemplateBindingParseResult {
+        constructor(templateBindings, warnings, errors) {
+            this.templateBindings = templateBindings;
+            this.warnings = warnings;
+            this.errors = errors;
+        }
+    }
+    class Parser$1 {
+        constructor(_lexer) {
+            this._lexer = _lexer;
+            this.errors = [];
+            this.simpleExpressionChecker = SimpleExpressionChecker;
+        }
+        parseAction(input, location, absoluteOffset, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
+            this._checkNoInterpolation(input, location, interpolationConfig);
+            const sourceToLex = this._stripComments(input);
+            const tokens = this._lexer.tokenize(this._stripComments(input));
+            const ast = new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, true, this.errors, input.length - sourceToLex.length)
+                .parseChain();
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
+        }
+        parseBinding(input, location, absoluteOffset, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
+            const ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
+        }
+        checkSimpleExpression(ast) {
+            const checker = new this.simpleExpressionChecker();
+            ast.visit(checker);
+            return checker.errors;
+        }
+        parseSimpleBinding(input, location, absoluteOffset, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
+            const ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
+            const errors = this.checkSimpleExpression(ast);
+            if (errors.length > 0) {
+                this._reportError(`Host binding expression cannot contain ${errors.join(' ')}`, input, location);
+            }
+            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
+        }
+        _reportError(message, input, errLocation, ctxLocation) {
+            this.errors.push(new ParserError(message, input, errLocation, ctxLocation));
+        }
+        _parseBindingAst(input, location, absoluteOffset, interpolationConfig) {
+            // Quotes expressions use 3rd-party expression language. We don't want to use
+            // our lexer or parser for that, so we check for that ahead of time.
+            const quote = this._parseQuote(input, location, absoluteOffset);
+            if (quote != null) {
+                return quote;
+            }
+            this._checkNoInterpolation(input, location, interpolationConfig);
+            const sourceToLex = this._stripComments(input);
+            const tokens = this._lexer.tokenize(sourceToLex);
+            return new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, input.length - sourceToLex.length)
+                .parseChain();
+        }
+        _parseQuote(input, location, absoluteOffset) {
+            if (input == null)
+                return null;
+            const prefixSeparatorIndex = input.indexOf(':');
+            if (prefixSeparatorIndex == -1)
+                return null;
+            const prefix = input.substring(0, prefixSeparatorIndex).trim();
+            if (!isIdentifier$1(prefix))
+                return null;
+            const uninterpretedExpression = input.substring(prefixSeparatorIndex + 1);
+            const span = new ParseSpan(0, input.length);
+            return new Quote(span, span.toAbsolute(absoluteOffset), prefix, uninterpretedExpression, location);
+        }
+        /**
+         * Parse microsyntax template expression and return a list of bindings or
+         * parsing errors in case the given expression is invalid.
+         *
+         * For example,
+         * ```
+         *   <div *ngFor="let item of items">
+         *         ^      ^ absoluteValueOffset for `templateValue`
+         *         absoluteKeyOffset for `templateKey`
+         * ```
+         * contains three bindings:
+         * 1. ngFor -> null
+         * 2. item -> NgForOfContext.$implicit
+         * 3. ngForOf -> items
+         *
+         * This is apparent from the de-sugared template:
+         * ```
+         *   <ng-template ngFor let-item [ngForOf]="items">
+         * ```
+         *
+         * @param templateKey name of directive, without the * prefix. For example: ngIf, ngFor
+         * @param templateValue RHS of the microsyntax attribute
+         * @param templateUrl template filename if it's external, component filename if it's inline
+         * @param absoluteKeyOffset start of the `templateKey`
+         * @param absoluteValueOffset start of the `templateValue`
+         */
+        parseTemplateBindings(templateKey, templateValue, templateUrl, absoluteKeyOffset, absoluteValueOffset) {
+            const tokens = this._lexer.tokenize(templateValue);
+            const parser = new _ParseAST(templateValue, templateUrl, absoluteValueOffset, tokens, templateValue.length, false /* parseAction */, this.errors, 0 /* relative offset */);
+            return parser.parseTemplateBindings({
+                source: templateKey,
+                span: new AbsoluteSourceSpan$1(absoluteKeyOffset, absoluteKeyOffset + templateKey.length),
+            });
+        }
+        parseInterpolation(input, location, absoluteOffset, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
+            const { strings, expressions, offsets } = this.splitInterpolation(input, location, interpolationConfig);
+            if (expressions.length === 0)
+                return null;
+            const expressionNodes = [];
+            for (let i = 0; i < expressions.length; ++i) {
+                const expressionText = expressions[i].text;
+                const sourceToLex = this._stripComments(expressionText);
+                const tokens = this._lexer.tokenize(sourceToLex);
+                const ast = new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, offsets[i] + (expressionText.length - sourceToLex.length))
+                    .parseChain();
+                expressionNodes.push(ast);
+            }
+            return this.createInterpolationAst(strings.map(s => s.text), expressionNodes, input, location, absoluteOffset);
+        }
+        /**
+         * Similar to `parseInterpolation`, but treats the provided string as a single expression
+         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
+         * This is used for parsing the switch expression in ICUs.
+         */
+        parseInterpolationExpression(expression, location, absoluteOffset) {
+            const sourceToLex = this._stripComments(expression);
+            const tokens = this._lexer.tokenize(sourceToLex);
+            const ast = new _ParseAST(expression, location, absoluteOffset, tokens, sourceToLex.length, 
+            /* parseAction */ false, this.errors, 0)
+                .parseChain();
+            const strings = ['', '']; // The prefix and suffix strings are both empty
+            return this.createInterpolationAst(strings, [ast], expression, location, absoluteOffset);
+        }
+        createInterpolationAst(strings, expressions, input, location, absoluteOffset) {
+            const span = new ParseSpan(0, input.length);
+            const interpolation = new Interpolation(span, span.toAbsolute(absoluteOffset), strings, expressions);
+            return new ASTWithSource(interpolation, input, location, absoluteOffset, this.errors);
+        }
+        /**
+         * Splits a string of text into "raw" text segments and expressions present in interpolations in
+         * the string.
+         * Returns `null` if there are no interpolations, otherwise a
+         * `SplitInterpolation` with splits that look like
+         *   <raw text> <expression> <raw text> ... <raw text> <expression> <raw text>
+         */
+        splitInterpolation(input, location, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
+            const strings = [];
+            const expressions = [];
+            const offsets = [];
+            let i = 0;
+            let atInterpolation = false;
+            let extendLastString = false;
+            let { start: interpStart, end: interpEnd } = interpolationConfig;
+            while (i < input.length) {
+                if (!atInterpolation) {
+                    // parse until starting {{
+                    const start = i;
+                    i = input.indexOf(interpStart, i);
+                    if (i === -1) {
+                        i = input.length;
+                    }
+                    const text = input.substring(start, i);
+                    strings.push({ text, start, end: i });
+                    atInterpolation = true;
+                }
+                else {
+                    // parse from starting {{ to ending }} while ignoring content inside quotes.
+                    const fullStart = i;
+                    const exprStart = fullStart + interpStart.length;
+                    const exprEnd = this._getInterpolationEndIndex(input, interpEnd, exprStart);
+                    if (exprEnd === -1) {
+                        // Could not find the end of the interpolation; do not parse an expression.
+                        // Instead we should extend the content on the last raw string.
+                        atInterpolation = false;
+                        extendLastString = true;
+                        break;
+                    }
+                    const fullEnd = exprEnd + interpEnd.length;
+                    const text = input.substring(exprStart, exprEnd);
+                    if (text.trim().length === 0) {
+                        this._reportError('Blank expressions are not allowed in interpolated strings', input, `at column ${i} in`, location);
+                    }
+                    expressions.push({ text, start: fullStart, end: fullEnd });
+                    offsets.push(exprStart);
+                    i = fullEnd;
+                    atInterpolation = false;
+                }
+            }
+            if (!atInterpolation) {
+                // If we are now at a text section, add the remaining content as a raw string.
+                if (extendLastString) {
+                    const piece = strings[strings.length - 1];
+                    piece.text += input.substring(i);
+                    piece.end = input.length;
+                }
+                else {
+                    strings.push({ text: input.substring(i), start: i, end: input.length });
+                }
+            }
+            return new SplitInterpolation(strings, expressions, offsets);
+        }
+        wrapLiteralPrimitive(input, location, absoluteOffset) {
+            const span = new ParseSpan(0, input == null ? 0 : input.length);
+            return new ASTWithSource(new LiteralPrimitive(span, span.toAbsolute(absoluteOffset), input), input, location, absoluteOffset, this.errors);
+        }
+        _stripComments(input) {
+            const i = this._commentStart(input);
+            return i != null ? input.substring(0, i).trim() : input;
+        }
+        _commentStart(input) {
+            let outerQuote = null;
+            for (let i = 0; i < input.length - 1; i++) {
+                const char = input.charCodeAt(i);
+                const nextChar = input.charCodeAt(i + 1);
+                if (char === $SLASH && nextChar == $SLASH && outerQuote == null)
+                    return i;
+                if (outerQuote === char) {
+                    outerQuote = null;
+                }
+                else if (outerQuote == null && isQuote(char)) {
+                    outerQuote = char;
+                }
+            }
+            return null;
+        }
+        _checkNoInterpolation(input, location, { start, end }) {
+            let startIndex = -1;
+            let endIndex = -1;
+            for (const charIndex of this._forEachUnquotedChar(input, 0)) {
+                if (startIndex === -1) {
+                    if (input.startsWith(start)) {
+                        startIndex = charIndex;
+                    }
+                }
+                else {
+                    endIndex = this._getInterpolationEndIndex(input, end, charIndex);
+                    if (endIndex > -1) {
+                        break;
+                    }
+                }
+            }
+            if (startIndex > -1 && endIndex > -1) {
+                this._reportError(`Got interpolation (${start}${end}) where expression was expected`, input, `at column ${startIndex} in`, location);
+            }
+        }
+        /**
+         * Finds the index of the end of an interpolation expression
+         * while ignoring comments and quoted content.
+         */
+        _getInterpolationEndIndex(input, expressionEnd, start) {
+            for (const charIndex of this._forEachUnquotedChar(input, start)) {
+                if (input.startsWith(expressionEnd, charIndex)) {
+                    return charIndex;
+                }
+                // Nothing else in the expression matters after we've
+                // hit a comment so look directly for the end token.
+                if (input.startsWith('//', charIndex)) {
+                    return input.indexOf(expressionEnd, charIndex);
+                }
+            }
+            return -1;
+        }
+        /**
+         * Generator used to iterate over the character indexes of a string that are outside of quotes.
+         * @param input String to loop through.
+         * @param start Index within the string at which to start.
+         */
+        *_forEachUnquotedChar(input, start) {
+            let currentQuote = null;
+            let escapeCount = 0;
+            for (let i = start; i < input.length; i++) {
+                const char = input[i];
+                // Skip the characters inside quotes. Note that we only care about the outer-most
+                // quotes matching up and we need to account for escape characters.
+                if (isQuote(input.charCodeAt(i)) && (currentQuote === null || currentQuote === char) &&
+                    escapeCount % 2 === 0) {
+                    currentQuote = currentQuote === null ? char : null;
+                }
+                else if (currentQuote === null) {
+                    yield i;
+                }
+                escapeCount = char === '\\' ? escapeCount + 1 : 0;
+            }
+        }
+    }
+    class IvyParser extends Parser$1 {
+        constructor() {
+            super(...arguments);
+            this.simpleExpressionChecker = IvySimpleExpressionChecker;
+        }
+    }
+    /** Describes a stateful context an expression parser is in. */
+    var ParseContextFlags;
+    (function (ParseContextFlags) {
+        ParseContextFlags[ParseContextFlags["None"] = 0] = "None";
+        /**
+         * A Writable context is one in which a value may be written to an lvalue.
+         * For example, after we see a property access, we may expect a write to the
+         * property via the "=" operator.
+         *   prop
+         *        ^ possible "=" after
+         */
+        ParseContextFlags[ParseContextFlags["Writable"] = 1] = "Writable";
+    })(ParseContextFlags || (ParseContextFlags = {}));
+    class _ParseAST {
+        constructor(input, location, absoluteOffset, tokens, inputLength, parseAction, errors, offset) {
+            this.input = input;
+            this.location = location;
+            this.absoluteOffset = absoluteOffset;
+            this.tokens = tokens;
+            this.inputLength = inputLength;
+            this.parseAction = parseAction;
+            this.errors = errors;
+            this.offset = offset;
+            this.rparensExpected = 0;
+            this.rbracketsExpected = 0;
+            this.rbracesExpected = 0;
+            this.context = ParseContextFlags.None;
+            // Cache of expression start and input indeces to the absolute source span they map to, used to
+            // prevent creating superfluous source spans in `sourceSpan`.
+            // A serial of the expression start and input index is used for mapping because both are stateful
+            // and may change for subsequent expressions visited by the parser.
+            this.sourceSpanCache = new Map();
+            this.index = 0;
+        }
+        peek(offset) {
+            const i = this.index + offset;
+            return i < this.tokens.length ? this.tokens[i] : EOF;
+        }
+        get next() {
+            return this.peek(0);
+        }
+        /** Whether all the parser input has been processed. */
+        get atEOF() {
+            return this.index >= this.tokens.length;
+        }
+        /**
+         * Index of the next token to be processed, or the end of the last token if all have been
+         * processed.
+         */
+        get inputIndex() {
+            return this.atEOF ? this.currentEndIndex : this.next.index + this.offset;
+        }
+        /**
+         * End index of the last processed token, or the start of the first token if none have been
+         * processed.
+         */
+        get currentEndIndex() {
+            if (this.index > 0) {
+                const curToken = this.peek(-1);
+                return curToken.end + this.offset;
+            }
+            // No tokens have been processed yet; return the next token's start or the length of the input
+            // if there is no token.
+            if (this.tokens.length === 0) {
+                return this.inputLength + this.offset;
+            }
+            return this.next.index + this.offset;
+        }
+        /**
+         * Returns the absolute offset of the start of the current token.
+         */
+        get currentAbsoluteOffset() {
+            return this.absoluteOffset + this.inputIndex;
+        }
+        /**
+         * Retrieve a `ParseSpan` from `start` to the current position (or to `artificialEndIndex` if
+         * provided).
+         *
+         * @param start Position from which the `ParseSpan` will start.
+         * @param artificialEndIndex Optional ending index to be used if provided (and if greater than the
+         *     natural ending index)
+         */
+        span(start, artificialEndIndex) {
+            let endIndex = this.currentEndIndex;
+            if (artificialEndIndex !== undefined && artificialEndIndex > this.currentEndIndex) {
+                endIndex = artificialEndIndex;
+            }
+            // In some unusual parsing scenarios (like when certain tokens are missing and an `EmptyExpr` is
+            // being created), the current token may already be advanced beyond the `currentEndIndex`. This
+            // appears to be a deep-seated parser bug.
+            //
+            // As a workaround for now, swap the start and end indices to ensure a valid `ParseSpan`.
+            // TODO(alxhub): fix the bug upstream in the parser state, and remove this workaround.
+            if (start > endIndex) {
+                const tmp = endIndex;
+                endIndex = start;
+                start = tmp;
+            }
+            return new ParseSpan(start, endIndex);
+        }
+        sourceSpan(start, artificialEndIndex) {
+            const serial = `${start}@${this.inputIndex}:${artificialEndIndex}`;
+            if (!this.sourceSpanCache.has(serial)) {
+                this.sourceSpanCache.set(serial, this.span(start, artificialEndIndex).toAbsolute(this.absoluteOffset));
+            }
+            return this.sourceSpanCache.get(serial);
+        }
+        advance() {
+            this.index++;
+        }
+        /**
+         * Executes a callback in the provided context.
+         */
+        withContext(context, cb) {
+            this.context |= context;
+            const ret = cb();
+            this.context ^= context;
+            return ret;
+        }
+        consumeOptionalCharacter(code) {
+            if (this.next.isCharacter(code)) {
+                this.advance();
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        peekKeywordLet() {
+            return this.next.isKeywordLet();
+        }
+        peekKeywordAs() {
+            return this.next.isKeywordAs();
+        }
+        /**
+         * Consumes an expected character, otherwise emits an error about the missing expected character
+         * and skips over the token stream until reaching a recoverable point.
+         *
+         * See `this.error` and `this.skip` for more details.
+         */
+        expectCharacter(code) {
+            if (this.consumeOptionalCharacter(code))
+                return;
+            this.error(`Missing expected ${String.fromCharCode(code)}`);
+        }
+        consumeOptionalOperator(op) {
+            if (this.next.isOperator(op)) {
+                this.advance();
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        expectOperator(operator) {
+            if (this.consumeOptionalOperator(operator))
+                return;
+            this.error(`Missing expected operator ${operator}`);
+        }
+        prettyPrintToken(tok) {
+            return tok === EOF ? 'end of input' : `token ${tok}`;
+        }
+        expectIdentifierOrKeyword() {
+            const n = this.next;
+            if (!n.isIdentifier() && !n.isKeyword()) {
+                if (n.isPrivateIdentifier()) {
+                    this._reportErrorForPrivateIdentifier(n, 'expected identifier or keyword');
+                }
+                else {
+                    this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
+                }
+                return null;
+            }
+            this.advance();
+            return n.toString();
+        }
+        expectIdentifierOrKeywordOrString() {
+            const n = this.next;
+            if (!n.isIdentifier() && !n.isKeyword() && !n.isString()) {
+                if (n.isPrivateIdentifier()) {
+                    this._reportErrorForPrivateIdentifier(n, 'expected identifier, keyword or string');
+                }
+                else {
+                    this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
+                }
+                return '';
+            }
+            this.advance();
+            return n.toString();
+        }
+        parseChain() {
+            const exprs = [];
+            const start = this.inputIndex;
+            while (this.index < this.tokens.length) {
+                const expr = this.parsePipe();
+                exprs.push(expr);
+                if (this.consumeOptionalCharacter($SEMICOLON)) {
+                    if (!this.parseAction) {
+                        this.error('Binding expression cannot contain chained expression');
+                    }
+                    while (this.consumeOptionalCharacter($SEMICOLON)) {
+                    } // read all semicolons
+                }
+                else if (this.index < this.tokens.length) {
+                    this.error(`Unexpected token '${this.next}'`);
+                }
+            }
+            if (exprs.length == 0) {
+                // We have no expressions so create an empty expression that spans the entire input length
+                const artificialStart = this.offset;
+                const artificialEnd = this.offset + this.inputLength;
+                return new EmptyExpr(this.span(artificialStart, artificialEnd), this.sourceSpan(artificialStart, artificialEnd));
+            }
+            if (exprs.length == 1)
+                return exprs[0];
+            return new Chain(this.span(start), this.sourceSpan(start), exprs);
+        }
+        parsePipe() {
+            const start = this.inputIndex;
+            let result = this.parseExpression();
+            if (this.consumeOptionalOperator('|')) {
+                if (this.parseAction) {
+                    this.error('Cannot have a pipe in an action expression');
+                }
+                do {
+                    const nameStart = this.inputIndex;
+                    let nameId = this.expectIdentifierOrKeyword();
+                    let nameSpan;
+                    let fullSpanEnd = undefined;
+                    if (nameId !== null) {
+                        nameSpan = this.sourceSpan(nameStart);
+                    }
+                    else {
+                        // No valid identifier was found, so we'll assume an empty pipe name ('').
+                        nameId = '';
+                        // However, there may have been whitespace present between the pipe character and the next
+                        // token in the sequence (or the end of input). We want to track this whitespace so that
+                        // the `BindingPipe` we produce covers not just the pipe character, but any trailing
+                        // whitespace beyond it. Another way of thinking about this is that the zero-length name
+                        // is assumed to be at the end of any whitespace beyond the pipe character.
+                        //
+                        // Therefore, we push the end of the `ParseSpan` for this pipe all the way up to the
+                        // beginning of the next token, or until the end of input if the next token is EOF.
+                        fullSpanEnd = this.next.index !== -1 ? this.next.index : this.inputLength + this.offset;
+                        // The `nameSpan` for an empty pipe name is zero-length at the end of any whitespace
+                        // beyond the pipe character.
+                        nameSpan = new ParseSpan(fullSpanEnd, fullSpanEnd).toAbsolute(this.absoluteOffset);
+                    }
+                    const args = [];
+                    while (this.consumeOptionalCharacter($COLON)) {
+                        args.push(this.parseExpression());
+                        // If there are additional expressions beyond the name, then the artificial end for the
+                        // name is no longer relevant.
+                    }
+                    result = new BindingPipe(this.span(start), this.sourceSpan(start, fullSpanEnd), result, nameId, args, nameSpan);
+                } while (this.consumeOptionalOperator('|'));
+            }
+            return result;
+        }
+        parseExpression() {
+            return this.parseConditional();
+        }
+        parseConditional() {
+            const start = this.inputIndex;
+            const result = this.parseLogicalOr();
+            if (this.consumeOptionalOperator('?')) {
+                const yes = this.parsePipe();
+                let no;
+                if (!this.consumeOptionalCharacter($COLON)) {
+                    const end = this.inputIndex;
+                    const expression = this.input.substring(start, end);
+                    this.error(`Conditional expression ${expression} requires all 3 expressions`);
+                    no = new EmptyExpr(this.span(start), this.sourceSpan(start));
+                }
+                else {
+                    no = this.parsePipe();
+                }
+                return new Conditional(this.span(start), this.sourceSpan(start), result, yes, no);
+            }
+            else {
+                return result;
+            }
+        }
+        parseLogicalOr() {
+            // '||'
+            const start = this.inputIndex;
+            let result = this.parseLogicalAnd();
+            while (this.consumeOptionalOperator('||')) {
+                const right = this.parseLogicalAnd();
+                result = new Binary(this.span(start), this.sourceSpan(start), '||', result, right);
+            }
+            return result;
+        }
+        parseLogicalAnd() {
+            // '&&'
+            const start = this.inputIndex;
+            let result = this.parseNullishCoalescing();
+            while (this.consumeOptionalOperator('&&')) {
+                const right = this.parseNullishCoalescing();
+                result = new Binary(this.span(start), this.sourceSpan(start), '&&', result, right);
+            }
+            return result;
+        }
+        parseNullishCoalescing() {
+            // '??'
+            const start = this.inputIndex;
+            let result = this.parseEquality();
+            while (this.consumeOptionalOperator('??')) {
+                const right = this.parseEquality();
+                result = new Binary(this.span(start), this.sourceSpan(start), '??', result, right);
+            }
+            return result;
+        }
+        parseEquality() {
+            // '==','!=','===','!=='
+            const start = this.inputIndex;
+            let result = this.parseRelational();
+            while (this.next.type == TokenType.Operator) {
+                const operator = this.next.strValue;
+                switch (operator) {
+                    case '==':
+                    case '===':
+                    case '!=':
+                    case '!==':
+                        this.advance();
+                        const right = this.parseRelational();
+                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
+                        continue;
+                }
+                break;
+            }
+            return result;
+        }
+        parseRelational() {
+            // '<', '>', '<=', '>='
+            const start = this.inputIndex;
+            let result = this.parseAdditive();
+            while (this.next.type == TokenType.Operator) {
+                const operator = this.next.strValue;
+                switch (operator) {
+                    case '<':
+                    case '>':
+                    case '<=':
+                    case '>=':
+                        this.advance();
+                        const right = this.parseAdditive();
+                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
+                        continue;
+                }
+                break;
+            }
+            return result;
+        }
+        parseAdditive() {
+            // '+', '-'
+            const start = this.inputIndex;
+            let result = this.parseMultiplicative();
+            while (this.next.type == TokenType.Operator) {
+                const operator = this.next.strValue;
+                switch (operator) {
+                    case '+':
+                    case '-':
+                        this.advance();
+                        let right = this.parseMultiplicative();
+                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
+                        continue;
+                }
+                break;
+            }
+            return result;
+        }
+        parseMultiplicative() {
+            // '*', '%', '/'
+            const start = this.inputIndex;
+            let result = this.parsePrefix();
+            while (this.next.type == TokenType.Operator) {
+                const operator = this.next.strValue;
+                switch (operator) {
+                    case '*':
+                    case '%':
+                    case '/':
+                        this.advance();
+                        let right = this.parsePrefix();
+                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
+                        continue;
+                }
+                break;
+            }
+            return result;
+        }
+        parsePrefix() {
+            if (this.next.type == TokenType.Operator) {
+                const start = this.inputIndex;
+                const operator = this.next.strValue;
+                let result;
+                switch (operator) {
+                    case '+':
+                        this.advance();
+                        result = this.parsePrefix();
+                        return Unary.createPlus(this.span(start), this.sourceSpan(start), result);
+                    case '-':
+                        this.advance();
+                        result = this.parsePrefix();
+                        return Unary.createMinus(this.span(start), this.sourceSpan(start), result);
+                    case '!':
+                        this.advance();
+                        result = this.parsePrefix();
+                        return new PrefixNot(this.span(start), this.sourceSpan(start), result);
+                }
+            }
+            return this.parseCallChain();
+        }
+        parseCallChain() {
+            const start = this.inputIndex;
+            let result = this.parsePrimary();
+            while (true) {
+                if (this.consumeOptionalCharacter($PERIOD)) {
+                    result = this.parseAccessMemberOrCall(result, start, false);
+                }
+                else if (this.consumeOptionalOperator('?.')) {
+                    result = this.consumeOptionalCharacter($LBRACKET) ?
+                        this.parseKeyedReadOrWrite(result, start, true) :
+                        this.parseAccessMemberOrCall(result, start, true);
+                }
+                else if (this.consumeOptionalCharacter($LBRACKET)) {
+                    result = this.parseKeyedReadOrWrite(result, start, false);
+                }
+                else if (this.consumeOptionalCharacter($LPAREN)) {
+                    const argumentStart = this.inputIndex;
+                    this.rparensExpected++;
+                    const args = this.parseCallArguments();
+                    const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
+                    this.rparensExpected--;
+                    this.expectCharacter($RPAREN);
+                    result = new Call(this.span(start), this.sourceSpan(start), result, args, argumentSpan);
+                }
+                else if (this.consumeOptionalOperator('!')) {
+                    result = new NonNullAssert(this.span(start), this.sourceSpan(start), result);
+                }
+                else {
+                    return result;
+                }
+            }
+        }
+        parsePrimary() {
+            const start = this.inputIndex;
+            if (this.consumeOptionalCharacter($LPAREN)) {
+                this.rparensExpected++;
+                const result = this.parsePipe();
+                this.rparensExpected--;
+                this.expectCharacter($RPAREN);
+                return result;
+            }
+            else if (this.next.isKeywordNull()) {
+                this.advance();
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), null);
+            }
+            else if (this.next.isKeywordUndefined()) {
+                this.advance();
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), void 0);
+            }
+            else if (this.next.isKeywordTrue()) {
+                this.advance();
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), true);
+            }
+            else if (this.next.isKeywordFalse()) {
+                this.advance();
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), false);
+            }
+            else if (this.next.isKeywordThis()) {
+                this.advance();
+                return new ThisReceiver(this.span(start), this.sourceSpan(start));
+            }
+            else if (this.consumeOptionalCharacter($LBRACKET)) {
+                this.rbracketsExpected++;
+                const elements = this.parseExpressionList($RBRACKET);
+                this.rbracketsExpected--;
+                this.expectCharacter($RBRACKET);
+                return new LiteralArray(this.span(start), this.sourceSpan(start), elements);
+            }
+            else if (this.next.isCharacter($LBRACE)) {
+                return this.parseLiteralMap();
+            }
+            else if (this.next.isIdentifier()) {
+                return this.parseAccessMemberOrCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
+            }
+            else if (this.next.isNumber()) {
+                const value = this.next.toNumber();
+                this.advance();
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), value);
+            }
+            else if (this.next.isString()) {
+                const literalValue = this.next.toString();
+                this.advance();
+                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), literalValue);
+            }
+            else if (this.next.isPrivateIdentifier()) {
+                this._reportErrorForPrivateIdentifier(this.next, null);
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            }
+            else if (this.index >= this.tokens.length) {
+                this.error(`Unexpected end of expression: ${this.input}`);
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            }
+            else {
+                this.error(`Unexpected token ${this.next}`);
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            }
+        }
+        parseExpressionList(terminator) {
+            const result = [];
+            do {
+                if (!this.next.isCharacter(terminator)) {
+                    result.push(this.parsePipe());
+                }
+                else {
+                    break;
+                }
+            } while (this.consumeOptionalCharacter($COMMA));
+            return result;
+        }
+        parseLiteralMap() {
+            const keys = [];
+            const values = [];
+            const start = this.inputIndex;
+            this.expectCharacter($LBRACE);
+            if (!this.consumeOptionalCharacter($RBRACE)) {
+                this.rbracesExpected++;
+                do {
+                    const keyStart = this.inputIndex;
+                    const quoted = this.next.isString();
+                    const key = this.expectIdentifierOrKeywordOrString();
+                    keys.push({ key, quoted });
+                    // Properties with quoted keys can't use the shorthand syntax.
+                    if (quoted) {
+                        this.expectCharacter($COLON);
+                        values.push(this.parsePipe());
+                    }
+                    else if (this.consumeOptionalCharacter($COLON)) {
+                        values.push(this.parsePipe());
+                    }
+                    else {
+                        const span = this.span(keyStart);
+                        const sourceSpan = this.sourceSpan(keyStart);
+                        values.push(new PropertyRead(span, sourceSpan, sourceSpan, new ImplicitReceiver(span, sourceSpan), key));
+                    }
+                } while (this.consumeOptionalCharacter($COMMA));
+                this.rbracesExpected--;
+                this.expectCharacter($RBRACE);
+            }
+            return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
+        }
+        parseAccessMemberOrCall(readReceiver, start, isSafe) {
+            const nameStart = this.inputIndex;
+            const id = this.withContext(ParseContextFlags.Writable, () => {
+                const id = this.expectIdentifierOrKeyword() ?? '';
+                if (id.length === 0) {
+                    this.error(`Expected identifier for property access`, readReceiver.span.end);
+                }
+                return id;
+            });
+            const nameSpan = this.sourceSpan(nameStart);
+            let receiver;
+            if (isSafe) {
+                if (this.consumeOptionalOperator('=')) {
+                    this.error('The \'?.\' operator cannot be used in the assignment');
+                    receiver = new EmptyExpr(this.span(start), this.sourceSpan(start));
+                }
+                else {
+                    receiver = new SafePropertyRead(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id);
+                }
+            }
+            else {
+                if (this.consumeOptionalOperator('=')) {
+                    if (!this.parseAction) {
+                        this.error('Bindings cannot contain assignments');
+                        return new EmptyExpr(this.span(start), this.sourceSpan(start));
+                    }
+                    const value = this.parseConditional();
+                    receiver = new PropertyWrite(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id, value);
+                }
+                else {
+                    receiver =
+                        new PropertyRead(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id);
+                }
+            }
+            if (this.consumeOptionalCharacter($LPAREN)) {
+                const argumentStart = this.inputIndex;
+                this.rparensExpected++;
+                const args = this.parseCallArguments();
+                const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
+                this.expectCharacter($RPAREN);
+                this.rparensExpected--;
+                const span = this.span(start);
+                const sourceSpan = this.sourceSpan(start);
+                return new Call(span, sourceSpan, receiver, args, argumentSpan);
+            }
+            return receiver;
+        }
+        parseCallArguments() {
+            if (this.next.isCharacter($RPAREN))
+                return [];
+            const positionals = [];
+            do {
+                positionals.push(this.parsePipe());
+            } while (this.consumeOptionalCharacter($COMMA));
+            return positionals;
+        }
+        /**
+         * Parses an identifier, a keyword, a string with an optional `-` in between,
+         * and returns the string along with its absolute source span.
+         */
+        expectTemplateBindingKey() {
+            let result = '';
+            let operatorFound = false;
+            const start = this.currentAbsoluteOffset;
+            do {
+                result += this.expectIdentifierOrKeywordOrString();
+                operatorFound = this.consumeOptionalOperator('-');
+                if (operatorFound) {
+                    result += '-';
+                }
+            } while (operatorFound);
+            return {
+                source: result,
+                span: new AbsoluteSourceSpan$1(start, start + result.length),
+            };
+        }
+        /**
+         * Parse microsyntax template expression and return a list of bindings or
+         * parsing errors in case the given expression is invalid.
+         *
+         * For example,
+         * ```
+         *   <div *ngFor="let item of items; index as i; trackBy: func">
+         * ```
+         * contains five bindings:
+         * 1. ngFor -> null
+         * 2. item -> NgForOfContext.$implicit
+         * 3. ngForOf -> items
+         * 4. i -> NgForOfContext.index
+         * 5. ngForTrackBy -> func
+         *
+         * For a full description of the microsyntax grammar, see
+         * https://gist.github.com/mhevery/d3530294cff2e4a1b3fe15ff75d08855
+         *
+         * @param templateKey name of the microsyntax directive, like ngIf, ngFor,
+         * without the *, along with its absolute span.
+         */
+        parseTemplateBindings(templateKey) {
+            const bindings = [];
+            // The first binding is for the template key itself
+            // In *ngFor="let item of items", key = "ngFor", value = null
+            // In *ngIf="cond | pipe", key = "ngIf", value = "cond | pipe"
+            bindings.push(...this.parseDirectiveKeywordBindings(templateKey));
+            while (this.index < this.tokens.length) {
+                // If it starts with 'let', then this must be variable declaration
+                const letBinding = this.parseLetBinding();
+                if (letBinding) {
+                    bindings.push(letBinding);
+                }
+                else {
+                    // Two possible cases here, either `value "as" key` or
+                    // "directive-keyword expression". We don't know which case, but both
+                    // "value" and "directive-keyword" are template binding key, so consume
+                    // the key first.
+                    const key = this.expectTemplateBindingKey();
+                    // Peek at the next token, if it is "as" then this must be variable
+                    // declaration.
+                    const binding = this.parseAsBinding(key);
+                    if (binding) {
+                        bindings.push(binding);
+                    }
+                    else {
+                        // Otherwise the key must be a directive keyword, like "of". Transform
+                        // the key to actual key. Eg. of -> ngForOf, trackBy -> ngForTrackBy
+                        key.source =
+                            templateKey.source + key.source.charAt(0).toUpperCase() + key.source.substring(1);
+                        bindings.push(...this.parseDirectiveKeywordBindings(key));
+                    }
+                }
+                this.consumeStatementTerminator();
+            }
+            return new TemplateBindingParseResult(bindings, [] /* warnings */, this.errors);
+        }
+        parseKeyedReadOrWrite(receiver, start, isSafe) {
+            return this.withContext(ParseContextFlags.Writable, () => {
+                this.rbracketsExpected++;
+                const key = this.parsePipe();
+                if (key instanceof EmptyExpr) {
+                    this.error(`Key access cannot be empty`);
+                }
+                this.rbracketsExpected--;
+                this.expectCharacter($RBRACKET);
+                if (this.consumeOptionalOperator('=')) {
+                    if (isSafe) {
+                        this.error('The \'?.\' operator cannot be used in the assignment');
+                    }
+                    else {
+                        const value = this.parseConditional();
+                        return new KeyedWrite(this.span(start), this.sourceSpan(start), receiver, key, value);
+                    }
+                }
+                else {
+                    return isSafe ? new SafeKeyedRead(this.span(start), this.sourceSpan(start), receiver, key) :
+                        new KeyedRead(this.span(start), this.sourceSpan(start), receiver, key);
+                }
+                return new EmptyExpr(this.span(start), this.sourceSpan(start));
+            });
+        }
+        /**
+         * Parse a directive keyword, followed by a mandatory expression.
+         * For example, "of items", "trackBy: func".
+         * The bindings are: ngForOf -> items, ngForTrackBy -> func
+         * There could be an optional "as" binding that follows the expression.
+         * For example,
+         * ```
+         *   *ngFor="let item of items | slice:0:1 as collection".
+         *                    ^^ ^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^
+         *               keyword    bound target   optional 'as' binding
+         * ```
+         *
+         * @param key binding key, for example, ngFor, ngIf, ngForOf, along with its
+         * absolute span.
+         */
+        parseDirectiveKeywordBindings(key) {
+            const bindings = [];
+            this.consumeOptionalCharacter($COLON); // trackBy: trackByFunction
+            const value = this.getDirectiveBoundTarget();
+            let spanEnd = this.currentAbsoluteOffset;
+            // The binding could optionally be followed by "as". For example,
+            // *ngIf="cond | pipe as x". In this case, the key in the "as" binding
+            // is "x" and the value is the template key itself ("ngIf"). Note that the
+            // 'key' in the current context now becomes the "value" in the next binding.
+            const asBinding = this.parseAsBinding(key);
+            if (!asBinding) {
+                this.consumeStatementTerminator();
+                spanEnd = this.currentAbsoluteOffset;
+            }
+            const sourceSpan = new AbsoluteSourceSpan$1(key.span.start, spanEnd);
+            bindings.push(new ExpressionBinding(sourceSpan, key, value));
+            if (asBinding) {
+                bindings.push(asBinding);
+            }
+            return bindings;
+        }
+        /**
+         * Return the expression AST for the bound target of a directive keyword
+         * binding. For example,
+         * ```
+         *   *ngIf="condition | pipe"
+         *          ^^^^^^^^^^^^^^^^ bound target for "ngIf"
+         *   *ngFor="let item of items"
+         *                       ^^^^^ bound target for "ngForOf"
+         * ```
+         */
+        getDirectiveBoundTarget() {
+            if (this.next === EOF || this.peekKeywordAs() || this.peekKeywordLet()) {
+                return null;
+            }
+            const ast = this.parsePipe(); // example: "condition | async"
+            const { start, end } = ast.span;
+            const value = this.input.substring(start, end);
+            return new ASTWithSource(ast, value, this.location, this.absoluteOffset + start, this.errors);
+        }
+        /**
+         * Return the binding for a variable declared using `as`. Note that the order
+         * of the key-value pair in this declaration is reversed. For example,
+         * ```
+         *   *ngFor="let item of items; index as i"
+         *                              ^^^^^    ^
+         *                              value    key
+         * ```
+         *
+         * @param value name of the value in the declaration, "ngIf" in the example
+         * above, along with its absolute span.
+         */
+        parseAsBinding(value) {
+            if (!this.peekKeywordAs()) {
+                return null;
+            }
+            this.advance(); // consume the 'as' keyword
+            const key = this.expectTemplateBindingKey();
+            this.consumeStatementTerminator();
+            const sourceSpan = new AbsoluteSourceSpan$1(value.span.start, this.currentAbsoluteOffset);
+            return new VariableBinding(sourceSpan, key, value);
+        }
+        /**
+         * Return the binding for a variable declared using `let`. For example,
+         * ```
+         *   *ngFor="let item of items; let i=index;"
+         *           ^^^^^^^^           ^^^^^^^^^^^
+         * ```
+         * In the first binding, `item` is bound to `NgForOfContext.$implicit`.
+         * In the second binding, `i` is bound to `NgForOfContext.index`.
+         */
+        parseLetBinding() {
+            if (!this.peekKeywordLet()) {
+                return null;
+            }
+            const spanStart = this.currentAbsoluteOffset;
+            this.advance(); // consume the 'let' keyword
+            const key = this.expectTemplateBindingKey();
+            let value = null;
+            if (this.consumeOptionalOperator('=')) {
+                value = this.expectTemplateBindingKey();
+            }
+            this.consumeStatementTerminator();
+            const sourceSpan = new AbsoluteSourceSpan$1(spanStart, this.currentAbsoluteOffset);
+            return new VariableBinding(sourceSpan, key, value);
+        }
+        /**
+         * Consume the optional statement terminator: semicolon or comma.
+         */
+        consumeStatementTerminator() {
+            this.consumeOptionalCharacter($SEMICOLON) || this.consumeOptionalCharacter($COMMA);
+        }
+        /**
+         * Records an error and skips over the token stream until reaching a recoverable point. See
+         * `this.skip` for more details on token skipping.
+         */
+        error(message, index = null) {
+            this.errors.push(new ParserError(message, this.input, this.locationText(index), this.location));
+            this.skip();
+        }
+        locationText(index = null) {
+            if (index == null)
+                index = this.index;
+            return (index < this.tokens.length) ? `at column ${this.tokens[index].index + 1} in` :
+                `at the end of the expression`;
+        }
+        /**
+         * Records an error for an unexpected private identifier being discovered.
+         * @param token Token representing a private identifier.
+         * @param extraMessage Optional additional message being appended to the error.
+         */
+        _reportErrorForPrivateIdentifier(token, extraMessage) {
+            let errorMessage = `Private identifiers are not supported. Unexpected private identifier: ${token}`;
+            if (extraMessage !== null) {
+                errorMessage += `, ${extraMessage}`;
+            }
+            this.error(errorMessage);
+        }
+        /**
+         * Error recovery should skip tokens until it encounters a recovery point.
+         *
+         * The following are treated as unconditional recovery points:
+         *   - end of input
+         *   - ';' (parseChain() is always the root production, and it expects a ';')
+         *   - '|' (since pipes may be chained and each pipe expression may be treated independently)
+         *
+         * The following are conditional recovery points:
+         *   - ')', '}', ']' if one of calling productions is expecting one of these symbols
+         *     - This allows skip() to recover from errors such as '(a.) + 1' allowing more of the AST to
+         *       be retained (it doesn't skip any tokens as the ')' is retained because of the '(' begins
+         *       an '(' <expr> ')' production).
+         *       The recovery points of grouping symbols must be conditional as they must be skipped if
+         *       none of the calling productions are not expecting the closing token else we will never
+         *       make progress in the case of an extraneous group closing symbol (such as a stray ')').
+         *       That is, we skip a closing symbol if we are not in a grouping production.
+         *   - '=' in a `Writable` context
+         *     - In this context, we are able to recover after seeing the `=` operator, which
+         *       signals the presence of an independent rvalue expression following the `=` operator.
+         *
+         * If a production expects one of these token it increments the corresponding nesting count,
+         * and then decrements it just prior to checking if the token is in the input.
+         */
+        skip() {
+            let n = this.next;
+            while (this.index < this.tokens.length && !n.isCharacter($SEMICOLON) &&
+                !n.isOperator('|') && (this.rparensExpected <= 0 || !n.isCharacter($RPAREN)) &&
+                (this.rbracesExpected <= 0 || !n.isCharacter($RBRACE)) &&
+                (this.rbracketsExpected <= 0 || !n.isCharacter($RBRACKET)) &&
+                (!(this.context & ParseContextFlags.Writable) || !n.isOperator('='))) {
+                if (this.next.isError()) {
+                    this.errors.push(new ParserError(this.next.toString(), this.input, this.locationText(), this.location));
+                }
+                this.advance();
+                n = this.next;
+            }
+        }
+    }
+    class SimpleExpressionChecker {
+        constructor() {
+            this.errors = [];
+        }
+        visitImplicitReceiver(ast, context) { }
+        visitThisReceiver(ast, context) { }
+        visitInterpolation(ast, context) { }
+        visitLiteralPrimitive(ast, context) { }
+        visitPropertyRead(ast, context) { }
+        visitPropertyWrite(ast, context) { }
+        visitSafePropertyRead(ast, context) { }
+        visitCall(ast, context) { }
+        visitLiteralArray(ast, context) {
+            this.visitAll(ast.expressions, context);
+        }
+        visitLiteralMap(ast, context) {
+            this.visitAll(ast.values, context);
+        }
+        visitUnary(ast, context) { }
+        visitBinary(ast, context) { }
+        visitPrefixNot(ast, context) { }
+        visitNonNullAssert(ast, context) { }
+        visitConditional(ast, context) { }
+        visitPipe(ast, context) {
+            this.errors.push('pipes');
+        }
+        visitKeyedRead(ast, context) { }
+        visitKeyedWrite(ast, context) { }
+        visitAll(asts, context) {
+            return asts.map(node => node.visit(this, context));
+        }
+        visitChain(ast, context) { }
+        visitQuote(ast, context) { }
+        visitSafeKeyedRead(ast, context) { }
+    }
+    /**
+     * This class implements SimpleExpressionChecker used in View Engine and performs more strict checks
+     * to make sure host bindings do not contain pipes. In View Engine, having pipes in host bindings is
+     * not supported as well, but in some cases (like `!(value | async)`) the error is not triggered at
+     * compile time. In order to preserve View Engine behavior, more strict checks are introduced for
+     * Ivy mode only.
+     */
+    class IvySimpleExpressionChecker extends RecursiveAstVisitor {
+        constructor() {
+            super(...arguments);
+            this.errors = [];
+        }
+        visitPipe() {
+            this.errors.push('pipes');
+        }
+    }
 
     /**
      * @license
@@ -11748,7 +13934,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             this.errors = errors;
         }
     }
-    class Parser$1 {
+    class Parser {
         constructor(getTagDefinition) {
             this.getTagDefinition = getTagDefinition;
         }
@@ -12136,6 +14322,22 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
+    class HtmlParser extends Parser {
+        constructor() {
+            super(getHtmlTagDefinition);
+        }
+        parse(source, url, options) {
+            return super.parse(source, url, options);
+        }
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
     const PRESERVE_WS_ATTR_NAME = 'ngPreserveWhitespaces';
     const SKIP_WS_TRIM_TAGS = new Set(['pre', 'template', 'textarea', 'script', 'style']);
     // Equivalent to \s with \u00a0 (non-breaking space) excluded.
@@ -12221,2943 +14423,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             }
         });
         return result;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var ProviderAstType;
-    (function (ProviderAstType) {
-        ProviderAstType[ProviderAstType["PublicService"] = 0] = "PublicService";
-        ProviderAstType[ProviderAstType["PrivateService"] = 1] = "PrivateService";
-        ProviderAstType[ProviderAstType["Component"] = 2] = "Component";
-        ProviderAstType[ProviderAstType["Directive"] = 3] = "Directive";
-        ProviderAstType[ProviderAstType["Builtin"] = 4] = "Builtin";
-    })(ProviderAstType || (ProviderAstType = {}));
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    function isStyleUrlResolvable(url) {
-        if (url == null || url.length === 0 || url[0] == '/')
-            return false;
-        const schemeMatch = url.match(URL_WITH_SCHEMA_REGEXP);
-        return schemeMatch === null || schemeMatch[1] == 'package' || schemeMatch[1] == 'asset';
-    }
-    const URL_WITH_SCHEMA_REGEXP = /^([^:/?#]+):/;
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const PROPERTY_PARTS_SEPARATOR = '.';
-    const ATTRIBUTE_PREFIX = 'attr';
-    const CLASS_PREFIX = 'class';
-    const STYLE_PREFIX = 'style';
-    const TEMPLATE_ATTR_PREFIX$1 = '*';
-    const ANIMATE_PROP_PREFIX = 'animate-';
-    /**
-     * Parses bindings in templates and in the directive host area.
-     */
-    class BindingParser {
-        constructor(_exprParser, _interpolationConfig, _schemaRegistry, pipes, errors) {
-            this._exprParser = _exprParser;
-            this._interpolationConfig = _interpolationConfig;
-            this._schemaRegistry = _schemaRegistry;
-            this.errors = errors;
-            this.pipesByName = null;
-            this._usedPipes = new Map();
-            // When the `pipes` parameter is `null`, do not check for used pipes
-            // This is used in IVY when we might not know the available pipes at compile time
-            if (pipes) {
-                const pipesByName = new Map();
-                pipes.forEach(pipe => pipesByName.set(pipe.name, pipe));
-                this.pipesByName = pipesByName;
-            }
-        }
-        get interpolationConfig() {
-            return this._interpolationConfig;
-        }
-        getUsedPipes() {
-            return Array.from(this._usedPipes.values());
-        }
-        createBoundHostProperties(dirMeta, sourceSpan) {
-            if (dirMeta.hostProperties) {
-                const boundProps = [];
-                Object.keys(dirMeta.hostProperties).forEach(propName => {
-                    const expression = dirMeta.hostProperties[propName];
-                    if (typeof expression === 'string') {
-                        this.parsePropertyBinding(propName, expression, true, sourceSpan, sourceSpan.start.offset, undefined, [], 
-                        // Use the `sourceSpan` for  `keySpan`. This isn't really accurate, but neither is the
-                        // sourceSpan, as it represents the sourceSpan of the host itself rather than the
-                        // source of the host binding (which doesn't exist in the template). Regardless,
-                        // neither of these values are used in Ivy but are only here to satisfy the function
-                        // signature. This should likely be refactored in the future so that `sourceSpan`
-                        // isn't being used inaccurately.
-                        boundProps, sourceSpan);
-                    }
-                    else {
-                        this._reportError(`Value of the host property binding "${propName}" needs to be a string representing an expression but got "${expression}" (${typeof expression})`, sourceSpan);
-                    }
-                });
-                return boundProps;
-            }
-            return null;
-        }
-        createDirectiveHostPropertyAsts(dirMeta, elementSelector, sourceSpan) {
-            const boundProps = this.createBoundHostProperties(dirMeta, sourceSpan);
-            return boundProps &&
-                boundProps.map((prop) => this.createBoundElementProperty(elementSelector, prop));
-        }
-        createDirectiveHostEventAsts(dirMeta, sourceSpan) {
-            if (dirMeta.hostListeners) {
-                const targetEvents = [];
-                Object.keys(dirMeta.hostListeners).forEach(propName => {
-                    const expression = dirMeta.hostListeners[propName];
-                    if (typeof expression === 'string') {
-                        // Use the `sourceSpan` for  `keySpan` and `handlerSpan`. This isn't really accurate, but
-                        // neither is the `sourceSpan`, as it represents the `sourceSpan` of the host itself
-                        // rather than the source of the host binding (which doesn't exist in the template).
-                        // Regardless, neither of these values are used in Ivy but are only here to satisfy the
-                        // function signature. This should likely be refactored in the future so that `sourceSpan`
-                        // isn't being used inaccurately.
-                        this.parseEvent(propName, expression, sourceSpan, sourceSpan, [], targetEvents, sourceSpan);
-                    }
-                    else {
-                        this._reportError(`Value of the host listener "${propName}" needs to be a string representing an expression but got "${expression}" (${typeof expression})`, sourceSpan);
-                    }
-                });
-                return targetEvents;
-            }
-            return null;
-        }
-        parseInterpolation(value, sourceSpan) {
-            const sourceInfo = sourceSpan.start.toString();
-            const absoluteOffset = sourceSpan.fullStart.offset;
-            try {
-                const ast = this._exprParser.parseInterpolation(value, sourceInfo, absoluteOffset, this._interpolationConfig);
-                if (ast)
-                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
-                this._checkPipes(ast, sourceSpan);
-                return ast;
-            }
-            catch (e) {
-                this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
-            }
-        }
-        /**
-         * Similar to `parseInterpolation`, but treats the provided string as a single expression
-         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
-         * This is used for parsing the switch expression in ICUs.
-         */
-        parseInterpolationExpression(expression, sourceSpan) {
-            const sourceInfo = sourceSpan.start.toString();
-            const absoluteOffset = sourceSpan.start.offset;
-            try {
-                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, absoluteOffset);
-                if (ast)
-                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
-                this._checkPipes(ast, sourceSpan);
-                return ast;
-            }
-            catch (e) {
-                this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
-            }
-        }
-        /**
-         * Parses the bindings in a microsyntax expression, and converts them to
-         * `ParsedProperty` or `ParsedVariable`.
-         *
-         * @param tplKey template binding name
-         * @param tplValue template binding value
-         * @param sourceSpan span of template binding relative to entire the template
-         * @param absoluteValueOffset start of the tplValue relative to the entire template
-         * @param targetMatchableAttrs potential attributes to match in the template
-         * @param targetProps target property bindings in the template
-         * @param targetVars target variables in the template
-         */
-        parseInlineTemplateBinding(tplKey, tplValue, sourceSpan, absoluteValueOffset, targetMatchableAttrs, targetProps, targetVars, isIvyAst) {
-            const absoluteKeyOffset = sourceSpan.start.offset + TEMPLATE_ATTR_PREFIX$1.length;
-            const bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteKeyOffset, absoluteValueOffset);
-            for (const binding of bindings) {
-                // sourceSpan is for the entire HTML attribute. bindingSpan is for a particular
-                // binding within the microsyntax expression so it's more narrow than sourceSpan.
-                const bindingSpan = moveParseSourceSpan(sourceSpan, binding.sourceSpan);
-                const key = binding.key.source;
-                const keySpan = moveParseSourceSpan(sourceSpan, binding.key.span);
-                if (binding instanceof VariableBinding) {
-                    const value = binding.value ? binding.value.source : '$implicit';
-                    const valueSpan = binding.value ? moveParseSourceSpan(sourceSpan, binding.value.span) : undefined;
-                    targetVars.push(new ParsedVariable(key, value, bindingSpan, keySpan, valueSpan));
-                }
-                else if (binding.value) {
-                    const srcSpan = isIvyAst ? bindingSpan : sourceSpan;
-                    const valueSpan = moveParseSourceSpan(sourceSpan, binding.value.ast.sourceSpan);
-                    this._parsePropertyAst(key, binding.value, srcSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
-                }
-                else {
-                    targetMatchableAttrs.push([key, '' /* value */]);
-                    // Since this is a literal attribute with no RHS, source span should be
-                    // just the key span.
-                    this.parseLiteralAttr(key, null /* value */, keySpan, absoluteValueOffset, undefined /* valueSpan */, targetMatchableAttrs, targetProps, keySpan);
-                }
-            }
-        }
-        /**
-         * Parses the bindings in a microsyntax expression, e.g.
-         * ```
-         *    <tag *tplKey="let value1 = prop; let value2 = localVar">
-         * ```
-         *
-         * @param tplKey template binding name
-         * @param tplValue template binding value
-         * @param sourceSpan span of template binding relative to entire the template
-         * @param absoluteKeyOffset start of the `tplKey`
-         * @param absoluteValueOffset start of the `tplValue`
-         */
-        _parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteKeyOffset, absoluteValueOffset) {
-            const sourceInfo = sourceSpan.start.toString();
-            try {
-                const bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, absoluteKeyOffset, absoluteValueOffset);
-                this._reportExpressionParserErrors(bindingsResult.errors, sourceSpan);
-                bindingsResult.templateBindings.forEach((binding) => {
-                    if (binding.value instanceof ASTWithSource) {
-                        this._checkPipes(binding.value, sourceSpan);
-                    }
-                });
-                bindingsResult.warnings.forEach((warning) => {
-                    this._reportError(warning, sourceSpan, ParseErrorLevel.WARNING);
-                });
-                return bindingsResult.templateBindings;
-            }
-            catch (e) {
-                this._reportError(`${e}`, sourceSpan);
-                return [];
-            }
-        }
-        parseLiteralAttr(name, value, sourceSpan, absoluteOffset, valueSpan, targetMatchableAttrs, 
-        // TODO(atscott): keySpan is only optional here so VE template parser implementation does not
-        // have to change This should be required when VE is removed.
-        targetProps, keySpan) {
-            if (isAnimationLabel(name)) {
-                name = name.substring(1);
-                if (keySpan !== undefined) {
-                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan$1(keySpan.start.offset + 1, keySpan.end.offset));
-                }
-                if (value) {
-                    this._reportError(`Assigning animation triggers via @prop="exp" attributes with an expression is invalid.` +
-                        ` Use property bindings (e.g. [@prop]="exp") or use an attribute without a value (e.g. @prop) instead.`, sourceSpan, ParseErrorLevel.ERROR);
-                }
-                this._parseAnimation(name, value, sourceSpan, absoluteOffset, keySpan, valueSpan, targetMatchableAttrs, targetProps);
-            }
-            else {
-                targetProps.push(new ParsedProperty(name, this._exprParser.wrapLiteralPrimitive(value, '', absoluteOffset), ParsedPropertyType.LITERAL_ATTR, sourceSpan, keySpan, valueSpan));
-            }
-        }
-        parsePropertyBinding(name, expression, isHost, sourceSpan, absoluteOffset, valueSpan, 
-        // TODO(atscott): keySpan is only optional here so VE template parser implementation does not
-        // have to change This should be required when VE is removed.
-        targetMatchableAttrs, targetProps, keySpan) {
-            if (name.length === 0) {
-                this._reportError(`Property name is missing in binding`, sourceSpan);
-            }
-            let isAnimationProp = false;
-            if (name.startsWith(ANIMATE_PROP_PREFIX)) {
-                isAnimationProp = true;
-                name = name.substring(ANIMATE_PROP_PREFIX.length);
-                if (keySpan !== undefined) {
-                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan$1(keySpan.start.offset + ANIMATE_PROP_PREFIX.length, keySpan.end.offset));
-                }
-            }
-            else if (isAnimationLabel(name)) {
-                isAnimationProp = true;
-                name = name.substring(1);
-                if (keySpan !== undefined) {
-                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan$1(keySpan.start.offset + 1, keySpan.end.offset));
-                }
-            }
-            if (isAnimationProp) {
-                this._parseAnimation(name, expression, sourceSpan, absoluteOffset, keySpan, valueSpan, targetMatchableAttrs, targetProps);
-            }
-            else {
-                this._parsePropertyAst(name, this._parseBinding(expression, isHost, valueSpan || sourceSpan, absoluteOffset), sourceSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
-            }
-        }
-        parsePropertyInterpolation(name, value, sourceSpan, valueSpan, targetMatchableAttrs, 
-        // TODO(atscott): keySpan is only optional here so VE template parser implementation does not
-        // have to change This should be required when VE is removed.
-        targetProps, keySpan) {
-            const expr = this.parseInterpolation(value, valueSpan || sourceSpan);
-            if (expr) {
-                this._parsePropertyAst(name, expr, sourceSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
-                return true;
-            }
-            return false;
-        }
-        _parsePropertyAst(name, ast, sourceSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps) {
-            targetMatchableAttrs.push([name, ast.source]);
-            targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.DEFAULT, sourceSpan, keySpan, valueSpan));
-        }
-        _parseAnimation(name, expression, sourceSpan, absoluteOffset, keySpan, valueSpan, targetMatchableAttrs, targetProps) {
-            if (name.length === 0) {
-                this._reportError('Animation trigger is missing', sourceSpan);
-            }
-            // This will occur when a @trigger is not paired with an expression.
-            // For animations it is valid to not have an expression since */void
-            // states will be applied by angular when the element is attached/detached
-            const ast = this._parseBinding(expression || 'undefined', false, valueSpan || sourceSpan, absoluteOffset);
-            targetMatchableAttrs.push([name, ast.source]);
-            targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.ANIMATION, sourceSpan, keySpan, valueSpan));
-        }
-        _parseBinding(value, isHostBinding, sourceSpan, absoluteOffset) {
-            const sourceInfo = (sourceSpan && sourceSpan.start || '(unknown)').toString();
-            try {
-                const ast = isHostBinding ?
-                    this._exprParser.parseSimpleBinding(value, sourceInfo, absoluteOffset, this._interpolationConfig) :
-                    this._exprParser.parseBinding(value, sourceInfo, absoluteOffset, this._interpolationConfig);
-                if (ast)
-                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
-                this._checkPipes(ast, sourceSpan);
-                return ast;
-            }
-            catch (e) {
-                this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
-            }
-        }
-        createBoundElementProperty(elementSelector, boundProp, skipValidation = false, mapPropertyName = true) {
-            if (boundProp.isAnimation) {
-                return new BoundElementProperty(boundProp.name, 4 /* Animation */, SecurityContext.NONE, boundProp.expression, null, boundProp.sourceSpan, boundProp.keySpan, boundProp.valueSpan);
-            }
-            let unit = null;
-            let bindingType = undefined;
-            let boundPropertyName = null;
-            const parts = boundProp.name.split(PROPERTY_PARTS_SEPARATOR);
-            let securityContexts = undefined;
-            // Check for special cases (prefix style, attr, class)
-            if (parts.length > 1) {
-                if (parts[0] == ATTRIBUTE_PREFIX) {
-                    boundPropertyName = parts.slice(1).join(PROPERTY_PARTS_SEPARATOR);
-                    if (!skipValidation) {
-                        this._validatePropertyOrAttributeName(boundPropertyName, boundProp.sourceSpan, true);
-                    }
-                    securityContexts = calcPossibleSecurityContexts(this._schemaRegistry, elementSelector, boundPropertyName, true);
-                    const nsSeparatorIdx = boundPropertyName.indexOf(':');
-                    if (nsSeparatorIdx > -1) {
-                        const ns = boundPropertyName.substring(0, nsSeparatorIdx);
-                        const name = boundPropertyName.substring(nsSeparatorIdx + 1);
-                        boundPropertyName = mergeNsAndName(ns, name);
-                    }
-                    bindingType = 1 /* Attribute */;
-                }
-                else if (parts[0] == CLASS_PREFIX) {
-                    boundPropertyName = parts[1];
-                    bindingType = 2 /* Class */;
-                    securityContexts = [SecurityContext.NONE];
-                }
-                else if (parts[0] == STYLE_PREFIX) {
-                    unit = parts.length > 2 ? parts[2] : null;
-                    boundPropertyName = parts[1];
-                    bindingType = 3 /* Style */;
-                    securityContexts = [SecurityContext.STYLE];
-                }
-            }
-            // If not a special case, use the full property name
-            if (boundPropertyName === null) {
-                const mappedPropName = this._schemaRegistry.getMappedPropName(boundProp.name);
-                boundPropertyName = mapPropertyName ? mappedPropName : boundProp.name;
-                securityContexts = calcPossibleSecurityContexts(this._schemaRegistry, elementSelector, mappedPropName, false);
-                bindingType = 0 /* Property */;
-                if (!skipValidation) {
-                    this._validatePropertyOrAttributeName(mappedPropName, boundProp.sourceSpan, false);
-                }
-            }
-            return new BoundElementProperty(boundPropertyName, bindingType, securityContexts[0], boundProp.expression, unit, boundProp.sourceSpan, boundProp.keySpan, boundProp.valueSpan);
-        }
-        // TODO: keySpan should be required but was made optional to avoid changing VE parser.
-        parseEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan) {
-            if (name.length === 0) {
-                this._reportError(`Event name is missing in binding`, sourceSpan);
-            }
-            if (isAnimationLabel(name)) {
-                name = name.substr(1);
-                if (keySpan !== undefined) {
-                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan$1(keySpan.start.offset + 1, keySpan.end.offset));
-                }
-                this._parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents, keySpan);
-            }
-            else {
-                this._parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan);
-            }
-        }
-        calcPossibleSecurityContexts(selector, propName, isAttribute) {
-            const prop = this._schemaRegistry.getMappedPropName(propName);
-            return calcPossibleSecurityContexts(this._schemaRegistry, selector, prop, isAttribute);
-        }
-        _parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents, keySpan) {
-            const matches = splitAtPeriod(name, [name, '']);
-            const eventName = matches[0];
-            const phase = matches[1].toLowerCase();
-            const ast = this._parseAction(expression, handlerSpan);
-            targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan, keySpan));
-            if (eventName.length === 0) {
-                this._reportError(`Animation event name is missing in binding`, sourceSpan);
-            }
-            if (phase) {
-                if (phase !== 'start' && phase !== 'done') {
-                    this._reportError(`The provided animation output phase value "${phase}" for "@${eventName}" is not supported (use start or done)`, sourceSpan);
-                }
-            }
-            else {
-                this._reportError(`The animation trigger output event (@${eventName}) is missing its phase value name (start or done are currently supported)`, sourceSpan);
-            }
-        }
-        _parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan) {
-            // long format: 'target: eventName'
-            const [target, eventName] = splitAtColon(name, [null, name]);
-            const ast = this._parseAction(expression, handlerSpan);
-            targetMatchableAttrs.push([name, ast.source]);
-            targetEvents.push(new ParsedEvent(eventName, target, 0 /* Regular */, ast, sourceSpan, handlerSpan, keySpan));
-            // Don't detect directives for event names for now,
-            // so don't add the event name to the matchableAttrs
-        }
-        _parseAction(value, sourceSpan) {
-            const sourceInfo = (sourceSpan && sourceSpan.start || '(unknown').toString();
-            const absoluteOffset = (sourceSpan && sourceSpan.start) ? sourceSpan.start.offset : 0;
-            try {
-                const ast = this._exprParser.parseAction(value, sourceInfo, absoluteOffset, this._interpolationConfig);
-                if (ast) {
-                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
-                }
-                if (!ast || ast.ast instanceof EmptyExpr) {
-                    this._reportError(`Empty expressions are not allowed`, sourceSpan);
-                    return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
-                }
-                this._checkPipes(ast, sourceSpan);
-                return ast;
-            }
-            catch (e) {
-                this._reportError(`${e}`, sourceSpan);
-                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
-            }
-        }
-        _reportError(message, sourceSpan, level = ParseErrorLevel.ERROR) {
-            this.errors.push(new ParseError(sourceSpan, message, level));
-        }
-        _reportExpressionParserErrors(errors, sourceSpan) {
-            for (const error of errors) {
-                this._reportError(error.message, sourceSpan);
-            }
-        }
-        // Make sure all the used pipes are known in `this.pipesByName`
-        _checkPipes(ast, sourceSpan) {
-            if (ast && this.pipesByName) {
-                const collector = new PipeCollector();
-                ast.visit(collector);
-                collector.pipes.forEach((ast, pipeName) => {
-                    const pipeMeta = this.pipesByName.get(pipeName);
-                    if (!pipeMeta) {
-                        this._reportError(`The pipe '${pipeName}' could not be found`, new ParseSourceSpan(sourceSpan.start.moveBy(ast.span.start), sourceSpan.start.moveBy(ast.span.end)));
-                    }
-                    else {
-                        this._usedPipes.set(pipeName, pipeMeta);
-                    }
-                });
-            }
-        }
-        /**
-         * @param propName the name of the property / attribute
-         * @param sourceSpan
-         * @param isAttr true when binding to an attribute
-         */
-        _validatePropertyOrAttributeName(propName, sourceSpan, isAttr) {
-            const report = isAttr ? this._schemaRegistry.validateAttribute(propName) :
-                this._schemaRegistry.validateProperty(propName);
-            if (report.error) {
-                this._reportError(report.msg, sourceSpan, ParseErrorLevel.ERROR);
-            }
-        }
-    }
-    class PipeCollector extends RecursiveAstVisitor {
-        constructor() {
-            super(...arguments);
-            this.pipes = new Map();
-        }
-        visitPipe(ast, context) {
-            this.pipes.set(ast.name, ast);
-            ast.exp.visit(this);
-            this.visitAll(ast.args, context);
-            return null;
-        }
-    }
-    function isAnimationLabel(name) {
-        return name[0] == '@';
-    }
-    function calcPossibleSecurityContexts(registry, selector, propName, isAttribute) {
-        const ctxs = [];
-        CssSelector.parse(selector).forEach((selector) => {
-            const elementNames = selector.element ? [selector.element] : registry.allKnownElementNames();
-            const notElementNames = new Set(selector.notSelectors.filter(selector => selector.isElementSelector())
-                .map((selector) => selector.element));
-            const possibleElementNames = elementNames.filter(elementName => !notElementNames.has(elementName));
-            ctxs.push(...possibleElementNames.map(elementName => registry.securityContext(elementName, propName, isAttribute)));
-        });
-        return ctxs.length === 0 ? [SecurityContext.NONE] : Array.from(new Set(ctxs)).sort();
-    }
-    /**
-     * Compute a new ParseSourceSpan based off an original `sourceSpan` by using
-     * absolute offsets from the specified `absoluteSpan`.
-     *
-     * @param sourceSpan original source span
-     * @param absoluteSpan absolute source span to move to
-     */
-    function moveParseSourceSpan(sourceSpan, absoluteSpan) {
-        // The difference of two absolute offsets provide the relative offset
-        const startDiff = absoluteSpan.start - sourceSpan.start.offset;
-        const endDiff = absoluteSpan.end - sourceSpan.end.offset;
-        return new ParseSourceSpan(sourceSpan.start.moveBy(startDiff), sourceSpan.end.moveBy(endDiff), sourceSpan.fullStart.moveBy(startDiff), sourceSpan.details);
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    const NG_CONTENT_SELECT_ATTR$1 = 'select';
-    const LINK_ELEMENT = 'link';
-    const LINK_STYLE_REL_ATTR = 'rel';
-    const LINK_STYLE_HREF_ATTR = 'href';
-    const LINK_STYLE_REL_VALUE = 'stylesheet';
-    const STYLE_ELEMENT = 'style';
-    const SCRIPT_ELEMENT = 'script';
-    const NG_NON_BINDABLE_ATTR = 'ngNonBindable';
-    const NG_PROJECT_AS = 'ngProjectAs';
-    function preparseElement(ast) {
-        let selectAttr = null;
-        let hrefAttr = null;
-        let relAttr = null;
-        let nonBindable = false;
-        let projectAs = '';
-        ast.attrs.forEach(attr => {
-            const lcAttrName = attr.name.toLowerCase();
-            if (lcAttrName == NG_CONTENT_SELECT_ATTR$1) {
-                selectAttr = attr.value;
-            }
-            else if (lcAttrName == LINK_STYLE_HREF_ATTR) {
-                hrefAttr = attr.value;
-            }
-            else if (lcAttrName == LINK_STYLE_REL_ATTR) {
-                relAttr = attr.value;
-            }
-            else if (attr.name == NG_NON_BINDABLE_ATTR) {
-                nonBindable = true;
-            }
-            else if (attr.name == NG_PROJECT_AS) {
-                if (attr.value.length > 0) {
-                    projectAs = attr.value;
-                }
-            }
-        });
-        selectAttr = normalizeNgContentSelect(selectAttr);
-        const nodeName = ast.name.toLowerCase();
-        let type = PreparsedElementType.OTHER;
-        if (isNgContent(nodeName)) {
-            type = PreparsedElementType.NG_CONTENT;
-        }
-        else if (nodeName == STYLE_ELEMENT) {
-            type = PreparsedElementType.STYLE;
-        }
-        else if (nodeName == SCRIPT_ELEMENT) {
-            type = PreparsedElementType.SCRIPT;
-        }
-        else if (nodeName == LINK_ELEMENT && relAttr == LINK_STYLE_REL_VALUE) {
-            type = PreparsedElementType.STYLESHEET;
-        }
-        return new PreparsedElement(type, selectAttr, hrefAttr, nonBindable, projectAs);
-    }
-    var PreparsedElementType;
-    (function (PreparsedElementType) {
-        PreparsedElementType[PreparsedElementType["NG_CONTENT"] = 0] = "NG_CONTENT";
-        PreparsedElementType[PreparsedElementType["STYLE"] = 1] = "STYLE";
-        PreparsedElementType[PreparsedElementType["STYLESHEET"] = 2] = "STYLESHEET";
-        PreparsedElementType[PreparsedElementType["SCRIPT"] = 3] = "SCRIPT";
-        PreparsedElementType[PreparsedElementType["OTHER"] = 4] = "OTHER";
-    })(PreparsedElementType || (PreparsedElementType = {}));
-    class PreparsedElement {
-        constructor(type, selectAttr, hrefAttr, nonBindable, projectAs) {
-            this.type = type;
-            this.selectAttr = selectAttr;
-            this.hrefAttr = hrefAttr;
-            this.nonBindable = nonBindable;
-            this.projectAs = projectAs;
-        }
-    }
-    function normalizeNgContentSelect(selectAttr) {
-        if (selectAttr === null || selectAttr.length === 0) {
-            return '*';
-        }
-        return selectAttr;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class ElementContext {
-        constructor(isTemplateElement, _ngContentIndexMatcher, _wildcardNgContentIndex, providerContext) {
-            this.isTemplateElement = isTemplateElement;
-            this._ngContentIndexMatcher = _ngContentIndexMatcher;
-            this._wildcardNgContentIndex = _wildcardNgContentIndex;
-            this.providerContext = providerContext;
-        }
-        static create(isTemplateElement, directives, providerContext) {
-            const matcher = new SelectorMatcher();
-            let wildcardNgContentIndex = null;
-            const component = directives.find(directive => directive.directive.isComponent);
-            if (component) {
-                const ngContentSelectors = component.directive.template.ngContentSelectors;
-                for (let i = 0; i < ngContentSelectors.length; i++) {
-                    const selector = ngContentSelectors[i];
-                    if (selector === '*') {
-                        wildcardNgContentIndex = i;
-                    }
-                    else {
-                        matcher.addSelectables(CssSelector.parse(ngContentSelectors[i]), i);
-                    }
-                }
-            }
-            return new ElementContext(isTemplateElement, matcher, wildcardNgContentIndex, providerContext);
-        }
-        findNgContentIndex(selector) {
-            const ngContentIndices = [];
-            this._ngContentIndexMatcher.match(selector, (selector, ngContentIndex) => {
-                ngContentIndices.push(ngContentIndex);
-            });
-            ngContentIndices.sort();
-            if (this._wildcardNgContentIndex != null) {
-                ngContentIndices.push(this._wildcardNgContentIndex);
-            }
-            return ngContentIndices.length > 0 ? ngContentIndices[0] : null;
-        }
-    }
-    new ElementContext(true, new SelectorMatcher(), null, null);
-    function isEmptyExpression(ast) {
-        if (ast instanceof ASTWithSource) {
-            ast = ast.ast;
-        }
-        return ast instanceof EmptyExpr;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * Parses string representation of a style and converts it into object literal.
-     *
-     * @param value string representation of style as used in the `style` attribute in HTML.
-     *   Example: `color: red; height: auto`.
-     * @returns An array of style property name and value pairs, e.g. `['color', 'red', 'height',
-     * 'auto']`
-     */
-    function parse(value) {
-        // we use a string array here instead of a string map
-        // because a string-map is not guaranteed to retain the
-        // order of the entries whereas a string array can be
-        // constructed in a [key, value, key, value] format.
-        const styles = [];
-        let i = 0;
-        let parenDepth = 0;
-        let quote = 0 /* QuoteNone */;
-        let valueStart = 0;
-        let propStart = 0;
-        let currentProp = null;
-        let valueHasQuotes = false;
-        while (i < value.length) {
-            const token = value.charCodeAt(i++);
-            switch (token) {
-                case 40 /* OpenParen */:
-                    parenDepth++;
-                    break;
-                case 41 /* CloseParen */:
-                    parenDepth--;
-                    break;
-                case 39 /* QuoteSingle */:
-                    // valueStart needs to be there since prop values don't
-                    // have quotes in CSS
-                    valueHasQuotes = valueHasQuotes || valueStart > 0;
-                    if (quote === 0 /* QuoteNone */) {
-                        quote = 39 /* QuoteSingle */;
-                    }
-                    else if (quote === 39 /* QuoteSingle */ && value.charCodeAt(i - 1) !== 92 /* BackSlash */) {
-                        quote = 0 /* QuoteNone */;
-                    }
-                    break;
-                case 34 /* QuoteDouble */:
-                    // same logic as above
-                    valueHasQuotes = valueHasQuotes || valueStart > 0;
-                    if (quote === 0 /* QuoteNone */) {
-                        quote = 34 /* QuoteDouble */;
-                    }
-                    else if (quote === 34 /* QuoteDouble */ && value.charCodeAt(i - 1) !== 92 /* BackSlash */) {
-                        quote = 0 /* QuoteNone */;
-                    }
-                    break;
-                case 58 /* Colon */:
-                    if (!currentProp && parenDepth === 0 && quote === 0 /* QuoteNone */) {
-                        currentProp = hyphenate(value.substring(propStart, i - 1).trim());
-                        valueStart = i;
-                    }
-                    break;
-                case 59 /* Semicolon */:
-                    if (currentProp && valueStart > 0 && parenDepth === 0 && quote === 0 /* QuoteNone */) {
-                        const styleVal = value.substring(valueStart, i - 1).trim();
-                        styles.push(currentProp, valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal);
-                        propStart = i;
-                        valueStart = 0;
-                        currentProp = null;
-                        valueHasQuotes = false;
-                    }
-                    break;
-            }
-        }
-        if (currentProp && valueStart) {
-            const styleVal = value.substr(valueStart).trim();
-            styles.push(currentProp, valueHasQuotes ? stripUnnecessaryQuotes(styleVal) : styleVal);
-        }
-        return styles;
-    }
-    function stripUnnecessaryQuotes(value) {
-        const qS = value.charCodeAt(0);
-        const qE = value.charCodeAt(value.length - 1);
-        if (qS == qE && (qS == 39 /* QuoteSingle */ || qS == 34 /* QuoteDouble */)) {
-            const tempValue = value.substring(1, value.length - 1);
-            // special case to avoid using a multi-quoted string that was just chomped
-            // (e.g. `font-family: "Verdana", "sans-serif"`)
-            if (tempValue.indexOf('\'') == -1 && tempValue.indexOf('"') == -1) {
-                value = tempValue;
-            }
-        }
-        return value;
-    }
-    function hyphenate(value) {
-        return value
-            .replace(/[a-z][A-Z]/g, v => {
-            return v.charAt(0) + '-' + v.charAt(1);
-        })
-            .toLowerCase();
-    }
-
-    const IMPORTANT_FLAG = '!important';
-    /**
-     * Minimum amount of binding slots required in the runtime for style/class bindings.
-     *
-     * Styling in Angular uses up two slots in the runtime LView/TData data structures to
-     * record binding data, property information and metadata.
-     *
-     * When a binding is registered it will place the following information in the `LView`:
-     *
-     * slot 1) binding value
-     * slot 2) cached value (all other values collected before it in string form)
-     *
-     * When a binding is registered it will place the following information in the `TData`:
-     *
-     * slot 1) prop name
-     * slot 2) binding index that points to the previous style/class binding (and some extra config
-     * values)
-     *
-     * Let's imagine we have a binding that looks like so:
-     *
-     * ```
-     * <div [style.width]="x" [style.height]="y">
-     * ```
-     *
-     * Our `LView` and `TData` data-structures look like so:
-     *
-     * ```typescript
-     * LView = [
-     *   // ...
-     *   x, // value of x
-     *   "width: x",
-     *
-     *   y, // value of y
-     *   "width: x; height: y",
-     *   // ...
-     * ];
-     *
-     * TData = [
-     *   // ...
-     *   "width", // binding slot 20
-     *   0,
-     *
-     *   "height",
-     *   20,
-     *   // ...
-     * ];
-     * ```
-     *
-     * */
-    const MIN_STYLING_BINDING_SLOTS_REQUIRED = 2;
-    /**
-     * Produces creation/update instructions for all styling bindings (class and style)
-     *
-     * It also produces the creation instruction to register all initial styling values
-     * (which are all the static class="..." and style="..." attribute values that exist
-     * on an element within a template).
-     *
-     * The builder class below handles producing instructions for the following cases:
-     *
-     * - Static style/class attributes (style="..." and class="...")
-     * - Dynamic style/class map bindings ([style]="map" and [class]="map|string")
-     * - Dynamic style/class property bindings ([style.prop]="exp" and [class.name]="exp")
-     *
-     * Due to the complex relationship of all of these cases, the instructions generated
-     * for these attributes/properties/bindings must be done so in the correct order. The
-     * order which these must be generated is as follows:
-     *
-     * if (createMode) {
-     *   styling(...)
-     * }
-     * if (updateMode) {
-     *   styleMap(...)
-     *   classMap(...)
-     *   styleProp(...)
-     *   classProp(...)
-     * }
-     *
-     * The creation/update methods within the builder class produce these instructions.
-     */
-    class StylingBuilder {
-        constructor(_directiveExpr) {
-            this._directiveExpr = _directiveExpr;
-            /** Whether or not there are any static styling values present */
-            this._hasInitialValues = false;
-            /**
-             *  Whether or not there are any styling bindings present
-             *  (i.e. `[style]`, `[class]`, `[style.prop]` or `[class.name]`)
-             */
-            this.hasBindings = false;
-            this.hasBindingsWithPipes = false;
-            /** the input for [class] (if it exists) */
-            this._classMapInput = null;
-            /** the input for [style] (if it exists) */
-            this._styleMapInput = null;
-            /** an array of each [style.prop] input */
-            this._singleStyleInputs = null;
-            /** an array of each [class.name] input */
-            this._singleClassInputs = null;
-            this._lastStylingInput = null;
-            this._firstStylingInput = null;
-            // maps are used instead of hash maps because a Map will
-            // retain the ordering of the keys
-            /**
-             * Represents the location of each style binding in the template
-             * (e.g. `<div [style.width]="w" [style.height]="h">` implies
-             * that `width=0` and `height=1`)
-             */
-            this._stylesIndex = new Map();
-            /**
-             * Represents the location of each class binding in the template
-             * (e.g. `<div [class.big]="b" [class.hidden]="h">` implies
-             * that `big=0` and `hidden=1`)
-             */
-            this._classesIndex = new Map();
-            this._initialStyleValues = [];
-            this._initialClassValues = [];
-        }
-        /**
-         * Registers a given input to the styling builder to be later used when producing AOT code.
-         *
-         * The code below will only accept the input if it is somehow tied to styling (whether it be
-         * style/class bindings or static style/class attributes).
-         */
-        registerBoundInput(input) {
-            // [attr.style] or [attr.class] are skipped in the code below,
-            // they should not be treated as styling-based bindings since
-            // they are intended to be written directly to the attr and
-            // will therefore skip all style/class resolution that is present
-            // with style="", [style]="" and [style.prop]="", class="",
-            // [class.prop]="". [class]="" assignments
-            let binding = null;
-            let name = input.name;
-            switch (input.type) {
-                case 0 /* Property */:
-                    binding = this.registerInputBasedOnName(name, input.value, input.sourceSpan);
-                    break;
-                case 3 /* Style */:
-                    binding = this.registerStyleInput(name, false, input.value, input.sourceSpan, input.unit);
-                    break;
-                case 2 /* Class */:
-                    binding = this.registerClassInput(name, false, input.value, input.sourceSpan);
-                    break;
-            }
-            return binding ? true : false;
-        }
-        registerInputBasedOnName(name, expression, sourceSpan) {
-            let binding = null;
-            const prefix = name.substring(0, 6);
-            const isStyle = name === 'style' || prefix === 'style.' || prefix === 'style!';
-            const isClass = !isStyle && (name === 'class' || prefix === 'class.' || prefix === 'class!');
-            if (isStyle || isClass) {
-                const isMapBased = name.charAt(5) !== '.'; // style.prop or class.prop makes this a no
-                const property = name.substr(isMapBased ? 5 : 6); // the dot explains why there's a +1
-                if (isStyle) {
-                    binding = this.registerStyleInput(property, isMapBased, expression, sourceSpan);
-                }
-                else {
-                    binding = this.registerClassInput(property, isMapBased, expression, sourceSpan);
-                }
-            }
-            return binding;
-        }
-        registerStyleInput(name, isMapBased, value, sourceSpan, suffix) {
-            if (isEmptyExpression(value)) {
-                return null;
-            }
-            // CSS custom properties are case-sensitive so we shouldn't normalize them.
-            // See: https://www.w3.org/TR/css-variables-1/#defining-variables
-            if (!isCssCustomProperty(name)) {
-                name = hyphenate(name);
-            }
-            const { property, hasOverrideFlag, suffix: bindingSuffix } = parseProperty(name);
-            suffix = typeof suffix === 'string' && suffix.length !== 0 ? suffix : bindingSuffix;
-            const entry = { name: property, suffix: suffix, value, sourceSpan, hasOverrideFlag };
-            if (isMapBased) {
-                this._styleMapInput = entry;
-            }
-            else {
-                (this._singleStyleInputs = this._singleStyleInputs || []).push(entry);
-                registerIntoMap(this._stylesIndex, property);
-            }
-            this._lastStylingInput = entry;
-            this._firstStylingInput = this._firstStylingInput || entry;
-            this._checkForPipes(value);
-            this.hasBindings = true;
-            return entry;
-        }
-        registerClassInput(name, isMapBased, value, sourceSpan) {
-            if (isEmptyExpression(value)) {
-                return null;
-            }
-            const { property, hasOverrideFlag } = parseProperty(name);
-            const entry = { name: property, value, sourceSpan, hasOverrideFlag, suffix: null };
-            if (isMapBased) {
-                this._classMapInput = entry;
-            }
-            else {
-                (this._singleClassInputs = this._singleClassInputs || []).push(entry);
-                registerIntoMap(this._classesIndex, property);
-            }
-            this._lastStylingInput = entry;
-            this._firstStylingInput = this._firstStylingInput || entry;
-            this._checkForPipes(value);
-            this.hasBindings = true;
-            return entry;
-        }
-        _checkForPipes(value) {
-            if ((value instanceof ASTWithSource) && (value.ast instanceof BindingPipe)) {
-                this.hasBindingsWithPipes = true;
-            }
-        }
-        /**
-         * Registers the element's static style string value to the builder.
-         *
-         * @param value the style string (e.g. `width:100px; height:200px;`)
-         */
-        registerStyleAttr(value) {
-            this._initialStyleValues = parse(value);
-            this._hasInitialValues = true;
-        }
-        /**
-         * Registers the element's static class string value to the builder.
-         *
-         * @param value the className string (e.g. `disabled gold zoom`)
-         */
-        registerClassAttr(value) {
-            this._initialClassValues = value.trim().split(/\s+/g);
-            this._hasInitialValues = true;
-        }
-        /**
-         * Appends all styling-related expressions to the provided attrs array.
-         *
-         * @param attrs an existing array where each of the styling expressions
-         * will be inserted into.
-         */
-        populateInitialStylingAttrs(attrs) {
-            // [CLASS_MARKER, 'foo', 'bar', 'baz' ...]
-            if (this._initialClassValues.length) {
-                attrs.push(literal$1(1 /* Classes */));
-                for (let i = 0; i < this._initialClassValues.length; i++) {
-                    attrs.push(literal$1(this._initialClassValues[i]));
-                }
-            }
-            // [STYLE_MARKER, 'width', '200px', 'height', '100px', ...]
-            if (this._initialStyleValues.length) {
-                attrs.push(literal$1(2 /* Styles */));
-                for (let i = 0; i < this._initialStyleValues.length; i += 2) {
-                    attrs.push(literal$1(this._initialStyleValues[i]), literal$1(this._initialStyleValues[i + 1]));
-                }
-            }
-        }
-        /**
-         * Builds an instruction with all the expressions and parameters for `elementHostAttrs`.
-         *
-         * The instruction generation code below is used for producing the AOT statement code which is
-         * responsible for registering initial styles (within a directive hostBindings' creation block),
-         * as well as any of the provided attribute values, to the directive host element.
-         */
-        assignHostAttrs(attrs, definitionMap) {
-            if (this._directiveExpr && (attrs.length || this._hasInitialValues)) {
-                this.populateInitialStylingAttrs(attrs);
-                definitionMap.set('hostAttrs', literalArr(attrs));
-            }
-        }
-        /**
-         * Builds an instruction with all the expressions and parameters for `classMap`.
-         *
-         * The instruction data will contain all expressions for `classMap` to function
-         * which includes the `[class]` expression params.
-         */
-        buildClassMapInstruction(valueConverter) {
-            if (this._classMapInput) {
-                return this._buildMapBasedInstruction(valueConverter, true, this._classMapInput);
-            }
-            return null;
-        }
-        /**
-         * Builds an instruction with all the expressions and parameters for `styleMap`.
-         *
-         * The instruction data will contain all expressions for `styleMap` to function
-         * which includes the `[style]` expression params.
-         */
-        buildStyleMapInstruction(valueConverter) {
-            if (this._styleMapInput) {
-                return this._buildMapBasedInstruction(valueConverter, false, this._styleMapInput);
-            }
-            return null;
-        }
-        _buildMapBasedInstruction(valueConverter, isClassBased, stylingInput) {
-            // each styling binding value is stored in the LView
-            // map-based bindings allocate two slots: one for the
-            // previous binding value and another for the previous
-            // className or style attribute value.
-            let totalBindingSlotsRequired = MIN_STYLING_BINDING_SLOTS_REQUIRED;
-            // these values must be outside of the update block so that they can
-            // be evaluated (the AST visit call) during creation time so that any
-            // pipes can be picked up in time before the template is built
-            const mapValue = stylingInput.value.visit(valueConverter);
-            let reference;
-            if (mapValue instanceof Interpolation) {
-                totalBindingSlotsRequired += mapValue.expressions.length;
-                reference = isClassBased ? getClassMapInterpolationExpression(mapValue) :
-                    getStyleMapInterpolationExpression(mapValue);
-            }
-            else {
-                reference = isClassBased ? Identifiers$1.classMap : Identifiers$1.styleMap;
-            }
-            return {
-                reference,
-                calls: [{
-                        supportsInterpolation: true,
-                        sourceSpan: stylingInput.sourceSpan,
-                        allocateBindingSlots: totalBindingSlotsRequired,
-                        params: (convertFn) => {
-                            const convertResult = convertFn(mapValue);
-                            const params = Array.isArray(convertResult) ? convertResult : [convertResult];
-                            return params;
-                        }
-                    }]
-            };
-        }
-        _buildSingleInputs(reference, inputs, valueConverter, getInterpolationExpressionFn, isClassBased) {
-            const instructions = [];
-            inputs.forEach(input => {
-                const previousInstruction = instructions[instructions.length - 1];
-                const value = input.value.visit(valueConverter);
-                let referenceForCall = reference;
-                // each styling binding value is stored in the LView
-                // but there are two values stored for each binding:
-                //   1) the value itself
-                //   2) an intermediate value (concatenation of style up to this point).
-                //      We need to store the intermediate value so that we don't allocate
-                //      the strings on each CD.
-                let totalBindingSlotsRequired = MIN_STYLING_BINDING_SLOTS_REQUIRED;
-                if (value instanceof Interpolation) {
-                    totalBindingSlotsRequired += value.expressions.length;
-                    if (getInterpolationExpressionFn) {
-                        referenceForCall = getInterpolationExpressionFn(value);
-                    }
-                }
-                const call = {
-                    sourceSpan: input.sourceSpan,
-                    allocateBindingSlots: totalBindingSlotsRequired,
-                    supportsInterpolation: !!getInterpolationExpressionFn,
-                    params: (convertFn) => {
-                        // params => stylingProp(propName, value, suffix)
-                        const params = [];
-                        params.push(literal$1(input.name));
-                        const convertResult = convertFn(value);
-                        if (Array.isArray(convertResult)) {
-                            params.push(...convertResult);
-                        }
-                        else {
-                            params.push(convertResult);
-                        }
-                        // [style.prop] bindings may use suffix values (e.g. px, em, etc...), therefore,
-                        // if that is detected then we need to pass that in as an optional param.
-                        if (!isClassBased && input.suffix !== null) {
-                            params.push(literal$1(input.suffix));
-                        }
-                        return params;
-                    }
-                };
-                // If we ended up generating a call to the same instruction as the previous styling property
-                // we can chain the calls together safely to save some bytes, otherwise we have to generate
-                // a separate instruction call. This is primarily a concern with interpolation instructions
-                // where we may start off with one `reference`, but end up using another based on the
-                // number of interpolations.
-                if (previousInstruction && previousInstruction.reference === referenceForCall) {
-                    previousInstruction.calls.push(call);
-                }
-                else {
-                    instructions.push({ reference: referenceForCall, calls: [call] });
-                }
-            });
-            return instructions;
-        }
-        _buildClassInputs(valueConverter) {
-            if (this._singleClassInputs) {
-                return this._buildSingleInputs(Identifiers$1.classProp, this._singleClassInputs, valueConverter, null, true);
-            }
-            return [];
-        }
-        _buildStyleInputs(valueConverter) {
-            if (this._singleStyleInputs) {
-                return this._buildSingleInputs(Identifiers$1.styleProp, this._singleStyleInputs, valueConverter, getStylePropInterpolationExpression, false);
-            }
-            return [];
-        }
-        /**
-         * Constructs all instructions which contain the expressions that will be placed
-         * into the update block of a template function or a directive hostBindings function.
-         */
-        buildUpdateLevelInstructions(valueConverter) {
-            const instructions = [];
-            if (this.hasBindings) {
-                const styleMapInstruction = this.buildStyleMapInstruction(valueConverter);
-                if (styleMapInstruction) {
-                    instructions.push(styleMapInstruction);
-                }
-                const classMapInstruction = this.buildClassMapInstruction(valueConverter);
-                if (classMapInstruction) {
-                    instructions.push(classMapInstruction);
-                }
-                instructions.push(...this._buildStyleInputs(valueConverter));
-                instructions.push(...this._buildClassInputs(valueConverter));
-            }
-            return instructions;
-        }
-    }
-    function registerIntoMap(map, key) {
-        if (!map.has(key)) {
-            map.set(key, map.size);
-        }
-    }
-    function parseProperty(name) {
-        let hasOverrideFlag = false;
-        const overrideIndex = name.indexOf(IMPORTANT_FLAG);
-        if (overrideIndex !== -1) {
-            name = overrideIndex > 0 ? name.substring(0, overrideIndex) : '';
-            hasOverrideFlag = true;
-        }
-        let suffix = null;
-        let property = name;
-        const unitIndex = name.lastIndexOf('.');
-        if (unitIndex > 0) {
-            suffix = name.substr(unitIndex + 1);
-            property = name.substring(0, unitIndex);
-        }
-        return { property, suffix, hasOverrideFlag };
-    }
-    /**
-     * Gets the instruction to generate for an interpolated class map.
-     * @param interpolation An Interpolation AST
-     */
-    function getClassMapInterpolationExpression(interpolation) {
-        switch (getInterpolationArgsLength(interpolation)) {
-            case 1:
-                return Identifiers$1.classMap;
-            case 3:
-                return Identifiers$1.classMapInterpolate1;
-            case 5:
-                return Identifiers$1.classMapInterpolate2;
-            case 7:
-                return Identifiers$1.classMapInterpolate3;
-            case 9:
-                return Identifiers$1.classMapInterpolate4;
-            case 11:
-                return Identifiers$1.classMapInterpolate5;
-            case 13:
-                return Identifiers$1.classMapInterpolate6;
-            case 15:
-                return Identifiers$1.classMapInterpolate7;
-            case 17:
-                return Identifiers$1.classMapInterpolate8;
-            default:
-                return Identifiers$1.classMapInterpolateV;
-        }
-    }
-    /**
-     * Gets the instruction to generate for an interpolated style map.
-     * @param interpolation An Interpolation AST
-     */
-    function getStyleMapInterpolationExpression(interpolation) {
-        switch (getInterpolationArgsLength(interpolation)) {
-            case 1:
-                return Identifiers$1.styleMap;
-            case 3:
-                return Identifiers$1.styleMapInterpolate1;
-            case 5:
-                return Identifiers$1.styleMapInterpolate2;
-            case 7:
-                return Identifiers$1.styleMapInterpolate3;
-            case 9:
-                return Identifiers$1.styleMapInterpolate4;
-            case 11:
-                return Identifiers$1.styleMapInterpolate5;
-            case 13:
-                return Identifiers$1.styleMapInterpolate6;
-            case 15:
-                return Identifiers$1.styleMapInterpolate7;
-            case 17:
-                return Identifiers$1.styleMapInterpolate8;
-            default:
-                return Identifiers$1.styleMapInterpolateV;
-        }
-    }
-    /**
-     * Gets the instruction to generate for an interpolated style prop.
-     * @param interpolation An Interpolation AST
-     */
-    function getStylePropInterpolationExpression(interpolation) {
-        switch (getInterpolationArgsLength(interpolation)) {
-            case 1:
-                return Identifiers$1.styleProp;
-            case 3:
-                return Identifiers$1.stylePropInterpolate1;
-            case 5:
-                return Identifiers$1.stylePropInterpolate2;
-            case 7:
-                return Identifiers$1.stylePropInterpolate3;
-            case 9:
-                return Identifiers$1.stylePropInterpolate4;
-            case 11:
-                return Identifiers$1.stylePropInterpolate5;
-            case 13:
-                return Identifiers$1.stylePropInterpolate6;
-            case 15:
-                return Identifiers$1.stylePropInterpolate7;
-            case 17:
-                return Identifiers$1.stylePropInterpolate8;
-            default:
-                return Identifiers$1.stylePropInterpolateV;
-        }
-    }
-    /**
-     * Checks whether property name is a custom CSS property.
-     * See: https://www.w3.org/TR/css-variables-1
-     */
-    function isCssCustomProperty(name) {
-        return name.startsWith('--');
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var TokenType;
-    (function (TokenType) {
-        TokenType[TokenType["Character"] = 0] = "Character";
-        TokenType[TokenType["Identifier"] = 1] = "Identifier";
-        TokenType[TokenType["PrivateIdentifier"] = 2] = "PrivateIdentifier";
-        TokenType[TokenType["Keyword"] = 3] = "Keyword";
-        TokenType[TokenType["String"] = 4] = "String";
-        TokenType[TokenType["Operator"] = 5] = "Operator";
-        TokenType[TokenType["Number"] = 6] = "Number";
-        TokenType[TokenType["Error"] = 7] = "Error";
-    })(TokenType || (TokenType = {}));
-    const KEYWORDS = ['var', 'let', 'as', 'null', 'undefined', 'true', 'false', 'if', 'else', 'this'];
-    class Lexer {
-        tokenize(text) {
-            const scanner = new _Scanner(text);
-            const tokens = [];
-            let token = scanner.scanToken();
-            while (token != null) {
-                tokens.push(token);
-                token = scanner.scanToken();
-            }
-            return tokens;
-        }
-    }
-    class Token {
-        constructor(index, end, type, numValue, strValue) {
-            this.index = index;
-            this.end = end;
-            this.type = type;
-            this.numValue = numValue;
-            this.strValue = strValue;
-        }
-        isCharacter(code) {
-            return this.type == TokenType.Character && this.numValue == code;
-        }
-        isNumber() {
-            return this.type == TokenType.Number;
-        }
-        isString() {
-            return this.type == TokenType.String;
-        }
-        isOperator(operator) {
-            return this.type == TokenType.Operator && this.strValue == operator;
-        }
-        isIdentifier() {
-            return this.type == TokenType.Identifier;
-        }
-        isPrivateIdentifier() {
-            return this.type == TokenType.PrivateIdentifier;
-        }
-        isKeyword() {
-            return this.type == TokenType.Keyword;
-        }
-        isKeywordLet() {
-            return this.type == TokenType.Keyword && this.strValue == 'let';
-        }
-        isKeywordAs() {
-            return this.type == TokenType.Keyword && this.strValue == 'as';
-        }
-        isKeywordNull() {
-            return this.type == TokenType.Keyword && this.strValue == 'null';
-        }
-        isKeywordUndefined() {
-            return this.type == TokenType.Keyword && this.strValue == 'undefined';
-        }
-        isKeywordTrue() {
-            return this.type == TokenType.Keyword && this.strValue == 'true';
-        }
-        isKeywordFalse() {
-            return this.type == TokenType.Keyword && this.strValue == 'false';
-        }
-        isKeywordThis() {
-            return this.type == TokenType.Keyword && this.strValue == 'this';
-        }
-        isError() {
-            return this.type == TokenType.Error;
-        }
-        toNumber() {
-            return this.type == TokenType.Number ? this.numValue : -1;
-        }
-        toString() {
-            switch (this.type) {
-                case TokenType.Character:
-                case TokenType.Identifier:
-                case TokenType.Keyword:
-                case TokenType.Operator:
-                case TokenType.PrivateIdentifier:
-                case TokenType.String:
-                case TokenType.Error:
-                    return this.strValue;
-                case TokenType.Number:
-                    return this.numValue.toString();
-                default:
-                    return null;
-            }
-        }
-    }
-    function newCharacterToken(index, end, code) {
-        return new Token(index, end, TokenType.Character, code, String.fromCharCode(code));
-    }
-    function newIdentifierToken(index, end, text) {
-        return new Token(index, end, TokenType.Identifier, 0, text);
-    }
-    function newPrivateIdentifierToken(index, end, text) {
-        return new Token(index, end, TokenType.PrivateIdentifier, 0, text);
-    }
-    function newKeywordToken(index, end, text) {
-        return new Token(index, end, TokenType.Keyword, 0, text);
-    }
-    function newOperatorToken(index, end, text) {
-        return new Token(index, end, TokenType.Operator, 0, text);
-    }
-    function newStringToken(index, end, text) {
-        return new Token(index, end, TokenType.String, 0, text);
-    }
-    function newNumberToken(index, end, n) {
-        return new Token(index, end, TokenType.Number, n, '');
-    }
-    function newErrorToken(index, end, message) {
-        return new Token(index, end, TokenType.Error, 0, message);
-    }
-    const EOF = new Token(-1, -1, TokenType.Character, 0, '');
-    class _Scanner {
-        constructor(input) {
-            this.input = input;
-            this.peek = 0;
-            this.index = -1;
-            this.length = input.length;
-            this.advance();
-        }
-        advance() {
-            this.peek = ++this.index >= this.length ? $EOF : this.input.charCodeAt(this.index);
-        }
-        scanToken() {
-            const input = this.input, length = this.length;
-            let peek = this.peek, index = this.index;
-            // Skip whitespace.
-            while (peek <= $SPACE) {
-                if (++index >= length) {
-                    peek = $EOF;
-                    break;
-                }
-                else {
-                    peek = input.charCodeAt(index);
-                }
-            }
-            this.peek = peek;
-            this.index = index;
-            if (index >= length) {
-                return null;
-            }
-            // Handle identifiers and numbers.
-            if (isIdentifierStart(peek))
-                return this.scanIdentifier();
-            if (isDigit(peek))
-                return this.scanNumber(index);
-            const start = index;
-            switch (peek) {
-                case $PERIOD:
-                    this.advance();
-                    return isDigit(this.peek) ? this.scanNumber(start) :
-                        newCharacterToken(start, this.index, $PERIOD);
-                case $LPAREN:
-                case $RPAREN:
-                case $LBRACE:
-                case $RBRACE:
-                case $LBRACKET:
-                case $RBRACKET:
-                case $COMMA:
-                case $COLON:
-                case $SEMICOLON:
-                    return this.scanCharacter(start, peek);
-                case $SQ:
-                case $DQ:
-                    return this.scanString();
-                case $HASH:
-                    return this.scanPrivateIdentifier();
-                case $PLUS:
-                case $MINUS:
-                case $STAR:
-                case $SLASH:
-                case $PERCENT:
-                case $CARET:
-                    return this.scanOperator(start, String.fromCharCode(peek));
-                case $QUESTION:
-                    return this.scanQuestion(start);
-                case $LT:
-                case $GT:
-                    return this.scanComplexOperator(start, String.fromCharCode(peek), $EQ, '=');
-                case $BANG:
-                case $EQ:
-                    return this.scanComplexOperator(start, String.fromCharCode(peek), $EQ, '=', $EQ, '=');
-                case $AMPERSAND:
-                    return this.scanComplexOperator(start, '&', $AMPERSAND, '&');
-                case $BAR:
-                    return this.scanComplexOperator(start, '|', $BAR, '|');
-                case $NBSP:
-                    while (isWhitespace(this.peek))
-                        this.advance();
-                    return this.scanToken();
-            }
-            this.advance();
-            return this.error(`Unexpected character [${String.fromCharCode(peek)}]`, 0);
-        }
-        scanCharacter(start, code) {
-            this.advance();
-            return newCharacterToken(start, this.index, code);
-        }
-        scanOperator(start, str) {
-            this.advance();
-            return newOperatorToken(start, this.index, str);
-        }
-        /**
-         * Tokenize a 2/3 char long operator
-         *
-         * @param start start index in the expression
-         * @param one first symbol (always part of the operator)
-         * @param twoCode code point for the second symbol
-         * @param two second symbol (part of the operator when the second code point matches)
-         * @param threeCode code point for the third symbol
-         * @param three third symbol (part of the operator when provided and matches source expression)
-         */
-        scanComplexOperator(start, one, twoCode, two, threeCode, three) {
-            this.advance();
-            let str = one;
-            if (this.peek == twoCode) {
-                this.advance();
-                str += two;
-            }
-            if (threeCode != null && this.peek == threeCode) {
-                this.advance();
-                str += three;
-            }
-            return newOperatorToken(start, this.index, str);
-        }
-        scanIdentifier() {
-            const start = this.index;
-            this.advance();
-            while (isIdentifierPart(this.peek))
-                this.advance();
-            const str = this.input.substring(start, this.index);
-            return KEYWORDS.indexOf(str) > -1 ? newKeywordToken(start, this.index, str) :
-                newIdentifierToken(start, this.index, str);
-        }
-        /** Scans an ECMAScript private identifier. */
-        scanPrivateIdentifier() {
-            const start = this.index;
-            this.advance();
-            if (!isIdentifierStart(this.peek)) {
-                return this.error('Invalid character [#]', -1);
-            }
-            while (isIdentifierPart(this.peek))
-                this.advance();
-            const identifierName = this.input.substring(start, this.index);
-            return newPrivateIdentifierToken(start, this.index, identifierName);
-        }
-        scanNumber(start) {
-            let simple = (this.index === start);
-            let hasSeparators = false;
-            this.advance(); // Skip initial digit.
-            while (true) {
-                if (isDigit(this.peek)) ;
-                else if (this.peek === $_) {
-                    // Separators are only valid when they're surrounded by digits. E.g. `1_0_1` is
-                    // valid while `_101` and `101_` are not. The separator can't be next to the decimal
-                    // point or another separator either. Note that it's unlikely that we'll hit a case where
-                    // the underscore is at the start, because that's a valid identifier and it will be picked
-                    // up earlier in the parsing. We validate for it anyway just in case.
-                    if (!isDigit(this.input.charCodeAt(this.index - 1)) ||
-                        !isDigit(this.input.charCodeAt(this.index + 1))) {
-                        return this.error('Invalid numeric separator', 0);
-                    }
-                    hasSeparators = true;
-                }
-                else if (this.peek === $PERIOD) {
-                    simple = false;
-                }
-                else if (isExponentStart(this.peek)) {
-                    this.advance();
-                    if (isExponentSign(this.peek))
-                        this.advance();
-                    if (!isDigit(this.peek))
-                        return this.error('Invalid exponent', -1);
-                    simple = false;
-                }
-                else {
-                    break;
-                }
-                this.advance();
-            }
-            let str = this.input.substring(start, this.index);
-            if (hasSeparators) {
-                str = str.replace(/_/g, '');
-            }
-            const value = simple ? parseIntAutoRadix(str) : parseFloat(str);
-            return newNumberToken(start, this.index, value);
-        }
-        scanString() {
-            const start = this.index;
-            const quote = this.peek;
-            this.advance(); // Skip initial quote.
-            let buffer = '';
-            let marker = this.index;
-            const input = this.input;
-            while (this.peek != quote) {
-                if (this.peek == $BACKSLASH) {
-                    buffer += input.substring(marker, this.index);
-                    this.advance();
-                    let unescapedCode;
-                    // Workaround for TS2.1-introduced type strictness
-                    this.peek = this.peek;
-                    if (this.peek == $u) {
-                        // 4 character hex code for unicode character.
-                        const hex = input.substring(this.index + 1, this.index + 5);
-                        if (/^[0-9a-f]+$/i.test(hex)) {
-                            unescapedCode = parseInt(hex, 16);
-                        }
-                        else {
-                            return this.error(`Invalid unicode escape [\\u${hex}]`, 0);
-                        }
-                        for (let i = 0; i < 5; i++) {
-                            this.advance();
-                        }
-                    }
-                    else {
-                        unescapedCode = unescape(this.peek);
-                        this.advance();
-                    }
-                    buffer += String.fromCharCode(unescapedCode);
-                    marker = this.index;
-                }
-                else if (this.peek == $EOF) {
-                    return this.error('Unterminated quote', 0);
-                }
-                else {
-                    this.advance();
-                }
-            }
-            const last = input.substring(marker, this.index);
-            this.advance(); // Skip terminating quote.
-            return newStringToken(start, this.index, buffer + last);
-        }
-        scanQuestion(start) {
-            this.advance();
-            let str = '?';
-            // Either `a ?? b` or 'a?.b'.
-            if (this.peek === $QUESTION || this.peek === $PERIOD) {
-                str += this.peek === $PERIOD ? '.' : '?';
-                this.advance();
-            }
-            return newOperatorToken(start, this.index, str);
-        }
-        error(message, offset) {
-            const position = this.index + offset;
-            return newErrorToken(position, this.index, `Lexer Error: ${message} at column ${position} in expression [${this.input}]`);
-        }
-    }
-    function isIdentifierStart(code) {
-        return ($a <= code && code <= $z) || ($A <= code && code <= $Z) ||
-            (code == $_) || (code == $$);
-    }
-    function isIdentifier$1(input) {
-        if (input.length == 0)
-            return false;
-        const scanner = new _Scanner(input);
-        if (!isIdentifierStart(scanner.peek))
-            return false;
-        scanner.advance();
-        while (scanner.peek !== $EOF) {
-            if (!isIdentifierPart(scanner.peek))
-                return false;
-            scanner.advance();
-        }
-        return true;
-    }
-    function isIdentifierPart(code) {
-        return isAsciiLetter(code) || isDigit(code) || (code == $_) ||
-            (code == $$);
-    }
-    function isExponentStart(code) {
-        return code == $e || code == $E;
-    }
-    function isExponentSign(code) {
-        return code == $MINUS || code == $PLUS;
-    }
-    function unescape(code) {
-        switch (code) {
-            case $n:
-                return $LF;
-            case $f:
-                return $FF;
-            case $r:
-                return $CR;
-            case $t:
-                return $TAB;
-            case $v:
-                return $VTAB;
-            default:
-                return code;
-        }
-    }
-    function parseIntAutoRadix(text) {
-        const result = parseInt(text);
-        if (isNaN(result)) {
-            throw new Error('Invalid integer literal when parsing ' + text);
-        }
-        return result;
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class SplitInterpolation {
-        constructor(strings, expressions, offsets) {
-            this.strings = strings;
-            this.expressions = expressions;
-            this.offsets = offsets;
-        }
-    }
-    class TemplateBindingParseResult {
-        constructor(templateBindings, warnings, errors) {
-            this.templateBindings = templateBindings;
-            this.warnings = warnings;
-            this.errors = errors;
-        }
-    }
-    class Parser {
-        constructor(_lexer) {
-            this._lexer = _lexer;
-            this.errors = [];
-            this.simpleExpressionChecker = SimpleExpressionChecker;
-        }
-        parseAction(input, location, absoluteOffset, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
-            this._checkNoInterpolation(input, location, interpolationConfig);
-            const sourceToLex = this._stripComments(input);
-            const tokens = this._lexer.tokenize(this._stripComments(input));
-            const ast = new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, true, this.errors, input.length - sourceToLex.length)
-                .parseChain();
-            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
-        }
-        parseBinding(input, location, absoluteOffset, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
-            const ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
-            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
-        }
-        checkSimpleExpression(ast) {
-            const checker = new this.simpleExpressionChecker();
-            ast.visit(checker);
-            return checker.errors;
-        }
-        parseSimpleBinding(input, location, absoluteOffset, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
-            const ast = this._parseBindingAst(input, location, absoluteOffset, interpolationConfig);
-            const errors = this.checkSimpleExpression(ast);
-            if (errors.length > 0) {
-                this._reportError(`Host binding expression cannot contain ${errors.join(' ')}`, input, location);
-            }
-            return new ASTWithSource(ast, input, location, absoluteOffset, this.errors);
-        }
-        _reportError(message, input, errLocation, ctxLocation) {
-            this.errors.push(new ParserError(message, input, errLocation, ctxLocation));
-        }
-        _parseBindingAst(input, location, absoluteOffset, interpolationConfig) {
-            // Quotes expressions use 3rd-party expression language. We don't want to use
-            // our lexer or parser for that, so we check for that ahead of time.
-            const quote = this._parseQuote(input, location, absoluteOffset);
-            if (quote != null) {
-                return quote;
-            }
-            this._checkNoInterpolation(input, location, interpolationConfig);
-            const sourceToLex = this._stripComments(input);
-            const tokens = this._lexer.tokenize(sourceToLex);
-            return new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, input.length - sourceToLex.length)
-                .parseChain();
-        }
-        _parseQuote(input, location, absoluteOffset) {
-            if (input == null)
-                return null;
-            const prefixSeparatorIndex = input.indexOf(':');
-            if (prefixSeparatorIndex == -1)
-                return null;
-            const prefix = input.substring(0, prefixSeparatorIndex).trim();
-            if (!isIdentifier$1(prefix))
-                return null;
-            const uninterpretedExpression = input.substring(prefixSeparatorIndex + 1);
-            const span = new ParseSpan(0, input.length);
-            return new Quote(span, span.toAbsolute(absoluteOffset), prefix, uninterpretedExpression, location);
-        }
-        /**
-         * Parse microsyntax template expression and return a list of bindings or
-         * parsing errors in case the given expression is invalid.
-         *
-         * For example,
-         * ```
-         *   <div *ngFor="let item of items">
-         *         ^      ^ absoluteValueOffset for `templateValue`
-         *         absoluteKeyOffset for `templateKey`
-         * ```
-         * contains three bindings:
-         * 1. ngFor -> null
-         * 2. item -> NgForOfContext.$implicit
-         * 3. ngForOf -> items
-         *
-         * This is apparent from the de-sugared template:
-         * ```
-         *   <ng-template ngFor let-item [ngForOf]="items">
-         * ```
-         *
-         * @param templateKey name of directive, without the * prefix. For example: ngIf, ngFor
-         * @param templateValue RHS of the microsyntax attribute
-         * @param templateUrl template filename if it's external, component filename if it's inline
-         * @param absoluteKeyOffset start of the `templateKey`
-         * @param absoluteValueOffset start of the `templateValue`
-         */
-        parseTemplateBindings(templateKey, templateValue, templateUrl, absoluteKeyOffset, absoluteValueOffset) {
-            const tokens = this._lexer.tokenize(templateValue);
-            const parser = new _ParseAST(templateValue, templateUrl, absoluteValueOffset, tokens, templateValue.length, false /* parseAction */, this.errors, 0 /* relative offset */);
-            return parser.parseTemplateBindings({
-                source: templateKey,
-                span: new AbsoluteSourceSpan$1(absoluteKeyOffset, absoluteKeyOffset + templateKey.length),
-            });
-        }
-        parseInterpolation(input, location, absoluteOffset, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
-            const { strings, expressions, offsets } = this.splitInterpolation(input, location, interpolationConfig);
-            if (expressions.length === 0)
-                return null;
-            const expressionNodes = [];
-            for (let i = 0; i < expressions.length; ++i) {
-                const expressionText = expressions[i].text;
-                const sourceToLex = this._stripComments(expressionText);
-                const tokens = this._lexer.tokenize(sourceToLex);
-                const ast = new _ParseAST(input, location, absoluteOffset, tokens, sourceToLex.length, false, this.errors, offsets[i] + (expressionText.length - sourceToLex.length))
-                    .parseChain();
-                expressionNodes.push(ast);
-            }
-            return this.createInterpolationAst(strings.map(s => s.text), expressionNodes, input, location, absoluteOffset);
-        }
-        /**
-         * Similar to `parseInterpolation`, but treats the provided string as a single expression
-         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
-         * This is used for parsing the switch expression in ICUs.
-         */
-        parseInterpolationExpression(expression, location, absoluteOffset) {
-            const sourceToLex = this._stripComments(expression);
-            const tokens = this._lexer.tokenize(sourceToLex);
-            const ast = new _ParseAST(expression, location, absoluteOffset, tokens, sourceToLex.length, 
-            /* parseAction */ false, this.errors, 0)
-                .parseChain();
-            const strings = ['', '']; // The prefix and suffix strings are both empty
-            return this.createInterpolationAst(strings, [ast], expression, location, absoluteOffset);
-        }
-        createInterpolationAst(strings, expressions, input, location, absoluteOffset) {
-            const span = new ParseSpan(0, input.length);
-            const interpolation = new Interpolation(span, span.toAbsolute(absoluteOffset), strings, expressions);
-            return new ASTWithSource(interpolation, input, location, absoluteOffset, this.errors);
-        }
-        /**
-         * Splits a string of text into "raw" text segments and expressions present in interpolations in
-         * the string.
-         * Returns `null` if there are no interpolations, otherwise a
-         * `SplitInterpolation` with splits that look like
-         *   <raw text> <expression> <raw text> ... <raw text> <expression> <raw text>
-         */
-        splitInterpolation(input, location, interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
-            const strings = [];
-            const expressions = [];
-            const offsets = [];
-            let i = 0;
-            let atInterpolation = false;
-            let extendLastString = false;
-            let { start: interpStart, end: interpEnd } = interpolationConfig;
-            while (i < input.length) {
-                if (!atInterpolation) {
-                    // parse until starting {{
-                    const start = i;
-                    i = input.indexOf(interpStart, i);
-                    if (i === -1) {
-                        i = input.length;
-                    }
-                    const text = input.substring(start, i);
-                    strings.push({ text, start, end: i });
-                    atInterpolation = true;
-                }
-                else {
-                    // parse from starting {{ to ending }} while ignoring content inside quotes.
-                    const fullStart = i;
-                    const exprStart = fullStart + interpStart.length;
-                    const exprEnd = this._getInterpolationEndIndex(input, interpEnd, exprStart);
-                    if (exprEnd === -1) {
-                        // Could not find the end of the interpolation; do not parse an expression.
-                        // Instead we should extend the content on the last raw string.
-                        atInterpolation = false;
-                        extendLastString = true;
-                        break;
-                    }
-                    const fullEnd = exprEnd + interpEnd.length;
-                    const text = input.substring(exprStart, exprEnd);
-                    if (text.trim().length === 0) {
-                        this._reportError('Blank expressions are not allowed in interpolated strings', input, `at column ${i} in`, location);
-                    }
-                    expressions.push({ text, start: fullStart, end: fullEnd });
-                    offsets.push(exprStart);
-                    i = fullEnd;
-                    atInterpolation = false;
-                }
-            }
-            if (!atInterpolation) {
-                // If we are now at a text section, add the remaining content as a raw string.
-                if (extendLastString) {
-                    const piece = strings[strings.length - 1];
-                    piece.text += input.substring(i);
-                    piece.end = input.length;
-                }
-                else {
-                    strings.push({ text: input.substring(i), start: i, end: input.length });
-                }
-            }
-            return new SplitInterpolation(strings, expressions, offsets);
-        }
-        wrapLiteralPrimitive(input, location, absoluteOffset) {
-            const span = new ParseSpan(0, input == null ? 0 : input.length);
-            return new ASTWithSource(new LiteralPrimitive(span, span.toAbsolute(absoluteOffset), input), input, location, absoluteOffset, this.errors);
-        }
-        _stripComments(input) {
-            const i = this._commentStart(input);
-            return i != null ? input.substring(0, i).trim() : input;
-        }
-        _commentStart(input) {
-            let outerQuote = null;
-            for (let i = 0; i < input.length - 1; i++) {
-                const char = input.charCodeAt(i);
-                const nextChar = input.charCodeAt(i + 1);
-                if (char === $SLASH && nextChar == $SLASH && outerQuote == null)
-                    return i;
-                if (outerQuote === char) {
-                    outerQuote = null;
-                }
-                else if (outerQuote == null && isQuote(char)) {
-                    outerQuote = char;
-                }
-            }
-            return null;
-        }
-        _checkNoInterpolation(input, location, { start, end }) {
-            let startIndex = -1;
-            let endIndex = -1;
-            for (const charIndex of this._forEachUnquotedChar(input, 0)) {
-                if (startIndex === -1) {
-                    if (input.startsWith(start)) {
-                        startIndex = charIndex;
-                    }
-                }
-                else {
-                    endIndex = this._getInterpolationEndIndex(input, end, charIndex);
-                    if (endIndex > -1) {
-                        break;
-                    }
-                }
-            }
-            if (startIndex > -1 && endIndex > -1) {
-                this._reportError(`Got interpolation (${start}${end}) where expression was expected`, input, `at column ${startIndex} in`, location);
-            }
-        }
-        /**
-         * Finds the index of the end of an interpolation expression
-         * while ignoring comments and quoted content.
-         */
-        _getInterpolationEndIndex(input, expressionEnd, start) {
-            for (const charIndex of this._forEachUnquotedChar(input, start)) {
-                if (input.startsWith(expressionEnd, charIndex)) {
-                    return charIndex;
-                }
-                // Nothing else in the expression matters after we've
-                // hit a comment so look directly for the end token.
-                if (input.startsWith('//', charIndex)) {
-                    return input.indexOf(expressionEnd, charIndex);
-                }
-            }
-            return -1;
-        }
-        /**
-         * Generator used to iterate over the character indexes of a string that are outside of quotes.
-         * @param input String to loop through.
-         * @param start Index within the string at which to start.
-         */
-        *_forEachUnquotedChar(input, start) {
-            let currentQuote = null;
-            let escapeCount = 0;
-            for (let i = start; i < input.length; i++) {
-                const char = input[i];
-                // Skip the characters inside quotes. Note that we only care about the outer-most
-                // quotes matching up and we need to account for escape characters.
-                if (isQuote(input.charCodeAt(i)) && (currentQuote === null || currentQuote === char) &&
-                    escapeCount % 2 === 0) {
-                    currentQuote = currentQuote === null ? char : null;
-                }
-                else if (currentQuote === null) {
-                    yield i;
-                }
-                escapeCount = char === '\\' ? escapeCount + 1 : 0;
-            }
-        }
-    }
-    class IvyParser extends Parser {
-        constructor() {
-            super(...arguments);
-            this.simpleExpressionChecker = IvySimpleExpressionChecker;
-        }
-    }
-    /** Describes a stateful context an expression parser is in. */
-    var ParseContextFlags;
-    (function (ParseContextFlags) {
-        ParseContextFlags[ParseContextFlags["None"] = 0] = "None";
-        /**
-         * A Writable context is one in which a value may be written to an lvalue.
-         * For example, after we see a property access, we may expect a write to the
-         * property via the "=" operator.
-         *   prop
-         *        ^ possible "=" after
-         */
-        ParseContextFlags[ParseContextFlags["Writable"] = 1] = "Writable";
-    })(ParseContextFlags || (ParseContextFlags = {}));
-    class _ParseAST {
-        constructor(input, location, absoluteOffset, tokens, inputLength, parseAction, errors, offset) {
-            this.input = input;
-            this.location = location;
-            this.absoluteOffset = absoluteOffset;
-            this.tokens = tokens;
-            this.inputLength = inputLength;
-            this.parseAction = parseAction;
-            this.errors = errors;
-            this.offset = offset;
-            this.rparensExpected = 0;
-            this.rbracketsExpected = 0;
-            this.rbracesExpected = 0;
-            this.context = ParseContextFlags.None;
-            // Cache of expression start and input indeces to the absolute source span they map to, used to
-            // prevent creating superfluous source spans in `sourceSpan`.
-            // A serial of the expression start and input index is used for mapping because both are stateful
-            // and may change for subsequent expressions visited by the parser.
-            this.sourceSpanCache = new Map();
-            this.index = 0;
-        }
-        peek(offset) {
-            const i = this.index + offset;
-            return i < this.tokens.length ? this.tokens[i] : EOF;
-        }
-        get next() {
-            return this.peek(0);
-        }
-        /** Whether all the parser input has been processed. */
-        get atEOF() {
-            return this.index >= this.tokens.length;
-        }
-        /**
-         * Index of the next token to be processed, or the end of the last token if all have been
-         * processed.
-         */
-        get inputIndex() {
-            return this.atEOF ? this.currentEndIndex : this.next.index + this.offset;
-        }
-        /**
-         * End index of the last processed token, or the start of the first token if none have been
-         * processed.
-         */
-        get currentEndIndex() {
-            if (this.index > 0) {
-                const curToken = this.peek(-1);
-                return curToken.end + this.offset;
-            }
-            // No tokens have been processed yet; return the next token's start or the length of the input
-            // if there is no token.
-            if (this.tokens.length === 0) {
-                return this.inputLength + this.offset;
-            }
-            return this.next.index + this.offset;
-        }
-        /**
-         * Returns the absolute offset of the start of the current token.
-         */
-        get currentAbsoluteOffset() {
-            return this.absoluteOffset + this.inputIndex;
-        }
-        /**
-         * Retrieve a `ParseSpan` from `start` to the current position (or to `artificialEndIndex` if
-         * provided).
-         *
-         * @param start Position from which the `ParseSpan` will start.
-         * @param artificialEndIndex Optional ending index to be used if provided (and if greater than the
-         *     natural ending index)
-         */
-        span(start, artificialEndIndex) {
-            let endIndex = this.currentEndIndex;
-            if (artificialEndIndex !== undefined && artificialEndIndex > this.currentEndIndex) {
-                endIndex = artificialEndIndex;
-            }
-            // In some unusual parsing scenarios (like when certain tokens are missing and an `EmptyExpr` is
-            // being created), the current token may already be advanced beyond the `currentEndIndex`. This
-            // appears to be a deep-seated parser bug.
-            //
-            // As a workaround for now, swap the start and end indices to ensure a valid `ParseSpan`.
-            // TODO(alxhub): fix the bug upstream in the parser state, and remove this workaround.
-            if (start > endIndex) {
-                const tmp = endIndex;
-                endIndex = start;
-                start = tmp;
-            }
-            return new ParseSpan(start, endIndex);
-        }
-        sourceSpan(start, artificialEndIndex) {
-            const serial = `${start}@${this.inputIndex}:${artificialEndIndex}`;
-            if (!this.sourceSpanCache.has(serial)) {
-                this.sourceSpanCache.set(serial, this.span(start, artificialEndIndex).toAbsolute(this.absoluteOffset));
-            }
-            return this.sourceSpanCache.get(serial);
-        }
-        advance() {
-            this.index++;
-        }
-        /**
-         * Executes a callback in the provided context.
-         */
-        withContext(context, cb) {
-            this.context |= context;
-            const ret = cb();
-            this.context ^= context;
-            return ret;
-        }
-        consumeOptionalCharacter(code) {
-            if (this.next.isCharacter(code)) {
-                this.advance();
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-        peekKeywordLet() {
-            return this.next.isKeywordLet();
-        }
-        peekKeywordAs() {
-            return this.next.isKeywordAs();
-        }
-        /**
-         * Consumes an expected character, otherwise emits an error about the missing expected character
-         * and skips over the token stream until reaching a recoverable point.
-         *
-         * See `this.error` and `this.skip` for more details.
-         */
-        expectCharacter(code) {
-            if (this.consumeOptionalCharacter(code))
-                return;
-            this.error(`Missing expected ${String.fromCharCode(code)}`);
-        }
-        consumeOptionalOperator(op) {
-            if (this.next.isOperator(op)) {
-                this.advance();
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-        expectOperator(operator) {
-            if (this.consumeOptionalOperator(operator))
-                return;
-            this.error(`Missing expected operator ${operator}`);
-        }
-        prettyPrintToken(tok) {
-            return tok === EOF ? 'end of input' : `token ${tok}`;
-        }
-        expectIdentifierOrKeyword() {
-            const n = this.next;
-            if (!n.isIdentifier() && !n.isKeyword()) {
-                if (n.isPrivateIdentifier()) {
-                    this._reportErrorForPrivateIdentifier(n, 'expected identifier or keyword');
-                }
-                else {
-                    this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier or keyword`);
-                }
-                return null;
-            }
-            this.advance();
-            return n.toString();
-        }
-        expectIdentifierOrKeywordOrString() {
-            const n = this.next;
-            if (!n.isIdentifier() && !n.isKeyword() && !n.isString()) {
-                if (n.isPrivateIdentifier()) {
-                    this._reportErrorForPrivateIdentifier(n, 'expected identifier, keyword or string');
-                }
-                else {
-                    this.error(`Unexpected ${this.prettyPrintToken(n)}, expected identifier, keyword, or string`);
-                }
-                return '';
-            }
-            this.advance();
-            return n.toString();
-        }
-        parseChain() {
-            const exprs = [];
-            const start = this.inputIndex;
-            while (this.index < this.tokens.length) {
-                const expr = this.parsePipe();
-                exprs.push(expr);
-                if (this.consumeOptionalCharacter($SEMICOLON)) {
-                    if (!this.parseAction) {
-                        this.error('Binding expression cannot contain chained expression');
-                    }
-                    while (this.consumeOptionalCharacter($SEMICOLON)) {
-                    } // read all semicolons
-                }
-                else if (this.index < this.tokens.length) {
-                    this.error(`Unexpected token '${this.next}'`);
-                }
-            }
-            if (exprs.length == 0) {
-                // We have no expressions so create an empty expression that spans the entire input length
-                const artificialStart = this.offset;
-                const artificialEnd = this.offset + this.inputLength;
-                return new EmptyExpr(this.span(artificialStart, artificialEnd), this.sourceSpan(artificialStart, artificialEnd));
-            }
-            if (exprs.length == 1)
-                return exprs[0];
-            return new Chain(this.span(start), this.sourceSpan(start), exprs);
-        }
-        parsePipe() {
-            const start = this.inputIndex;
-            let result = this.parseExpression();
-            if (this.consumeOptionalOperator('|')) {
-                if (this.parseAction) {
-                    this.error('Cannot have a pipe in an action expression');
-                }
-                do {
-                    const nameStart = this.inputIndex;
-                    let nameId = this.expectIdentifierOrKeyword();
-                    let nameSpan;
-                    let fullSpanEnd = undefined;
-                    if (nameId !== null) {
-                        nameSpan = this.sourceSpan(nameStart);
-                    }
-                    else {
-                        // No valid identifier was found, so we'll assume an empty pipe name ('').
-                        nameId = '';
-                        // However, there may have been whitespace present between the pipe character and the next
-                        // token in the sequence (or the end of input). We want to track this whitespace so that
-                        // the `BindingPipe` we produce covers not just the pipe character, but any trailing
-                        // whitespace beyond it. Another way of thinking about this is that the zero-length name
-                        // is assumed to be at the end of any whitespace beyond the pipe character.
-                        //
-                        // Therefore, we push the end of the `ParseSpan` for this pipe all the way up to the
-                        // beginning of the next token, or until the end of input if the next token is EOF.
-                        fullSpanEnd = this.next.index !== -1 ? this.next.index : this.inputLength + this.offset;
-                        // The `nameSpan` for an empty pipe name is zero-length at the end of any whitespace
-                        // beyond the pipe character.
-                        nameSpan = new ParseSpan(fullSpanEnd, fullSpanEnd).toAbsolute(this.absoluteOffset);
-                    }
-                    const args = [];
-                    while (this.consumeOptionalCharacter($COLON)) {
-                        args.push(this.parseExpression());
-                        // If there are additional expressions beyond the name, then the artificial end for the
-                        // name is no longer relevant.
-                    }
-                    result = new BindingPipe(this.span(start), this.sourceSpan(start, fullSpanEnd), result, nameId, args, nameSpan);
-                } while (this.consumeOptionalOperator('|'));
-            }
-            return result;
-        }
-        parseExpression() {
-            return this.parseConditional();
-        }
-        parseConditional() {
-            const start = this.inputIndex;
-            const result = this.parseLogicalOr();
-            if (this.consumeOptionalOperator('?')) {
-                const yes = this.parsePipe();
-                let no;
-                if (!this.consumeOptionalCharacter($COLON)) {
-                    const end = this.inputIndex;
-                    const expression = this.input.substring(start, end);
-                    this.error(`Conditional expression ${expression} requires all 3 expressions`);
-                    no = new EmptyExpr(this.span(start), this.sourceSpan(start));
-                }
-                else {
-                    no = this.parsePipe();
-                }
-                return new Conditional(this.span(start), this.sourceSpan(start), result, yes, no);
-            }
-            else {
-                return result;
-            }
-        }
-        parseLogicalOr() {
-            // '||'
-            const start = this.inputIndex;
-            let result = this.parseLogicalAnd();
-            while (this.consumeOptionalOperator('||')) {
-                const right = this.parseLogicalAnd();
-                result = new Binary(this.span(start), this.sourceSpan(start), '||', result, right);
-            }
-            return result;
-        }
-        parseLogicalAnd() {
-            // '&&'
-            const start = this.inputIndex;
-            let result = this.parseNullishCoalescing();
-            while (this.consumeOptionalOperator('&&')) {
-                const right = this.parseNullishCoalescing();
-                result = new Binary(this.span(start), this.sourceSpan(start), '&&', result, right);
-            }
-            return result;
-        }
-        parseNullishCoalescing() {
-            // '??'
-            const start = this.inputIndex;
-            let result = this.parseEquality();
-            while (this.consumeOptionalOperator('??')) {
-                const right = this.parseEquality();
-                result = new Binary(this.span(start), this.sourceSpan(start), '??', result, right);
-            }
-            return result;
-        }
-        parseEquality() {
-            // '==','!=','===','!=='
-            const start = this.inputIndex;
-            let result = this.parseRelational();
-            while (this.next.type == TokenType.Operator) {
-                const operator = this.next.strValue;
-                switch (operator) {
-                    case '==':
-                    case '===':
-                    case '!=':
-                    case '!==':
-                        this.advance();
-                        const right = this.parseRelational();
-                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
-                        continue;
-                }
-                break;
-            }
-            return result;
-        }
-        parseRelational() {
-            // '<', '>', '<=', '>='
-            const start = this.inputIndex;
-            let result = this.parseAdditive();
-            while (this.next.type == TokenType.Operator) {
-                const operator = this.next.strValue;
-                switch (operator) {
-                    case '<':
-                    case '>':
-                    case '<=':
-                    case '>=':
-                        this.advance();
-                        const right = this.parseAdditive();
-                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
-                        continue;
-                }
-                break;
-            }
-            return result;
-        }
-        parseAdditive() {
-            // '+', '-'
-            const start = this.inputIndex;
-            let result = this.parseMultiplicative();
-            while (this.next.type == TokenType.Operator) {
-                const operator = this.next.strValue;
-                switch (operator) {
-                    case '+':
-                    case '-':
-                        this.advance();
-                        let right = this.parseMultiplicative();
-                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
-                        continue;
-                }
-                break;
-            }
-            return result;
-        }
-        parseMultiplicative() {
-            // '*', '%', '/'
-            const start = this.inputIndex;
-            let result = this.parsePrefix();
-            while (this.next.type == TokenType.Operator) {
-                const operator = this.next.strValue;
-                switch (operator) {
-                    case '*':
-                    case '%':
-                    case '/':
-                        this.advance();
-                        let right = this.parsePrefix();
-                        result = new Binary(this.span(start), this.sourceSpan(start), operator, result, right);
-                        continue;
-                }
-                break;
-            }
-            return result;
-        }
-        parsePrefix() {
-            if (this.next.type == TokenType.Operator) {
-                const start = this.inputIndex;
-                const operator = this.next.strValue;
-                let result;
-                switch (operator) {
-                    case '+':
-                        this.advance();
-                        result = this.parsePrefix();
-                        return Unary.createPlus(this.span(start), this.sourceSpan(start), result);
-                    case '-':
-                        this.advance();
-                        result = this.parsePrefix();
-                        return Unary.createMinus(this.span(start), this.sourceSpan(start), result);
-                    case '!':
-                        this.advance();
-                        result = this.parsePrefix();
-                        return new PrefixNot(this.span(start), this.sourceSpan(start), result);
-                }
-            }
-            return this.parseCallChain();
-        }
-        parseCallChain() {
-            const start = this.inputIndex;
-            let result = this.parsePrimary();
-            while (true) {
-                if (this.consumeOptionalCharacter($PERIOD)) {
-                    result = this.parseAccessMemberOrCall(result, start, false);
-                }
-                else if (this.consumeOptionalOperator('?.')) {
-                    result = this.consumeOptionalCharacter($LBRACKET) ?
-                        this.parseKeyedReadOrWrite(result, start, true) :
-                        this.parseAccessMemberOrCall(result, start, true);
-                }
-                else if (this.consumeOptionalCharacter($LBRACKET)) {
-                    result = this.parseKeyedReadOrWrite(result, start, false);
-                }
-                else if (this.consumeOptionalCharacter($LPAREN)) {
-                    const argumentStart = this.inputIndex;
-                    this.rparensExpected++;
-                    const args = this.parseCallArguments();
-                    const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
-                    this.rparensExpected--;
-                    this.expectCharacter($RPAREN);
-                    result = new Call(this.span(start), this.sourceSpan(start), result, args, argumentSpan);
-                }
-                else if (this.consumeOptionalOperator('!')) {
-                    result = new NonNullAssert(this.span(start), this.sourceSpan(start), result);
-                }
-                else {
-                    return result;
-                }
-            }
-        }
-        parsePrimary() {
-            const start = this.inputIndex;
-            if (this.consumeOptionalCharacter($LPAREN)) {
-                this.rparensExpected++;
-                const result = this.parsePipe();
-                this.rparensExpected--;
-                this.expectCharacter($RPAREN);
-                return result;
-            }
-            else if (this.next.isKeywordNull()) {
-                this.advance();
-                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), null);
-            }
-            else if (this.next.isKeywordUndefined()) {
-                this.advance();
-                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), void 0);
-            }
-            else if (this.next.isKeywordTrue()) {
-                this.advance();
-                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), true);
-            }
-            else if (this.next.isKeywordFalse()) {
-                this.advance();
-                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), false);
-            }
-            else if (this.next.isKeywordThis()) {
-                this.advance();
-                return new ThisReceiver(this.span(start), this.sourceSpan(start));
-            }
-            else if (this.consumeOptionalCharacter($LBRACKET)) {
-                this.rbracketsExpected++;
-                const elements = this.parseExpressionList($RBRACKET);
-                this.rbracketsExpected--;
-                this.expectCharacter($RBRACKET);
-                return new LiteralArray(this.span(start), this.sourceSpan(start), elements);
-            }
-            else if (this.next.isCharacter($LBRACE)) {
-                return this.parseLiteralMap();
-            }
-            else if (this.next.isIdentifier()) {
-                return this.parseAccessMemberOrCall(new ImplicitReceiver(this.span(start), this.sourceSpan(start)), start, false);
-            }
-            else if (this.next.isNumber()) {
-                const value = this.next.toNumber();
-                this.advance();
-                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), value);
-            }
-            else if (this.next.isString()) {
-                const literalValue = this.next.toString();
-                this.advance();
-                return new LiteralPrimitive(this.span(start), this.sourceSpan(start), literalValue);
-            }
-            else if (this.next.isPrivateIdentifier()) {
-                this._reportErrorForPrivateIdentifier(this.next, null);
-                return new EmptyExpr(this.span(start), this.sourceSpan(start));
-            }
-            else if (this.index >= this.tokens.length) {
-                this.error(`Unexpected end of expression: ${this.input}`);
-                return new EmptyExpr(this.span(start), this.sourceSpan(start));
-            }
-            else {
-                this.error(`Unexpected token ${this.next}`);
-                return new EmptyExpr(this.span(start), this.sourceSpan(start));
-            }
-        }
-        parseExpressionList(terminator) {
-            const result = [];
-            do {
-                if (!this.next.isCharacter(terminator)) {
-                    result.push(this.parsePipe());
-                }
-                else {
-                    break;
-                }
-            } while (this.consumeOptionalCharacter($COMMA));
-            return result;
-        }
-        parseLiteralMap() {
-            const keys = [];
-            const values = [];
-            const start = this.inputIndex;
-            this.expectCharacter($LBRACE);
-            if (!this.consumeOptionalCharacter($RBRACE)) {
-                this.rbracesExpected++;
-                do {
-                    const keyStart = this.inputIndex;
-                    const quoted = this.next.isString();
-                    const key = this.expectIdentifierOrKeywordOrString();
-                    keys.push({ key, quoted });
-                    // Properties with quoted keys can't use the shorthand syntax.
-                    if (quoted) {
-                        this.expectCharacter($COLON);
-                        values.push(this.parsePipe());
-                    }
-                    else if (this.consumeOptionalCharacter($COLON)) {
-                        values.push(this.parsePipe());
-                    }
-                    else {
-                        const span = this.span(keyStart);
-                        const sourceSpan = this.sourceSpan(keyStart);
-                        values.push(new PropertyRead(span, sourceSpan, sourceSpan, new ImplicitReceiver(span, sourceSpan), key));
-                    }
-                } while (this.consumeOptionalCharacter($COMMA));
-                this.rbracesExpected--;
-                this.expectCharacter($RBRACE);
-            }
-            return new LiteralMap(this.span(start), this.sourceSpan(start), keys, values);
-        }
-        parseAccessMemberOrCall(readReceiver, start, isSafe) {
-            const nameStart = this.inputIndex;
-            const id = this.withContext(ParseContextFlags.Writable, () => {
-                const id = this.expectIdentifierOrKeyword() ?? '';
-                if (id.length === 0) {
-                    this.error(`Expected identifier for property access`, readReceiver.span.end);
-                }
-                return id;
-            });
-            const nameSpan = this.sourceSpan(nameStart);
-            let receiver;
-            if (isSafe) {
-                if (this.consumeOptionalOperator('=')) {
-                    this.error('The \'?.\' operator cannot be used in the assignment');
-                    receiver = new EmptyExpr(this.span(start), this.sourceSpan(start));
-                }
-                else {
-                    receiver = new SafePropertyRead(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id);
-                }
-            }
-            else {
-                if (this.consumeOptionalOperator('=')) {
-                    if (!this.parseAction) {
-                        this.error('Bindings cannot contain assignments');
-                        return new EmptyExpr(this.span(start), this.sourceSpan(start));
-                    }
-                    const value = this.parseConditional();
-                    receiver = new PropertyWrite(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id, value);
-                }
-                else {
-                    receiver =
-                        new PropertyRead(this.span(start), this.sourceSpan(start), nameSpan, readReceiver, id);
-                }
-            }
-            if (this.consumeOptionalCharacter($LPAREN)) {
-                const argumentStart = this.inputIndex;
-                this.rparensExpected++;
-                const args = this.parseCallArguments();
-                const argumentSpan = this.span(argumentStart, this.inputIndex).toAbsolute(this.absoluteOffset);
-                this.expectCharacter($RPAREN);
-                this.rparensExpected--;
-                const span = this.span(start);
-                const sourceSpan = this.sourceSpan(start);
-                return new Call(span, sourceSpan, receiver, args, argumentSpan);
-            }
-            return receiver;
-        }
-        parseCallArguments() {
-            if (this.next.isCharacter($RPAREN))
-                return [];
-            const positionals = [];
-            do {
-                positionals.push(this.parsePipe());
-            } while (this.consumeOptionalCharacter($COMMA));
-            return positionals;
-        }
-        /**
-         * Parses an identifier, a keyword, a string with an optional `-` in between,
-         * and returns the string along with its absolute source span.
-         */
-        expectTemplateBindingKey() {
-            let result = '';
-            let operatorFound = false;
-            const start = this.currentAbsoluteOffset;
-            do {
-                result += this.expectIdentifierOrKeywordOrString();
-                operatorFound = this.consumeOptionalOperator('-');
-                if (operatorFound) {
-                    result += '-';
-                }
-            } while (operatorFound);
-            return {
-                source: result,
-                span: new AbsoluteSourceSpan$1(start, start + result.length),
-            };
-        }
-        /**
-         * Parse microsyntax template expression and return a list of bindings or
-         * parsing errors in case the given expression is invalid.
-         *
-         * For example,
-         * ```
-         *   <div *ngFor="let item of items; index as i; trackBy: func">
-         * ```
-         * contains five bindings:
-         * 1. ngFor -> null
-         * 2. item -> NgForOfContext.$implicit
-         * 3. ngForOf -> items
-         * 4. i -> NgForOfContext.index
-         * 5. ngForTrackBy -> func
-         *
-         * For a full description of the microsyntax grammar, see
-         * https://gist.github.com/mhevery/d3530294cff2e4a1b3fe15ff75d08855
-         *
-         * @param templateKey name of the microsyntax directive, like ngIf, ngFor,
-         * without the *, along with its absolute span.
-         */
-        parseTemplateBindings(templateKey) {
-            const bindings = [];
-            // The first binding is for the template key itself
-            // In *ngFor="let item of items", key = "ngFor", value = null
-            // In *ngIf="cond | pipe", key = "ngIf", value = "cond | pipe"
-            bindings.push(...this.parseDirectiveKeywordBindings(templateKey));
-            while (this.index < this.tokens.length) {
-                // If it starts with 'let', then this must be variable declaration
-                const letBinding = this.parseLetBinding();
-                if (letBinding) {
-                    bindings.push(letBinding);
-                }
-                else {
-                    // Two possible cases here, either `value "as" key` or
-                    // "directive-keyword expression". We don't know which case, but both
-                    // "value" and "directive-keyword" are template binding key, so consume
-                    // the key first.
-                    const key = this.expectTemplateBindingKey();
-                    // Peek at the next token, if it is "as" then this must be variable
-                    // declaration.
-                    const binding = this.parseAsBinding(key);
-                    if (binding) {
-                        bindings.push(binding);
-                    }
-                    else {
-                        // Otherwise the key must be a directive keyword, like "of". Transform
-                        // the key to actual key. Eg. of -> ngForOf, trackBy -> ngForTrackBy
-                        key.source =
-                            templateKey.source + key.source.charAt(0).toUpperCase() + key.source.substring(1);
-                        bindings.push(...this.parseDirectiveKeywordBindings(key));
-                    }
-                }
-                this.consumeStatementTerminator();
-            }
-            return new TemplateBindingParseResult(bindings, [] /* warnings */, this.errors);
-        }
-        parseKeyedReadOrWrite(receiver, start, isSafe) {
-            return this.withContext(ParseContextFlags.Writable, () => {
-                this.rbracketsExpected++;
-                const key = this.parsePipe();
-                if (key instanceof EmptyExpr) {
-                    this.error(`Key access cannot be empty`);
-                }
-                this.rbracketsExpected--;
-                this.expectCharacter($RBRACKET);
-                if (this.consumeOptionalOperator('=')) {
-                    if (isSafe) {
-                        this.error('The \'?.\' operator cannot be used in the assignment');
-                    }
-                    else {
-                        const value = this.parseConditional();
-                        return new KeyedWrite(this.span(start), this.sourceSpan(start), receiver, key, value);
-                    }
-                }
-                else {
-                    return isSafe ? new SafeKeyedRead(this.span(start), this.sourceSpan(start), receiver, key) :
-                        new KeyedRead(this.span(start), this.sourceSpan(start), receiver, key);
-                }
-                return new EmptyExpr(this.span(start), this.sourceSpan(start));
-            });
-        }
-        /**
-         * Parse a directive keyword, followed by a mandatory expression.
-         * For example, "of items", "trackBy: func".
-         * The bindings are: ngForOf -> items, ngForTrackBy -> func
-         * There could be an optional "as" binding that follows the expression.
-         * For example,
-         * ```
-         *   *ngFor="let item of items | slice:0:1 as collection".
-         *                    ^^ ^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^
-         *               keyword    bound target   optional 'as' binding
-         * ```
-         *
-         * @param key binding key, for example, ngFor, ngIf, ngForOf, along with its
-         * absolute span.
-         */
-        parseDirectiveKeywordBindings(key) {
-            const bindings = [];
-            this.consumeOptionalCharacter($COLON); // trackBy: trackByFunction
-            const value = this.getDirectiveBoundTarget();
-            let spanEnd = this.currentAbsoluteOffset;
-            // The binding could optionally be followed by "as". For example,
-            // *ngIf="cond | pipe as x". In this case, the key in the "as" binding
-            // is "x" and the value is the template key itself ("ngIf"). Note that the
-            // 'key' in the current context now becomes the "value" in the next binding.
-            const asBinding = this.parseAsBinding(key);
-            if (!asBinding) {
-                this.consumeStatementTerminator();
-                spanEnd = this.currentAbsoluteOffset;
-            }
-            const sourceSpan = new AbsoluteSourceSpan$1(key.span.start, spanEnd);
-            bindings.push(new ExpressionBinding(sourceSpan, key, value));
-            if (asBinding) {
-                bindings.push(asBinding);
-            }
-            return bindings;
-        }
-        /**
-         * Return the expression AST for the bound target of a directive keyword
-         * binding. For example,
-         * ```
-         *   *ngIf="condition | pipe"
-         *          ^^^^^^^^^^^^^^^^ bound target for "ngIf"
-         *   *ngFor="let item of items"
-         *                       ^^^^^ bound target for "ngForOf"
-         * ```
-         */
-        getDirectiveBoundTarget() {
-            if (this.next === EOF || this.peekKeywordAs() || this.peekKeywordLet()) {
-                return null;
-            }
-            const ast = this.parsePipe(); // example: "condition | async"
-            const { start, end } = ast.span;
-            const value = this.input.substring(start, end);
-            return new ASTWithSource(ast, value, this.location, this.absoluteOffset + start, this.errors);
-        }
-        /**
-         * Return the binding for a variable declared using `as`. Note that the order
-         * of the key-value pair in this declaration is reversed. For example,
-         * ```
-         *   *ngFor="let item of items; index as i"
-         *                              ^^^^^    ^
-         *                              value    key
-         * ```
-         *
-         * @param value name of the value in the declaration, "ngIf" in the example
-         * above, along with its absolute span.
-         */
-        parseAsBinding(value) {
-            if (!this.peekKeywordAs()) {
-                return null;
-            }
-            this.advance(); // consume the 'as' keyword
-            const key = this.expectTemplateBindingKey();
-            this.consumeStatementTerminator();
-            const sourceSpan = new AbsoluteSourceSpan$1(value.span.start, this.currentAbsoluteOffset);
-            return new VariableBinding(sourceSpan, key, value);
-        }
-        /**
-         * Return the binding for a variable declared using `let`. For example,
-         * ```
-         *   *ngFor="let item of items; let i=index;"
-         *           ^^^^^^^^           ^^^^^^^^^^^
-         * ```
-         * In the first binding, `item` is bound to `NgForOfContext.$implicit`.
-         * In the second binding, `i` is bound to `NgForOfContext.index`.
-         */
-        parseLetBinding() {
-            if (!this.peekKeywordLet()) {
-                return null;
-            }
-            const spanStart = this.currentAbsoluteOffset;
-            this.advance(); // consume the 'let' keyword
-            const key = this.expectTemplateBindingKey();
-            let value = null;
-            if (this.consumeOptionalOperator('=')) {
-                value = this.expectTemplateBindingKey();
-            }
-            this.consumeStatementTerminator();
-            const sourceSpan = new AbsoluteSourceSpan$1(spanStart, this.currentAbsoluteOffset);
-            return new VariableBinding(sourceSpan, key, value);
-        }
-        /**
-         * Consume the optional statement terminator: semicolon or comma.
-         */
-        consumeStatementTerminator() {
-            this.consumeOptionalCharacter($SEMICOLON) || this.consumeOptionalCharacter($COMMA);
-        }
-        /**
-         * Records an error and skips over the token stream until reaching a recoverable point. See
-         * `this.skip` for more details on token skipping.
-         */
-        error(message, index = null) {
-            this.errors.push(new ParserError(message, this.input, this.locationText(index), this.location));
-            this.skip();
-        }
-        locationText(index = null) {
-            if (index == null)
-                index = this.index;
-            return (index < this.tokens.length) ? `at column ${this.tokens[index].index + 1} in` :
-                `at the end of the expression`;
-        }
-        /**
-         * Records an error for an unexpected private identifier being discovered.
-         * @param token Token representing a private identifier.
-         * @param extraMessage Optional additional message being appended to the error.
-         */
-        _reportErrorForPrivateIdentifier(token, extraMessage) {
-            let errorMessage = `Private identifiers are not supported. Unexpected private identifier: ${token}`;
-            if (extraMessage !== null) {
-                errorMessage += `, ${extraMessage}`;
-            }
-            this.error(errorMessage);
-        }
-        /**
-         * Error recovery should skip tokens until it encounters a recovery point.
-         *
-         * The following are treated as unconditional recovery points:
-         *   - end of input
-         *   - ';' (parseChain() is always the root production, and it expects a ';')
-         *   - '|' (since pipes may be chained and each pipe expression may be treated independently)
-         *
-         * The following are conditional recovery points:
-         *   - ')', '}', ']' if one of calling productions is expecting one of these symbols
-         *     - This allows skip() to recover from errors such as '(a.) + 1' allowing more of the AST to
-         *       be retained (it doesn't skip any tokens as the ')' is retained because of the '(' begins
-         *       an '(' <expr> ')' production).
-         *       The recovery points of grouping symbols must be conditional as they must be skipped if
-         *       none of the calling productions are not expecting the closing token else we will never
-         *       make progress in the case of an extraneous group closing symbol (such as a stray ')').
-         *       That is, we skip a closing symbol if we are not in a grouping production.
-         *   - '=' in a `Writable` context
-         *     - In this context, we are able to recover after seeing the `=` operator, which
-         *       signals the presence of an independent rvalue expression following the `=` operator.
-         *
-         * If a production expects one of these token it increments the corresponding nesting count,
-         * and then decrements it just prior to checking if the token is in the input.
-         */
-        skip() {
-            let n = this.next;
-            while (this.index < this.tokens.length && !n.isCharacter($SEMICOLON) &&
-                !n.isOperator('|') && (this.rparensExpected <= 0 || !n.isCharacter($RPAREN)) &&
-                (this.rbracesExpected <= 0 || !n.isCharacter($RBRACE)) &&
-                (this.rbracketsExpected <= 0 || !n.isCharacter($RBRACKET)) &&
-                (!(this.context & ParseContextFlags.Writable) || !n.isOperator('='))) {
-                if (this.next.isError()) {
-                    this.errors.push(new ParserError(this.next.toString(), this.input, this.locationText(), this.location));
-                }
-                this.advance();
-                n = this.next;
-            }
-        }
-    }
-    class SimpleExpressionChecker {
-        constructor() {
-            this.errors = [];
-        }
-        visitImplicitReceiver(ast, context) { }
-        visitThisReceiver(ast, context) { }
-        visitInterpolation(ast, context) { }
-        visitLiteralPrimitive(ast, context) { }
-        visitPropertyRead(ast, context) { }
-        visitPropertyWrite(ast, context) { }
-        visitSafePropertyRead(ast, context) { }
-        visitCall(ast, context) { }
-        visitLiteralArray(ast, context) {
-            this.visitAll(ast.expressions, context);
-        }
-        visitLiteralMap(ast, context) {
-            this.visitAll(ast.values, context);
-        }
-        visitUnary(ast, context) { }
-        visitBinary(ast, context) { }
-        visitPrefixNot(ast, context) { }
-        visitNonNullAssert(ast, context) { }
-        visitConditional(ast, context) { }
-        visitPipe(ast, context) {
-            this.errors.push('pipes');
-        }
-        visitKeyedRead(ast, context) { }
-        visitKeyedWrite(ast, context) { }
-        visitAll(asts, context) {
-            return asts.map(node => node.visit(this, context));
-        }
-        visitChain(ast, context) { }
-        visitQuote(ast, context) { }
-        visitSafeKeyedRead(ast, context) { }
-    }
-    /**
-     * This class implements SimpleExpressionChecker used in View Engine and performs more strict checks
-     * to make sure host bindings do not contain pipes. In View Engine, having pipes in host bindings is
-     * not supported as well, but in some cases (like `!(value | async)`) the error is not triggered at
-     * compile time. In order to preserve View Engine behavior, more strict checks are introduced for
-     * Ivy mode only.
-     */
-    class IvySimpleExpressionChecker extends RecursiveAstVisitor {
-        constructor() {
-            super(...arguments);
-            this.errors = [];
-        }
-        visitPipe() {
-            this.errors.push('pipes');
-        }
-    }
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    class HtmlParser extends Parser$1 {
-        constructor() {
-            super(getHtmlTagDefinition);
-        }
-        parse(source, url, options) {
-            return super.parse(source, url, options);
-        }
     }
 
     /**
@@ -15719,6 +14984,528 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         propName = propName.toLowerCase();
         return TRUSTED_TYPES_SINKS.has(tagName + '|' + propName) ||
             TRUSTED_TYPES_SINKS.has('*|' + propName);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const PROPERTY_PARTS_SEPARATOR = '.';
+    const ATTRIBUTE_PREFIX = 'attr';
+    const CLASS_PREFIX = 'class';
+    const STYLE_PREFIX = 'style';
+    const TEMPLATE_ATTR_PREFIX$1 = '*';
+    const ANIMATE_PROP_PREFIX = 'animate-';
+    /**
+     * Parses bindings in templates and in the directive host area.
+     */
+    class BindingParser {
+        constructor(_exprParser, _interpolationConfig, _schemaRegistry, errors) {
+            this._exprParser = _exprParser;
+            this._interpolationConfig = _interpolationConfig;
+            this._schemaRegistry = _schemaRegistry;
+            this.errors = errors;
+        }
+        get interpolationConfig() {
+            return this._interpolationConfig;
+        }
+        createBoundHostProperties(properties, sourceSpan) {
+            const boundProps = [];
+            for (const propName of Object.keys(properties)) {
+                const expression = properties[propName];
+                if (typeof expression === 'string') {
+                    this.parsePropertyBinding(propName, expression, true, sourceSpan, sourceSpan.start.offset, undefined, [], 
+                    // Use the `sourceSpan` for  `keySpan`. This isn't really accurate, but neither is the
+                    // sourceSpan, as it represents the sourceSpan of the host itself rather than the
+                    // source of the host binding (which doesn't exist in the template). Regardless,
+                    // neither of these values are used in Ivy but are only here to satisfy the function
+                    // signature. This should likely be refactored in the future so that `sourceSpan`
+                    // isn't being used inaccurately.
+                    boundProps, sourceSpan);
+                }
+                else {
+                    this._reportError(`Value of the host property binding "${propName}" needs to be a string representing an expression but got "${expression}" (${typeof expression})`, sourceSpan);
+                }
+            }
+            return boundProps;
+        }
+        createDirectiveHostPropertyAsts(hostProperties, elementSelector, sourceSpan) {
+            const boundProps = this.createBoundHostProperties(hostProperties, sourceSpan);
+            return boundProps &&
+                boundProps.map((prop) => this.createBoundElementProperty(elementSelector, prop));
+        }
+        createDirectiveHostEventAsts(hostListeners, sourceSpan) {
+            const targetEvents = [];
+            for (const propName of Object.keys(hostListeners)) {
+                const expression = hostListeners[propName];
+                if (typeof expression === 'string') {
+                    // Use the `sourceSpan` for  `keySpan` and `handlerSpan`. This isn't really accurate, but
+                    // neither is the `sourceSpan`, as it represents the `sourceSpan` of the host itself
+                    // rather than the source of the host binding (which doesn't exist in the template).
+                    // Regardless, neither of these values are used in Ivy but are only here to satisfy the
+                    // function signature. This should likely be refactored in the future so that `sourceSpan`
+                    // isn't being used inaccurately.
+                    this.parseEvent(propName, expression, sourceSpan, sourceSpan, [], targetEvents, sourceSpan);
+                }
+                else {
+                    this._reportError(`Value of the host listener "${propName}" needs to be a string representing an expression but got "${expression}" (${typeof expression})`, sourceSpan);
+                }
+            }
+            return targetEvents;
+        }
+        parseInterpolation(value, sourceSpan) {
+            const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.fullStart.offset;
+            try {
+                const ast = this._exprParser.parseInterpolation(value, sourceInfo, absoluteOffset, this._interpolationConfig);
+                if (ast)
+                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
+                return ast;
+            }
+            catch (e) {
+                this._reportError(`${e}`, sourceSpan);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
+            }
+        }
+        /**
+         * Similar to `parseInterpolation`, but treats the provided string as a single expression
+         * element that would normally appear within the interpolation prefix and suffix (`{{` and `}}`).
+         * This is used for parsing the switch expression in ICUs.
+         */
+        parseInterpolationExpression(expression, sourceSpan) {
+            const sourceInfo = sourceSpan.start.toString();
+            const absoluteOffset = sourceSpan.start.offset;
+            try {
+                const ast = this._exprParser.parseInterpolationExpression(expression, sourceInfo, absoluteOffset);
+                if (ast)
+                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
+                return ast;
+            }
+            catch (e) {
+                this._reportError(`${e}`, sourceSpan);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
+            }
+        }
+        /**
+         * Parses the bindings in a microsyntax expression, and converts them to
+         * `ParsedProperty` or `ParsedVariable`.
+         *
+         * @param tplKey template binding name
+         * @param tplValue template binding value
+         * @param sourceSpan span of template binding relative to entire the template
+         * @param absoluteValueOffset start of the tplValue relative to the entire template
+         * @param targetMatchableAttrs potential attributes to match in the template
+         * @param targetProps target property bindings in the template
+         * @param targetVars target variables in the template
+         */
+        parseInlineTemplateBinding(tplKey, tplValue, sourceSpan, absoluteValueOffset, targetMatchableAttrs, targetProps, targetVars, isIvyAst) {
+            const absoluteKeyOffset = sourceSpan.start.offset + TEMPLATE_ATTR_PREFIX$1.length;
+            const bindings = this._parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteKeyOffset, absoluteValueOffset);
+            for (const binding of bindings) {
+                // sourceSpan is for the entire HTML attribute. bindingSpan is for a particular
+                // binding within the microsyntax expression so it's more narrow than sourceSpan.
+                const bindingSpan = moveParseSourceSpan(sourceSpan, binding.sourceSpan);
+                const key = binding.key.source;
+                const keySpan = moveParseSourceSpan(sourceSpan, binding.key.span);
+                if (binding instanceof VariableBinding) {
+                    const value = binding.value ? binding.value.source : '$implicit';
+                    const valueSpan = binding.value ? moveParseSourceSpan(sourceSpan, binding.value.span) : undefined;
+                    targetVars.push(new ParsedVariable(key, value, bindingSpan, keySpan, valueSpan));
+                }
+                else if (binding.value) {
+                    const srcSpan = isIvyAst ? bindingSpan : sourceSpan;
+                    const valueSpan = moveParseSourceSpan(sourceSpan, binding.value.ast.sourceSpan);
+                    this._parsePropertyAst(key, binding.value, srcSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
+                }
+                else {
+                    targetMatchableAttrs.push([key, '' /* value */]);
+                    // Since this is a literal attribute with no RHS, source span should be
+                    // just the key span.
+                    this.parseLiteralAttr(key, null /* value */, keySpan, absoluteValueOffset, undefined /* valueSpan */, targetMatchableAttrs, targetProps, keySpan);
+                }
+            }
+        }
+        /**
+         * Parses the bindings in a microsyntax expression, e.g.
+         * ```
+         *    <tag *tplKey="let value1 = prop; let value2 = localVar">
+         * ```
+         *
+         * @param tplKey template binding name
+         * @param tplValue template binding value
+         * @param sourceSpan span of template binding relative to entire the template
+         * @param absoluteKeyOffset start of the `tplKey`
+         * @param absoluteValueOffset start of the `tplValue`
+         */
+        _parseTemplateBindings(tplKey, tplValue, sourceSpan, absoluteKeyOffset, absoluteValueOffset) {
+            const sourceInfo = sourceSpan.start.toString();
+            try {
+                const bindingsResult = this._exprParser.parseTemplateBindings(tplKey, tplValue, sourceInfo, absoluteKeyOffset, absoluteValueOffset);
+                this._reportExpressionParserErrors(bindingsResult.errors, sourceSpan);
+                bindingsResult.warnings.forEach((warning) => {
+                    this._reportError(warning, sourceSpan, ParseErrorLevel.WARNING);
+                });
+                return bindingsResult.templateBindings;
+            }
+            catch (e) {
+                this._reportError(`${e}`, sourceSpan);
+                return [];
+            }
+        }
+        parseLiteralAttr(name, value, sourceSpan, absoluteOffset, valueSpan, targetMatchableAttrs, 
+        // TODO(atscott): keySpan is only optional here so VE template parser implementation does not
+        // have to change This should be required when VE is removed.
+        targetProps, keySpan) {
+            if (isAnimationLabel(name)) {
+                name = name.substring(1);
+                if (keySpan !== undefined) {
+                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan$1(keySpan.start.offset + 1, keySpan.end.offset));
+                }
+                if (value) {
+                    this._reportError(`Assigning animation triggers via @prop="exp" attributes with an expression is invalid.` +
+                        ` Use property bindings (e.g. [@prop]="exp") or use an attribute without a value (e.g. @prop) instead.`, sourceSpan, ParseErrorLevel.ERROR);
+                }
+                this._parseAnimation(name, value, sourceSpan, absoluteOffset, keySpan, valueSpan, targetMatchableAttrs, targetProps);
+            }
+            else {
+                targetProps.push(new ParsedProperty(name, this._exprParser.wrapLiteralPrimitive(value, '', absoluteOffset), ParsedPropertyType.LITERAL_ATTR, sourceSpan, keySpan, valueSpan));
+            }
+        }
+        parsePropertyBinding(name, expression, isHost, sourceSpan, absoluteOffset, valueSpan, 
+        // TODO(atscott): keySpan is only optional here so VE template parser implementation does not
+        // have to change This should be required when VE is removed.
+        targetMatchableAttrs, targetProps, keySpan) {
+            if (name.length === 0) {
+                this._reportError(`Property name is missing in binding`, sourceSpan);
+            }
+            let isAnimationProp = false;
+            if (name.startsWith(ANIMATE_PROP_PREFIX)) {
+                isAnimationProp = true;
+                name = name.substring(ANIMATE_PROP_PREFIX.length);
+                if (keySpan !== undefined) {
+                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan$1(keySpan.start.offset + ANIMATE_PROP_PREFIX.length, keySpan.end.offset));
+                }
+            }
+            else if (isAnimationLabel(name)) {
+                isAnimationProp = true;
+                name = name.substring(1);
+                if (keySpan !== undefined) {
+                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan$1(keySpan.start.offset + 1, keySpan.end.offset));
+                }
+            }
+            if (isAnimationProp) {
+                this._parseAnimation(name, expression, sourceSpan, absoluteOffset, keySpan, valueSpan, targetMatchableAttrs, targetProps);
+            }
+            else {
+                this._parsePropertyAst(name, this._parseBinding(expression, isHost, valueSpan || sourceSpan, absoluteOffset), sourceSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
+            }
+        }
+        parsePropertyInterpolation(name, value, sourceSpan, valueSpan, targetMatchableAttrs, 
+        // TODO(atscott): keySpan is only optional here so VE template parser implementation does not
+        // have to change This should be required when VE is removed.
+        targetProps, keySpan) {
+            const expr = this.parseInterpolation(value, valueSpan || sourceSpan);
+            if (expr) {
+                this._parsePropertyAst(name, expr, sourceSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps);
+                return true;
+            }
+            return false;
+        }
+        _parsePropertyAst(name, ast, sourceSpan, keySpan, valueSpan, targetMatchableAttrs, targetProps) {
+            targetMatchableAttrs.push([name, ast.source]);
+            targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.DEFAULT, sourceSpan, keySpan, valueSpan));
+        }
+        _parseAnimation(name, expression, sourceSpan, absoluteOffset, keySpan, valueSpan, targetMatchableAttrs, targetProps) {
+            if (name.length === 0) {
+                this._reportError('Animation trigger is missing', sourceSpan);
+            }
+            // This will occur when a @trigger is not paired with an expression.
+            // For animations it is valid to not have an expression since */void
+            // states will be applied by angular when the element is attached/detached
+            const ast = this._parseBinding(expression || 'undefined', false, valueSpan || sourceSpan, absoluteOffset);
+            targetMatchableAttrs.push([name, ast.source]);
+            targetProps.push(new ParsedProperty(name, ast, ParsedPropertyType.ANIMATION, sourceSpan, keySpan, valueSpan));
+        }
+        _parseBinding(value, isHostBinding, sourceSpan, absoluteOffset) {
+            const sourceInfo = (sourceSpan && sourceSpan.start || '(unknown)').toString();
+            try {
+                const ast = isHostBinding ?
+                    this._exprParser.parseSimpleBinding(value, sourceInfo, absoluteOffset, this._interpolationConfig) :
+                    this._exprParser.parseBinding(value, sourceInfo, absoluteOffset, this._interpolationConfig);
+                if (ast)
+                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
+                return ast;
+            }
+            catch (e) {
+                this._reportError(`${e}`, sourceSpan);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
+            }
+        }
+        createBoundElementProperty(elementSelector, boundProp, skipValidation = false, mapPropertyName = true) {
+            if (boundProp.isAnimation) {
+                return new BoundElementProperty(boundProp.name, 4 /* Animation */, SecurityContext.NONE, boundProp.expression, null, boundProp.sourceSpan, boundProp.keySpan, boundProp.valueSpan);
+            }
+            let unit = null;
+            let bindingType = undefined;
+            let boundPropertyName = null;
+            const parts = boundProp.name.split(PROPERTY_PARTS_SEPARATOR);
+            let securityContexts = undefined;
+            // Check for special cases (prefix style, attr, class)
+            if (parts.length > 1) {
+                if (parts[0] == ATTRIBUTE_PREFIX) {
+                    boundPropertyName = parts.slice(1).join(PROPERTY_PARTS_SEPARATOR);
+                    if (!skipValidation) {
+                        this._validatePropertyOrAttributeName(boundPropertyName, boundProp.sourceSpan, true);
+                    }
+                    securityContexts = calcPossibleSecurityContexts(this._schemaRegistry, elementSelector, boundPropertyName, true);
+                    const nsSeparatorIdx = boundPropertyName.indexOf(':');
+                    if (nsSeparatorIdx > -1) {
+                        const ns = boundPropertyName.substring(0, nsSeparatorIdx);
+                        const name = boundPropertyName.substring(nsSeparatorIdx + 1);
+                        boundPropertyName = mergeNsAndName(ns, name);
+                    }
+                    bindingType = 1 /* Attribute */;
+                }
+                else if (parts[0] == CLASS_PREFIX) {
+                    boundPropertyName = parts[1];
+                    bindingType = 2 /* Class */;
+                    securityContexts = [SecurityContext.NONE];
+                }
+                else if (parts[0] == STYLE_PREFIX) {
+                    unit = parts.length > 2 ? parts[2] : null;
+                    boundPropertyName = parts[1];
+                    bindingType = 3 /* Style */;
+                    securityContexts = [SecurityContext.STYLE];
+                }
+            }
+            // If not a special case, use the full property name
+            if (boundPropertyName === null) {
+                const mappedPropName = this._schemaRegistry.getMappedPropName(boundProp.name);
+                boundPropertyName = mapPropertyName ? mappedPropName : boundProp.name;
+                securityContexts = calcPossibleSecurityContexts(this._schemaRegistry, elementSelector, mappedPropName, false);
+                bindingType = 0 /* Property */;
+                if (!skipValidation) {
+                    this._validatePropertyOrAttributeName(mappedPropName, boundProp.sourceSpan, false);
+                }
+            }
+            return new BoundElementProperty(boundPropertyName, bindingType, securityContexts[0], boundProp.expression, unit, boundProp.sourceSpan, boundProp.keySpan, boundProp.valueSpan);
+        }
+        // TODO: keySpan should be required but was made optional to avoid changing VE parser.
+        parseEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan) {
+            if (name.length === 0) {
+                this._reportError(`Event name is missing in binding`, sourceSpan);
+            }
+            if (isAnimationLabel(name)) {
+                name = name.substr(1);
+                if (keySpan !== undefined) {
+                    keySpan = moveParseSourceSpan(keySpan, new AbsoluteSourceSpan$1(keySpan.start.offset + 1, keySpan.end.offset));
+                }
+                this._parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents, keySpan);
+            }
+            else {
+                this._parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan);
+            }
+        }
+        calcPossibleSecurityContexts(selector, propName, isAttribute) {
+            const prop = this._schemaRegistry.getMappedPropName(propName);
+            return calcPossibleSecurityContexts(this._schemaRegistry, selector, prop, isAttribute);
+        }
+        _parseAnimationEvent(name, expression, sourceSpan, handlerSpan, targetEvents, keySpan) {
+            const matches = splitAtPeriod(name, [name, '']);
+            const eventName = matches[0];
+            const phase = matches[1].toLowerCase();
+            const ast = this._parseAction(expression, handlerSpan);
+            targetEvents.push(new ParsedEvent(eventName, phase, 1 /* Animation */, ast, sourceSpan, handlerSpan, keySpan));
+            if (eventName.length === 0) {
+                this._reportError(`Animation event name is missing in binding`, sourceSpan);
+            }
+            if (phase) {
+                if (phase !== 'start' && phase !== 'done') {
+                    this._reportError(`The provided animation output phase value "${phase}" for "@${eventName}" is not supported (use start or done)`, sourceSpan);
+                }
+            }
+            else {
+                this._reportError(`The animation trigger output event (@${eventName}) is missing its phase value name (start or done are currently supported)`, sourceSpan);
+            }
+        }
+        _parseRegularEvent(name, expression, sourceSpan, handlerSpan, targetMatchableAttrs, targetEvents, keySpan) {
+            // long format: 'target: eventName'
+            const [target, eventName] = splitAtColon(name, [null, name]);
+            const ast = this._parseAction(expression, handlerSpan);
+            targetMatchableAttrs.push([name, ast.source]);
+            targetEvents.push(new ParsedEvent(eventName, target, 0 /* Regular */, ast, sourceSpan, handlerSpan, keySpan));
+            // Don't detect directives for event names for now,
+            // so don't add the event name to the matchableAttrs
+        }
+        _parseAction(value, sourceSpan) {
+            const sourceInfo = (sourceSpan && sourceSpan.start || '(unknown').toString();
+            const absoluteOffset = (sourceSpan && sourceSpan.start) ? sourceSpan.start.offset : 0;
+            try {
+                const ast = this._exprParser.parseAction(value, sourceInfo, absoluteOffset, this._interpolationConfig);
+                if (ast) {
+                    this._reportExpressionParserErrors(ast.errors, sourceSpan);
+                }
+                if (!ast || ast.ast instanceof EmptyExpr) {
+                    this._reportError(`Empty expressions are not allowed`, sourceSpan);
+                    return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
+                }
+                return ast;
+            }
+            catch (e) {
+                this._reportError(`${e}`, sourceSpan);
+                return this._exprParser.wrapLiteralPrimitive('ERROR', sourceInfo, absoluteOffset);
+            }
+        }
+        _reportError(message, sourceSpan, level = ParseErrorLevel.ERROR) {
+            this.errors.push(new ParseError(sourceSpan, message, level));
+        }
+        _reportExpressionParserErrors(errors, sourceSpan) {
+            for (const error of errors) {
+                this._reportError(error.message, sourceSpan);
+            }
+        }
+        /**
+         * @param propName the name of the property / attribute
+         * @param sourceSpan
+         * @param isAttr true when binding to an attribute
+         */
+        _validatePropertyOrAttributeName(propName, sourceSpan, isAttr) {
+            const report = isAttr ? this._schemaRegistry.validateAttribute(propName) :
+                this._schemaRegistry.validateProperty(propName);
+            if (report.error) {
+                this._reportError(report.msg, sourceSpan, ParseErrorLevel.ERROR);
+            }
+        }
+    }
+    function isAnimationLabel(name) {
+        return name[0] == '@';
+    }
+    function calcPossibleSecurityContexts(registry, selector, propName, isAttribute) {
+        const ctxs = [];
+        CssSelector.parse(selector).forEach((selector) => {
+            const elementNames = selector.element ? [selector.element] : registry.allKnownElementNames();
+            const notElementNames = new Set(selector.notSelectors.filter(selector => selector.isElementSelector())
+                .map((selector) => selector.element));
+            const possibleElementNames = elementNames.filter(elementName => !notElementNames.has(elementName));
+            ctxs.push(...possibleElementNames.map(elementName => registry.securityContext(elementName, propName, isAttribute)));
+        });
+        return ctxs.length === 0 ? [SecurityContext.NONE] : Array.from(new Set(ctxs)).sort();
+    }
+    /**
+     * Compute a new ParseSourceSpan based off an original `sourceSpan` by using
+     * absolute offsets from the specified `absoluteSpan`.
+     *
+     * @param sourceSpan original source span
+     * @param absoluteSpan absolute source span to move to
+     */
+    function moveParseSourceSpan(sourceSpan, absoluteSpan) {
+        // The difference of two absolute offsets provide the relative offset
+        const startDiff = absoluteSpan.start - sourceSpan.start.offset;
+        const endDiff = absoluteSpan.end - sourceSpan.end.offset;
+        return new ParseSourceSpan(sourceSpan.start.moveBy(startDiff), sourceSpan.end.moveBy(endDiff), sourceSpan.fullStart.moveBy(startDiff), sourceSpan.details);
+    }
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    // Some of the code comes from WebComponents.JS
+    // https://github.com/webcomponents/webcomponentsjs/blob/master/src/HTMLImports/path.js
+    function isStyleUrlResolvable(url) {
+        if (url == null || url.length === 0 || url[0] == '/')
+            return false;
+        const schemeMatch = url.match(URL_WITH_SCHEMA_REGEXP);
+        return schemeMatch === null || schemeMatch[1] == 'package' || schemeMatch[1] == 'asset';
+    }
+    const URL_WITH_SCHEMA_REGEXP = /^([^:/?#]+):/;
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    const NG_CONTENT_SELECT_ATTR$1 = 'select';
+    const LINK_ELEMENT = 'link';
+    const LINK_STYLE_REL_ATTR = 'rel';
+    const LINK_STYLE_HREF_ATTR = 'href';
+    const LINK_STYLE_REL_VALUE = 'stylesheet';
+    const STYLE_ELEMENT = 'style';
+    const SCRIPT_ELEMENT = 'script';
+    const NG_NON_BINDABLE_ATTR = 'ngNonBindable';
+    const NG_PROJECT_AS = 'ngProjectAs';
+    function preparseElement(ast) {
+        let selectAttr = null;
+        let hrefAttr = null;
+        let relAttr = null;
+        let nonBindable = false;
+        let projectAs = '';
+        ast.attrs.forEach(attr => {
+            const lcAttrName = attr.name.toLowerCase();
+            if (lcAttrName == NG_CONTENT_SELECT_ATTR$1) {
+                selectAttr = attr.value;
+            }
+            else if (lcAttrName == LINK_STYLE_HREF_ATTR) {
+                hrefAttr = attr.value;
+            }
+            else if (lcAttrName == LINK_STYLE_REL_ATTR) {
+                relAttr = attr.value;
+            }
+            else if (attr.name == NG_NON_BINDABLE_ATTR) {
+                nonBindable = true;
+            }
+            else if (attr.name == NG_PROJECT_AS) {
+                if (attr.value.length > 0) {
+                    projectAs = attr.value;
+                }
+            }
+        });
+        selectAttr = normalizeNgContentSelect(selectAttr);
+        const nodeName = ast.name.toLowerCase();
+        let type = PreparsedElementType.OTHER;
+        if (isNgContent(nodeName)) {
+            type = PreparsedElementType.NG_CONTENT;
+        }
+        else if (nodeName == STYLE_ELEMENT) {
+            type = PreparsedElementType.STYLE;
+        }
+        else if (nodeName == SCRIPT_ELEMENT) {
+            type = PreparsedElementType.SCRIPT;
+        }
+        else if (nodeName == LINK_ELEMENT && relAttr == LINK_STYLE_REL_VALUE) {
+            type = PreparsedElementType.STYLESHEET;
+        }
+        return new PreparsedElement(type, selectAttr, hrefAttr, nonBindable, projectAs);
+    }
+    var PreparsedElementType;
+    (function (PreparsedElementType) {
+        PreparsedElementType[PreparsedElementType["NG_CONTENT"] = 0] = "NG_CONTENT";
+        PreparsedElementType[PreparsedElementType["STYLE"] = 1] = "STYLE";
+        PreparsedElementType[PreparsedElementType["STYLESHEET"] = 2] = "STYLESHEET";
+        PreparsedElementType[PreparsedElementType["SCRIPT"] = 3] = "SCRIPT";
+        PreparsedElementType[PreparsedElementType["OTHER"] = 4] = "OTHER";
+    })(PreparsedElementType || (PreparsedElementType = {}));
+    class PreparsedElement {
+        constructor(type, selectAttr, hrefAttr, nonBindable, projectAs) {
+            this.type = type;
+            this.selectAttr = selectAttr;
+            this.hrefAttr = hrefAttr;
+            this.nonBindable = nonBindable;
+            this.projectAs = projectAs;
+        }
+    }
+    function normalizeNgContentSelect(selectAttr) {
+        if (selectAttr === null || selectAttr.length === 0) {
+            return '*';
+        }
+        return selectAttr;
     }
 
     /**
@@ -16502,7 +16289,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    const _expParser = new Parser(new Lexer());
+    const _expParser = new Parser$1(new Lexer());
     /**
      * Returns a function converting html nodes to an i18n Message given an interpolationConfig
      */
@@ -18799,7 +18586,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Construct a `BindingParser` with a default configuration.
      */
     function makeBindingParser(interpolationConfig = DEFAULT_INTERPOLATION_CONFIG) {
-        return new BindingParser(new IvyParser(new Lexer()), interpolationConfig, elementRegistry, null, []);
+        return new BindingParser(new IvyParser(new Lexer()), interpolationConfig, elementRegistry, []);
     }
     function resolveSanitizationFn(context, isAttribute) {
         switch (context) {
@@ -18897,6 +18684,12 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
             .notIdentical(literal$1('undefined', STRING_TYPE))
             .and(variable(NG_I18N_CLOSURE_MODE));
     }
+    function flatten(list) {
+        return list.reduce((flat, item) => {
+            const flatItem = Array.isArray(item) ? flatten(item) : item;
+            return flat.concat(flatItem);
+        }, []);
+    }
 
     /**
      * @license
@@ -18908,6 +18701,9 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     // This regex matches any binding names that contain the "attr." prefix, e.g. "attr.required"
     // If there is a match, the first matching group will contain the attribute name to bind.
     const ATTR_REGEX = /attr\.([^\]]+)/;
+    const COMPONENT_VARIABLE = '%COMP%';
+    const HOST_ATTR = `_nghost-${COMPONENT_VARIABLE}`;
+    const CONTENT_ATTR = `_ngcontent-${COMPONENT_VARIABLE}`;
     function baseDirectiveFields(meta, constantPool, bindingParser) {
         const definitionMap = new DefinitionMap();
         const selectors = parseSelectorToR3Selector(meta.selector);
@@ -19232,15 +19028,14 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         const createStatements = [];
         const updateStatements = [];
         const hostBindingSourceSpan = typeSourceSpan;
-        const directiveSummary = metadataAsSummary(hostBindingsMetadata);
         // Calculate host event bindings
-        const eventBindings = bindingParser.createDirectiveHostEventAsts(directiveSummary, hostBindingSourceSpan);
+        const eventBindings = bindingParser.createDirectiveHostEventAsts(hostBindingsMetadata.listeners, hostBindingSourceSpan);
         if (eventBindings && eventBindings.length) {
             const listeners = createHostListeners(eventBindings, name);
             createStatements.push(...listeners);
         }
         // Calculate the host property bindings
-        const bindings = bindingParser.createBoundHostProperties(directiveSummary, hostBindingSourceSpan);
+        const bindings = bindingParser.createBoundHostProperties(hostBindingsMetadata.properties, hostBindingSourceSpan);
         const allOtherBindings = [];
         // We need to calculate the total amount of binding slots required by
         // all the instructions together before any value conversions happen.
@@ -19420,17 +19215,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         }
         return instructions;
     }
-    function metadataAsSummary(meta) {
-        // clang-format off
-        return {
-            // This is used by the BindingParser, which only deals with listeners and properties. There's no
-            // need to pass attributes to it.
-            hostAttributes: {},
-            hostListeners: meta.listeners,
-            hostProperties: meta.properties,
-        };
-        // clang-format on
-    }
     const HOST_REG_EXP = /^(?:\[([^\]]+)\])|(?:\(([^\)]+)\))$/;
     function parseHostBindings(host) {
         const attributes = {};
@@ -19494,12 +19278,11 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * @returns array of errors associated with a given set of host bindings.
      */
     function verifyHostBindings(bindings, sourceSpan) {
-        const summary = metadataAsSummary(bindings);
         // TODO: abstract out host bindings verification logic and use it instead of
         // creating events and properties ASTs to detect errors (FW-996)
         const bindingParser = makeBindingParser();
-        bindingParser.createDirectiveHostEventAsts(summary, sourceSpan);
-        bindingParser.createBoundHostProperties(summary, sourceSpan);
+        bindingParser.createDirectiveHostEventAsts(bindings.listeners, sourceSpan);
+        bindingParser.createBoundHostProperties(bindings.properties, sourceSpan);
         return bindingParser.errors;
     }
     function compileStyles(styles, selector, hostSelector) {
@@ -20016,7 +19799,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.3+7.sha-e8e21ac.with-local-changes');
+    new Version('13.0.3+11.sha-d06e546.with-local-changes');
 
     /**
      * @license
@@ -20030,75 +19813,6 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         _VisitorMode[_VisitorMode["Extract"] = 0] = "Extract";
         _VisitorMode[_VisitorMode["Merge"] = 1] = "Merge";
     })(_VisitorMode || (_VisitorMode = {}));
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    var LifecycleHooks;
-    (function (LifecycleHooks) {
-        LifecycleHooks[LifecycleHooks["OnInit"] = 0] = "OnInit";
-        LifecycleHooks[LifecycleHooks["OnDestroy"] = 1] = "OnDestroy";
-        LifecycleHooks[LifecycleHooks["DoCheck"] = 2] = "DoCheck";
-        LifecycleHooks[LifecycleHooks["OnChanges"] = 3] = "OnChanges";
-        LifecycleHooks[LifecycleHooks["AfterContentInit"] = 4] = "AfterContentInit";
-        LifecycleHooks[LifecycleHooks["AfterContentChecked"] = 5] = "AfterContentChecked";
-        LifecycleHooks[LifecycleHooks["AfterViewInit"] = 6] = "AfterViewInit";
-        LifecycleHooks[LifecycleHooks["AfterViewChecked"] = 7] = "AfterViewChecked";
-    })(LifecycleHooks || (LifecycleHooks = {}));
-    [
-        LifecycleHooks.OnInit, LifecycleHooks.OnDestroy, LifecycleHooks.DoCheck, LifecycleHooks.OnChanges,
-        LifecycleHooks.AfterContentInit, LifecycleHooks.AfterContentChecked, LifecycleHooks.AfterViewInit,
-        LifecycleHooks.AfterViewChecked
-    ];
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    variable('_l');
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    variable('_l');
-    variable('_v');
-    variable('_ck');
-    variable('_co');
-    variable('en');
-    variable(`ad`);
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /**
-     * The index of each URI component in the return value of goog.uri.utils.split.
-     * @enum {number}
-     */
-    var _ComponentIndex;
-    (function (_ComponentIndex) {
-        _ComponentIndex[_ComponentIndex["Scheme"] = 1] = "Scheme";
-        _ComponentIndex[_ComponentIndex["UserInfo"] = 2] = "UserInfo";
-        _ComponentIndex[_ComponentIndex["Domain"] = 3] = "Domain";
-        _ComponentIndex[_ComponentIndex["Port"] = 4] = "Port";
-        _ComponentIndex[_ComponentIndex["Path"] = 5] = "Path";
-        _ComponentIndex[_ComponentIndex["QueryData"] = 6] = "QueryData";
-        _ComponentIndex[_ComponentIndex["Fragment"] = 7] = "Fragment";
-    })(_ComponentIndex || (_ComponentIndex = {}));
 
     var FactoryTarget;
     (function (FactoryTarget) {
@@ -20645,7 +20359,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('13.0.3+7.sha-e8e21ac.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.3+11.sha-d06e546.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -20762,7 +20476,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createDirectiveDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('13.0.3+7.sha-e8e21ac.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.3+11.sha-d06e546.with-local-changes'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.internalType);
         // e.g. `selector: 'some-dir'`
@@ -20980,7 +20694,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('13.0.3+7.sha-e8e21ac.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.3+11.sha-d06e546.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -21022,7 +20736,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('13.0.3+7.sha-e8e21ac.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.3+11.sha-d06e546.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // Only generate providedIn property if it has a non-null value
@@ -21080,7 +20794,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('13.0.3+7.sha-e8e21ac.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.3+11.sha-d06e546.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         definitionMap.set('providers', meta.providers);
@@ -21117,7 +20831,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createNgModuleDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('13.0.3+7.sha-e8e21ac.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.3+11.sha-d06e546.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         definitionMap.set('type', meta.internalType);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -21175,7 +20889,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('13.0.3+7.sha-e8e21ac.with-local-changes'));
+        definitionMap.set('version', literal$1('13.0.3+11.sha-d06e546.with-local-changes'));
         definitionMap.set('ngImport', importExpr(Identifiers$1.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.internalType);
@@ -21207,18 +20921,7 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    new Version('13.0.3+7.sha-e8e21ac.with-local-changes');
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    // In TypeScript 2.1 the spread element kind was renamed.
-    ts__default["default"].SyntaxKind.SpreadElement || ts__default["default"].SyntaxKind.SpreadElementExpression;
-    ts__default["default"].createNodeArray();
+    new Version('13.0.3+11.sha-d06e546.with-local-changes');
 
     /**
      * @license
@@ -21238,6 +20941,19 @@ define(['exports', 'typescript/lib/tsserverlibrary', 'os', 'typescript', 'fs', '
         EmitFlags[EmitFlags["Default"] = 19] = "Default";
         EmitFlags[EmitFlags["All"] = 31] = "All";
     })(EmitFlags || (EmitFlags = {}));
+
+    /**
+     * @license
+     * Copyright Google LLC All Rights Reserved.
+     *
+     * Use of this source code is governed by an MIT-style license that can be
+     * found in the LICENSE file at https://angular.io/license
+     */
+    /**
+     * The currently used version of TypeScript, which can be adjusted for testing purposes using
+     * `setTypeScriptVersionForTesting` and `restoreTypeScriptVersionForTesting` below.
+     */
+    ts__default["default"].version;
 
     /**
      * @license
@@ -41058,33 +40774,6 @@ https://v9.angular.io/guide/template-typecheck#template-type-checking`,
      * Use of this source code is governed by an MIT-style license that can be
      * found in the LICENSE file at https://angular.io/license
      */
-    /**
-     * The currently used version of TypeScript, which can be adjusted for testing purposes using
-     * `setTypeScriptVersionForTesting` and `restoreTypeScriptVersionForTesting` below.
-     */
-    ts__default["default"].version;
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
-    /** Error message to show when attempting to build View Engine. */
-`
-This compilation is using the View Engine compiler which is no longer supported by the Angular team
-and is being removed. Please upgrade to the Ivy compiler by switching to \`NgtscProgram\`. See
-https://angular.io/guide/ivy for more information.
-`    .trim().split('\n').join(' ');
-
-    /**
-     * @license
-     * Copyright Google LLC All Rights Reserved.
-     *
-     * Use of this source code is governed by an MIT-style license that can be
-     * found in the LICENSE file at https://angular.io/license
-     */
     function calcProjectFileAndBasePath(project, host = getFileSystem()) {
         const absProject = host.resolve(project);
         const projectIsDir = host.lstat(absProject).isDirectory();
@@ -41799,7 +41488,7 @@ https://angular.io/guide/ivy for more information.
             // same name instead. That way, we can provide go-to-definition for the pre-compiled files which
             // would generally be the desired behavior.
             if (url.endsWith('.css')) {
-                const styleUrl = path__namespace.resolve(fromFile, '..', url);
+                const styleUrl = p__namespace.resolve(fromFile, '..', url);
                 for (const ext of PRE_COMPILED_STYLE_EXTENSIONS) {
                     const precompiledFileUrl = styleUrl.replace(/\.css$/, ext);
                     if (this.fileExists(precompiledFileUrl)) {
@@ -41904,16 +41593,16 @@ https://angular.io/guide/ivy for more information.
             return this.serverHost.getCurrentDirectory();
         }
         extname(path) {
-            return path__namespace.extname(path);
+            return p__namespace.extname(path);
         }
         resolve(...paths) {
-            return path__namespace.resolve(...paths);
+            return p__namespace.resolve(...paths);
         }
         dirname(file) {
-            return path__namespace.dirname(file);
+            return p__namespace.dirname(file);
         }
         join(basePath, ...paths) {
-            return path__namespace.join(basePath, ...paths);
+            return p__namespace.join(basePath, ...paths);
         }
     }
 
