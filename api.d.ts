@@ -24,7 +24,7 @@ export interface PluginConfig {
      */
     forceStrictTemplates?: true;
 }
-export declare type GetTcbResponse = {
+export type GetTcbResponse = {
     /**
      * The filename of the SourceFile this typecheck block belongs to.
      * The filename is entirely opaque and unstable, useful only for debugging
@@ -42,8 +42,8 @@ export declare type GetTcbResponse = {
      */
     selections: ts.TextSpan[];
 };
-export declare type GetComponentLocationsForTemplateResponse = ts.DocumentSpan[];
-export declare type GetTemplateLocationForComponentResponse = ts.DocumentSpan | undefined;
+export type GetComponentLocationsForTemplateResponse = ts.DocumentSpan[];
+export type GetTemplateLocationForComponentResponse = ts.DocumentSpan | undefined;
 /**
  * `NgLanguageService` describes an instance of an Angular language service,
  * whose API surface is a strict superset of TypeScript's language service.
