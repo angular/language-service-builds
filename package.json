@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "15.2.0-next.0+sha-7243ae6",
+  "version": "15.2.0-next.0+sha-489243b",
   "description": "Angular - language services",
   "main": "./index.js",
   "typings": "./index.d.ts",
@@ -13,6 +13,9 @@
     ".": {
       "types": "./index.d.ts",
       "default": "./index.js"
+    },
+    "./package.json": {
+      "default": "./package.json"
     },
     "./api": {
       "types": "./api.d.ts",
