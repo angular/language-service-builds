@@ -31,7 +31,7 @@ var factory = (tsModule) => {
     },
     getExternalFiles(project) {
       var _a, _b;
-      return (_b = (_a = plugin == null ? void 0 : plugin.getExternalFiles) == null ? void 0 : _a.call(plugin, project)) != null ? _b : [];
+      return (_b = (_a = plugin == null ? void 0 : plugin.getExternalFiles) == null ? void 0 : _a.call(plugin, project, 2)) != null ? _b : [];
     },
     onConfigurationChanged(config) {
       var _a;
