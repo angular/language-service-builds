@@ -34,7 +34,7 @@ export interface PluginConfig {
     /**
      * If false, disables parsing of `@let` declarations in the compiler.
      */
-    enableLetSyntax?: boolean;
+    enableLetSyntax?: false;
 }
 export type GetTcbResponse = {
     /**
