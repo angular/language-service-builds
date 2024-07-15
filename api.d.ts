@@ -57,6 +57,13 @@ export type GetTcbResponse = {
 export type GetComponentLocationsForTemplateResponse = ts.DocumentSpan[];
 export type GetTemplateLocationForComponentResponse = ts.DocumentSpan | undefined;
 /**
+ * Function that can be invoked to show progress when computing
+ * refactoring edits.
+ *
+ * Useful for refactorings which take a long time to compute edits for.
+ */
+export type ApplyRefactoringProgressFn = (percentage: number, updateMessage: string) => void;
+/**
  * `NgLanguageService` describes an instance of an Angular language service,
  * whose API surface is a strict superset of TypeScript's language service.
  */
@@ -65,5 +72,6 @@ export interface NgLanguageService extends ts.LanguageService {
     getComponentLocationsForTemplate(fileName: string): GetComponentLocationsForTemplateResponse;
     getTemplateLocationForComponent(fileName: string, position: number): GetTemplateLocationForComponentResponse;
     getTypescriptLanguageService(): ts.LanguageService;
+    applyRefactoring(fileName: string, positionOrRange: number | ts.TextRange, refactorName: string, reportProgress: ApplyRefactoringProgressFn): ts.RefactorEditInfo | undefined;
 }
 export declare function isNgLanguageService(ls: ts.LanguageService | NgLanguageService): ls is NgLanguageService;
