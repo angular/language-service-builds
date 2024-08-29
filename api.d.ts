@@ -72,7 +72,7 @@ export interface NgLanguageService extends ts.LanguageService {
     getComponentLocationsForTemplate(fileName: string): GetComponentLocationsForTemplateResponse;
     getTemplateLocationForComponent(fileName: string, position: number): GetTemplateLocationForComponentResponse;
     getTypescriptLanguageService(): ts.LanguageService;
-    applyRefactoring(fileName: string, positionOrRange: number | ts.TextRange, refactorName: string, reportProgress: ApplyRefactoringProgressFn): ts.RefactorEditInfo | undefined;
+    applyRefactoring(fileName: string, positionOrRange: number | ts.TextRange, refactorName: string, reportProgress: ApplyRefactoringProgressFn): Promise<ts.RefactorEditInfo | undefined>;
     hasCodeFixesForErrorCode(errorCode: number): boolean;
 }
 export declare function isNgLanguageService(ls: ts.LanguageService | NgLanguageService): ls is NgLanguageService;
