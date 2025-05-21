@@ -16,7 +16,7 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// bazel-out/k8-fastbuild/bin/packages/language-service/plugin-factory.mjs
+// bazel-out/k8-fastbuild/bin/packages/language-service/plugin-factory.js
 var plugin_factory_exports = {};
 __export(plugin_factory_exports, {
   factory: () => factory
