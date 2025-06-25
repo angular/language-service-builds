@@ -87,5 +87,7 @@ export interface NgLanguageService extends ts.LanguageService {
     getTypescriptLanguageService(): ts.LanguageService;
     applyRefactoring(fileName: string, positionOrRange: number | ts.TextRange, refactorName: string, reportProgress: ApplyRefactoringProgressFn): Promise<ApplyRefactoringResult | undefined>;
     hasCodeFixesForErrorCode(errorCode: number): boolean;
+    getTokenTypeFromClassification(classification: number): number | undefined;
+    getTokenModifierFromClassification(classification: number): number;
 }
 export declare function isNgLanguageService(ls: ts.LanguageService | NgLanguageService): ls is NgLanguageService;
