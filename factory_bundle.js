@@ -16,7 +16,7 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// bazel-out/k8-fastbuild/bin/packages/language-service/plugin-factory.js
+// packages/language-service/plugin-factory.ts
 var plugin_factory_exports = {};
 __export(plugin_factory_exports, {
   factory: () => factory
@@ -26,7 +26,7 @@ var factory = (tsModule) => {
   let plugin;
   return {
     create(info) {
-      plugin = require("./bundles/language-service.js")(tsModule);
+      plugin = require("@angular/language-service/bundles/language-service.js")(tsModule);
       return plugin.create(info);
     },
     getExternalFiles(project) {

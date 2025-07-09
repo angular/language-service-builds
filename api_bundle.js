@@ -16,7 +16,7 @@ var __copyProps = (to, from, except, desc) => {
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// bazel-out/k8-fastbuild/bin/packages/language-service/api.js
+// packages/language-service/api.ts
 var api_exports = {};
 __export(api_exports, {
   isNgLanguageService: () => isNgLanguageService
