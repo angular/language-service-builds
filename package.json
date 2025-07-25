@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "20.2.0-next.2+sha-63a6b5a",
+  "version": "20.2.0-next.2+sha-c66e9fe",
   "description": "Angular - language services",
   "main": "./index.js",
   "typings": "./index.d.ts",
@@ -13,6 +13,9 @@
     ".": {
       "types": "./index.d.ts",
       "default": "./index.js"
+    },
+    "./bundles/language-service.js": {
+      "default": "./bundles/language-service.js"
     },
     "./package.json": {
       "default": "./package.json"
