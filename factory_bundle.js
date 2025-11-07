@@ -26,7 +26,7 @@ var factory = (tsModule) => {
   let plugin;
   return {
     create(info) {
-      plugin = require("@angular/language-service/bundles/language-service.js")(tsModule);
+      plugin != null ? plugin : plugin = require("@angular/language-service/bundles/language-service.js")(tsModule);
       return plugin.create(info);
     },
     getExternalFiles(project) {
