@@ -10,7 +10,7 @@
  * @description
  * Entry point for all public APIs of the language service package.
  */
-import ts from 'typescript';
+import type ts from 'typescript';
 export interface PluginConfig {
     /**
      * If true, return only Angular results. Otherwise, return Angular + TypeScript
