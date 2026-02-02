@@ -22,22 +22,9 @@ __export(plugin_factory_exports, {
   factory: () => factory
 });
 module.exports = __toCommonJS(plugin_factory_exports);
-var factory = (tsModule) => {
-  let plugin;
-  return {
-    create(info) {
-      plugin != null ? plugin : plugin = require("@angular/language-service/bundles/language-service.js")(tsModule);
-      return plugin.create(info);
-    },
-    getExternalFiles(project) {
-      var _a, _b;
-      return (_b = (_a = plugin == null ? void 0 : plugin.getExternalFiles) == null ? void 0 : _a.call(plugin, project, tsModule.typescript.ProgramUpdateLevel.Full)) != null ? _b : [];
-    },
-    onConfigurationChanged(config) {
-      var _a;
-      (_a = plugin == null ? void 0 : plugin.onConfigurationChanged) == null ? void 0 : _a.call(plugin, config);
-    }
-  };
+var factory = (mod) => {
+  const { initialize } = require("@angular/language-service/bundles/language-service.js")(mod);
+  return initialize(mod);
 };
 /**
  * @license
