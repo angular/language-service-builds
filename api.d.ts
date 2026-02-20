@@ -90,6 +90,13 @@ export interface LinkedEditingRanges {
  * whose API surface is a strict superset of TypeScript's language service.
  */
 export interface NgLanguageService extends ts.LanguageService {
+    /**
+     * Triggers the Angular compiler's analysis pipeline without performing
+     * per-file type checking. This is a lighter alternative to calling
+     * `getSemanticDiagnostics()` when the goal is only to ensure that the
+     * Angular project has been analyzed (e.g. during project initialization).
+     */
+    ensureProjectAnalyzed(): void;
     getTcb(fileName: string, position: number): GetTcbResponse | undefined;
     /**
      * Gets linked editing ranges for synchronized editing of HTML tag pairs.
