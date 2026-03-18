@@ -19,9 +19,19 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // packages/language-service/api.ts
 var api_exports = {};
 __export(api_exports, {
+  AngularSymbolKind: () => AngularSymbolKind,
   isNgLanguageService: () => isNgLanguageService
 });
 module.exports = __toCommonJS(api_exports);
+var AngularSymbolKind = /* @__PURE__ */ ((AngularSymbolKind2) => {
+  AngularSymbolKind2[AngularSymbolKind2["Namespace"] = 3] = "Namespace";
+  AngularSymbolKind2[AngularSymbolKind2["Class"] = 5] = "Class";
+  AngularSymbolKind2[AngularSymbolKind2["Array"] = 18] = "Array";
+  AngularSymbolKind2[AngularSymbolKind2["Object"] = 19] = "Object";
+  AngularSymbolKind2[AngularSymbolKind2["Struct"] = 23] = "Struct";
+  AngularSymbolKind2[AngularSymbolKind2["Event"] = 24] = "Event";
+  return AngularSymbolKind2;
+})(AngularSymbolKind || {});
 function isNgLanguageService(ls) {
   return "getTcb" in ls;
 }
