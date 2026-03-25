@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "22.0.0-next.4+sha-ad57c9d",
+  "version": "22.0.0-next.4+sha-eecfa4c",
   "description": "Angular - language services",
   "main": "./index.js",
   "typings": "./index.d.ts",
@@ -23,6 +23,10 @@
     "./api": {
       "types": "./api.d.ts",
       "default": "./api_bundle.js"
+    },
+    "./private": {
+      "types": "./private.d.ts",
+      "default": "./private_bundle.js"
     }
   },
   "repository": {
