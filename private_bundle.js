@@ -230,14 +230,10 @@ function findFirstMatchingNodeForSourceSpan(tcb, sourceSpan) {
     filter: (node) => true
   });
 }
-function getTcbNodesOfTemplateAtPosition(typeCheckInfo, position, compiler) {
+function getTcbNodesOfTemplateAtPosition(templateNodes, position, tcb) {
   var _a;
-  const target = getTargetAtPosition(typeCheckInfo.nodes, position);
+  const target = getTargetAtPosition(templateNodes, position);
   if (target === null) {
-    return null;
-  }
-  const tcb = compiler.getTemplateTypeChecker().getTypeCheckBlock(typeCheckInfo.declaration);
-  if (tcb === null) {
     return null;
   }
   const tcbNodes = [];
