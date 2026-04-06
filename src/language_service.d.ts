@@ -7,7 +7,7 @@
  */
 import { CompilerOptions } from '@angular/compiler-cli';
 import ts from 'typescript';
-import { ApplyRefactoringProgressFn, ApplyRefactoringResult, AngularInlayHint, GetComponentLocationsForTemplateResponse, InlayHintsConfig, GetTcbResponse, GetTemplateLocationForComponentResponse, LinkedEditingRanges, PluginConfig } from '../api';
+import { AngularInlayHint, ApplyRefactoringProgressFn, ApplyRefactoringResult, GetComponentLocationsForTemplateResponse, GetTcbResponse, GetTemplateLocationForComponentResponse, InlayHintsConfig, LinkedEditingRanges, PluginConfig } from '../api';
 import { CompilerFactory } from './compiler_factory';
 import { DocumentSymbolsOptions, TemplateDocumentSymbol } from './document_symbols';
 export declare class LanguageService {
