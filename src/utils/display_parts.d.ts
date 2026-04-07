@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { LetDeclarationSymbol, PotentialDirective, ReferenceSymbol, VariableSymbol } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
+import { LetDeclarationSymbol, PotentialDirective, ReferenceSymbol, TemplateTypeChecker, VariableSymbol } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
 import ts from 'typescript';
 export declare const ALIAS_NAME: string;
 export declare const SYMBOL_INTERFACE: string;
@@ -38,7 +38,7 @@ export interface DisplayInfo {
     documentation: ts.SymbolDisplayPart[] | undefined;
     tags: ts.JSDocTagInfo[] | undefined;
 }
-export declare function getSymbolDisplayInfo(tsLS: ts.LanguageService, typeChecker: ts.TypeChecker, symbol: ReferenceSymbol | VariableSymbol | LetDeclarationSymbol): DisplayInfo;
+export declare function getSymbolDisplayInfo(tsLS: ts.LanguageService, typeChecker: ts.TypeChecker, symbol: ReferenceSymbol | VariableSymbol | LetDeclarationSymbol, templateTypeChecker: TemplateTypeChecker): DisplayInfo;
 /**
  * Construct a compound `ts.SymbolDisplayPart[]` which incorporates the container and type of a
  * target declaration.
