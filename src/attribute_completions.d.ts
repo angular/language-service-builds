@@ -191,5 +191,5 @@ export declare enum AsciiSortPriority {
  * `insertText` is `(myOutput)="$0"`.
  */
 export declare function addAttributeCompletionEntries(entries: ts.CompletionEntry[], completion: AttributeCompletion, isAttributeContext: boolean, isElementContext: boolean, replacementSpan: ts.TextSpan | undefined, insertSnippet: true | undefined): void;
-export declare function getAttributeCompletionSymbol(attrKind: AttributeCompletionKind, directive: PotentialDirective | null, classPropertyName: string | null, checker: ts.TypeChecker): ts.Symbol | null;
+export declare function getAttributeCompletionSymbol(attrKind: AttributeCompletionKind, directive: PotentialDirective | null, classPropertyName: string | null, checker: ts.TypeChecker, ls?: ts.LanguageService): ts.Symbol | null;
 export declare function buildAnimationCompletionEntries(animations: string[], replacementSpan: ts.TextSpan, kind: DisplayInfoKind): ts.CompletionEntry[];
