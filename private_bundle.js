@@ -86,6 +86,9 @@ var import_typescript3 = __toESM(require("typescript"));
 // packages/language-service/src/utils/format.js
 var import_typescript2 = __toESM(require("typescript"));
 
+// packages/language-service/src/utils/ts_utils.js
+var import_imports = require("@angular/compiler-cli/src/ngtsc/imports");
+
 // packages/language-service/src/utils/index.js
 function isTemplateNodeWithKeyAndValue(node) {
   return isTemplateNode(node) && node.hasOwnProperty("keySpan");

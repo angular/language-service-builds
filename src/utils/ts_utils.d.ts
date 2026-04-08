@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
-import { PotentialDirective, PotentialPipe, TemplateTypeChecker } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
+import { PotentialDirective, PotentialPipe, TemplateTypeChecker, SymbolReference } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
 import ts from 'typescript';
 /**
  * Return the node that most tightly encompasses the specified `position`.
@@ -16,6 +16,7 @@ import ts from 'typescript';
 export declare function findTightestNode(node: ts.Node, position: number): ts.Node | undefined;
 export interface FindOptions<T extends ts.Node> {
     filter: (node: ts.Node) => node is T;
+    position?: number;
 }
 /**
  * Finds TypeScript nodes descending from the provided root which match the given filter.
@@ -25,6 +26,10 @@ export declare function findAllMatchingNodes<T extends ts.Node>(root: ts.Node, o
  * Finds TypeScript nodes descending from the provided root which match the given filter.
  */
 export declare function findFirstMatchingNode<T extends ts.Node>(root: ts.Node, opts: FindOptions<T>): T | null;
+/**
+ * Resolves a ClassDeclaration from a SymbolReference.
+ */
+export declare function getClassDeclarationFromSymbolReference(ls: ts.LanguageService, ref: SymbolReference): ts.ClassDeclaration | null;
 export declare function getParentClassDeclaration(startNode: ts.Node): ts.ClassDeclaration | undefined;
 /**
  * Returns a property assignment from the assignment value if the property name
