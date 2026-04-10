@@ -42,7 +42,7 @@ module.exports = __toCommonJS(private_exports);
 
 // packages/language-service/src/template_target.js
 var import_compiler2 = require("@angular/compiler");
-var import_comments = require("@angular/compiler-cli/src/ngtsc/typecheck/src/comments");
+var import_hybrid_analysis = require("@angular/compiler-cli/private/hybrid_analysis");
 var import_typescript5 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/index.js
@@ -228,7 +228,7 @@ function getTargetAtPosition(template, position) {
   return { position, context: nodeInContext, template: context, parent };
 }
 function findFirstMatchingNodeForSourceSpan(tcb, sourceSpan) {
-  return (0, import_comments.findFirstMatchingNode)(tcb, {
+  return (0, import_hybrid_analysis.findFirstMatchingNode)(tcb, {
     withSpan: sourceSpan,
     filter: (node) => true
   });
@@ -243,7 +243,7 @@ function getTcbNodesOfTemplateAtPosition(templateNodes, position, tcb) {
   if (target.context.kind === TargetNodeKind.RawExpression) {
     const targetNode = target.context.node;
     if (targetNode instanceof import_compiler2.PropertyRead) {
-      const tsNode = (0, import_comments.findFirstMatchingNode)(tcb, {
+      const tsNode = (0, import_hybrid_analysis.findFirstMatchingNode)(tcb, {
         withSpan: targetNode.nameSpan,
         filter: (node) => import_typescript5.default.isPropertyAccessExpression(node)
       });
