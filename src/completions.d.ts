@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 import { AST, TmplAstNode } from '@angular/compiler';
-import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
+import { NgCompiler } from '@angular/compiler-cli';
 import ts from 'typescript';
 import { TemplateTarget } from './template_target';
 export declare enum CompletionNodeContext {

@@ -47,13 +47,11 @@ var import_typescript5 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/index.js
 var import_compiler = require("@angular/compiler");
-var import_file_system = require("@angular/compiler-cli/src/ngtsc/file_system");
-var import_metadata = require("@angular/compiler-cli/src/ngtsc/metadata");
+var import_compiler_cli3 = require("@angular/compiler-cli");
 var import_typescript4 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/display_parts.js
-var import_reflection = require("@angular/compiler-cli/src/ngtsc/reflection");
-var import_api = require("@angular/compiler-cli/src/ngtsc/typecheck/api");
+var import_compiler_cli = require("@angular/compiler-cli");
 var import_typescript = __toESM(require("typescript"));
 var ALIAS_NAME = import_typescript.default.SymbolDisplayPartKind[import_typescript.default.SymbolDisplayPartKind.aliasName];
 var SYMBOL_INTERFACE = import_typescript.default.SymbolDisplayPartKind[import_typescript.default.SymbolDisplayPartKind.interfaceName];
@@ -79,15 +77,12 @@ var DisplayInfoKind;
   DisplayInfoKind2["LET"] = "let";
 })(DisplayInfoKind || (DisplayInfoKind = {}));
 
-// packages/language-service/src/utils/ts_utils.js
-var import_api2 = require("@angular/compiler-cli/src/ngtsc/typecheck/api");
-var import_typescript3 = __toESM(require("typescript"));
-
 // packages/language-service/src/utils/format.js
 var import_typescript2 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/ts_utils.js
-var import_imports = require("@angular/compiler-cli/src/ngtsc/imports");
+var import_compiler_cli2 = require("@angular/compiler-cli");
+var import_typescript3 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/index.js
 function isTemplateNodeWithKeyAndValue(node) {

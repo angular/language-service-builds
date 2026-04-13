@@ -1,4 +1,4 @@
-import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
+import { NgCompiler } from '@angular/compiler-cli';
 import ts from 'typescript';
 export declare class ReferencesBuilder {
     private readonly tsLS;

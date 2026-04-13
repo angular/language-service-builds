@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { LetDeclarationSymbol, PotentialDirective, ReferenceSymbol, TemplateTypeChecker, VariableSymbol } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
+import { LetDeclarationSymbol, PotentialDirective, ReferenceSymbol, TemplateTypeChecker, VariableSymbol } from '@angular/compiler-cli';
 import ts from 'typescript';
 export declare const ALIAS_NAME: string;
 export declare const SYMBOL_INTERFACE: string;

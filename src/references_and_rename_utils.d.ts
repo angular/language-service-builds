@@ -5,10 +5,8 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { AST, TmplAstNode, TmplAstComponent, TmplAstDirective, TmplAstRecursiveVisitor } from '@angular/compiler';
-import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
-import { DirectiveMeta, PipeMeta } from '@angular/compiler-cli/src/ngtsc/metadata';
-import { Symbol, TemplateTypeChecker } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
+import { AST, TmplAstComponent, TmplAstDirective, TmplAstNode, TmplAstRecursiveVisitor } from '@angular/compiler';
+import { DirectiveMeta, NgCompiler, PipeMeta, Symbol, TemplateTypeChecker } from '@angular/compiler-cli';
 import ts from 'typescript';
 import { TypeCheckInfo } from './utils';
 /** Represents a location in a file. */

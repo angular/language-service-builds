@@ -5,9 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
-import { NgCompilerOptions } from '@angular/compiler-cli/src/ngtsc/core/api';
-import { ProgramDriver } from '@angular/compiler-cli/src/ngtsc/program_driver';
+import { NgCompiler, NgCompilerOptions, ProgramDriver } from '@angular/compiler-cli';
 import { LanguageServiceAdapter } from './adapters';
 /**
  * Manages the `NgCompiler` instance which backs the language service, updating or replacing it as

@@ -6,8 +6,8 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 import { CompilerOptions } from '@angular/compiler-cli';
-import ts from 'typescript';
 import { AngularInlayHint, ApplyRefactoringProgressFn, ApplyRefactoringResult, GetComponentLocationsForTemplateResponse, GetTcbResponse, GetTemplateLocationForComponentResponse, InlayHintsConfig, LinkedEditingRanges, PluginConfig } from '../api';
+import ts from 'typescript';
 import { CompilerFactory } from './compiler_factory';
 import { DocumentSymbolsOptions, TemplateDocumentSymbol } from './document_symbols';
 export declare class LanguageService {

@@ -6,7 +6,7 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 import { TmplAstElement, TmplAstTemplate } from '@angular/compiler';
-import { PotentialDirective, TemplateTypeChecker } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
+import { PotentialDirective, TemplateTypeChecker } from '@angular/compiler-cli';
 import ts from 'typescript';
 import { DisplayInfoKind } from './utils/display_parts';
 /**
