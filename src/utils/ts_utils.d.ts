@@ -1,4 +1,12 @@
-import { NgCompiler, PotentialDirective, PotentialPipe, SymbolReference, TemplateTypeChecker } from '@angular/compiler-cli';
+/**
+ * @license
+ * Copyright Google LLC All Rights Reserved.
+ *
+ * Use of this source code is governed by an MIT-style license that can be
+ * found in the LICENSE file at https://angular.dev/license
+ */
+import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
+import { PotentialDirective, PotentialPipe, TemplateTypeChecker, SymbolReference } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
 import ts from 'typescript';
 /**
  * Return the node that most tightly encompasses the specified `position`.

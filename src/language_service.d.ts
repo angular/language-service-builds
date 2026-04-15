@@ -6,10 +6,9 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 import { CompilerOptions } from '@angular/compiler-cli';
-import { AngularInlayHint, ApplyRefactoringProgressFn, ApplyRefactoringResult, GetComponentLocationsForTemplateResponse, GetTcbResponse, GetTemplateLocationForComponentResponse, InlayHintsConfig, LinkedEditingRanges, PluginConfig } from '../api';
 import ts from 'typescript';
+import { ApplyRefactoringProgressFn, ApplyRefactoringResult, GetComponentLocationsForTemplateResponse, GetTcbResponse, GetTemplateLocationForComponentResponse, LinkedEditingRanges, PluginConfig } from '../api';
 import { CompilerFactory } from './compiler_factory';
-import { DocumentSymbolsOptions, TemplateDocumentSymbol } from './document_symbols';
 export declare class LanguageService {
     private readonly project;
     private readonly tsLS;
@@ -30,21 +29,6 @@ export declare class LanguageService {
     getDefinitionAndBoundSpan(fileName: string, position: number): ts.DefinitionInfoAndBoundSpan | undefined;
     getTypeDefinitionAtPosition(fileName: string, position: number): readonly ts.DefinitionInfo[] | undefined;
     getQuickInfoAtPosition(fileName: string, position: number): ts.QuickInfo | undefined;
-    /**
-     * Provide Angular-specific inlay hints for templates.
-     *
-     * This returns hints for:
-     * - @for loop variable types: `@for (user: User of users)`
-     * - @if alias types: `@if (data; as result: ApiResult)`
-     * - Event parameter types: `(click)="onClick($event: MouseEvent)"`
-     * - Pipe output types: `{{ value | async: Observable<T> }}`
-     * - @let declaration types
-     *
-     * @param fileName The file to get inlay hints for
-     * @param span The text span to get hints within
-     * @param config Optional configuration for which hints to show
-     */
-    provideInlayHints(fileName: string, span: ts.TextSpan, config?: InlayHintsConfig): AngularInlayHint[];
     private getQuickInfoAtPositionImpl;
     getReferencesAtPosition(fileName: string, position: number): ts.ReferenceEntry[] | undefined;
     getRenameInfo(fileName: string, position: number): ts.RenameInfo;
@@ -70,15 +54,6 @@ export declare class LanguageService {
     getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined, data: ts.CompletionEntryData | undefined): ts.CompletionEntryDetails | undefined;
     getSignatureHelpItems(fileName: string, position: number, options?: ts.SignatureHelpItemsOptions): ts.SignatureHelpItems | undefined;
     getOutliningSpans(fileName: string): ts.OutliningSpan[];
-    /**
-     * Gets document symbols for Angular templates, including control flow blocks,
-     * elements, components, template references, and @let declarations.
-     * Returns symbols in NavigationTree format for compatibility with TypeScript.
-     *
-     * @param fileName The file path to get template symbols for
-     * @param options Optional configuration for document symbols behavior
-     */
-    getTemplateDocumentSymbols(fileName: string, options?: DocumentSymbolsOptions): TemplateDocumentSymbol[];
     getCompletionEntrySymbol(fileName: string, position: number, entryName: string): ts.Symbol | undefined;
     /**
      * Performance helper that can help make quick decisions for

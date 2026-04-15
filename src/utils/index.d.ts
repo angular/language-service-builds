@@ -6,7 +6,9 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 import { AbsoluteSourceSpan, AST, ParseSourceSpan, ParseSpan, PropertyRead, TmplAstBoundEvent, TmplAstElement, TmplAstNode, TmplAstTemplate } from '@angular/compiler';
-import { AbsoluteFsPath, DirectiveSymbol, NgCompiler, TemplateTypeChecker } from '@angular/compiler-cli';
+import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
+import { AbsoluteFsPath } from '@angular/compiler-cli/src/ngtsc/file_system';
+import { DirectiveSymbol, TemplateTypeChecker } from '@angular/compiler-cli/src/ngtsc/typecheck/api';
 import ts from 'typescript';
 import { DisplayInfoKind } from './display_parts';
 export declare function getTextSpanOfNode(node: TmplAstNode | AST): ts.TextSpan;

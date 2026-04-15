@@ -5,7 +5,8 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { CompilerOptions, NgCompiler } from '@angular/compiler-cli';
+import { CompilerOptions } from '@angular/compiler-cli';
+import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
 import { ApplyRefactoringProgressFn, ApplyRefactoringResult } from '../../../api';
 import ts from 'typescript';
 import type { ActiveRefactoring } from '../refactoring';

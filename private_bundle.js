@@ -42,16 +42,18 @@ module.exports = __toCommonJS(private_exports);
 
 // packages/language-service/src/template_target.js
 var import_compiler2 = require("@angular/compiler");
-var import_hybrid_analysis = require("@angular/compiler-cli/private/hybrid_analysis");
+var import_comments = require("@angular/compiler-cli/src/ngtsc/typecheck/src/comments");
 var import_typescript5 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/index.js
 var import_compiler = require("@angular/compiler");
-var import_compiler_cli3 = require("@angular/compiler-cli");
+var import_file_system = require("@angular/compiler-cli/src/ngtsc/file_system");
+var import_metadata = require("@angular/compiler-cli/src/ngtsc/metadata");
 var import_typescript4 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/display_parts.js
-var import_compiler_cli = require("@angular/compiler-cli");
+var import_reflection = require("@angular/compiler-cli/src/ngtsc/reflection");
+var import_api = require("@angular/compiler-cli/src/ngtsc/typecheck/api");
 var import_typescript = __toESM(require("typescript"));
 var ALIAS_NAME = import_typescript.default.SymbolDisplayPartKind[import_typescript.default.SymbolDisplayPartKind.aliasName];
 var SYMBOL_INTERFACE = import_typescript.default.SymbolDisplayPartKind[import_typescript.default.SymbolDisplayPartKind.interfaceName];
@@ -77,12 +79,15 @@ var DisplayInfoKind;
   DisplayInfoKind2["LET"] = "let";
 })(DisplayInfoKind || (DisplayInfoKind = {}));
 
+// packages/language-service/src/utils/ts_utils.js
+var import_api2 = require("@angular/compiler-cli/src/ngtsc/typecheck/api");
+var import_typescript3 = __toESM(require("typescript"));
+
 // packages/language-service/src/utils/format.js
 var import_typescript2 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/ts_utils.js
-var import_compiler_cli2 = require("@angular/compiler-cli");
-var import_typescript3 = __toESM(require("typescript"));
+var import_imports = require("@angular/compiler-cli/src/ngtsc/imports");
 
 // packages/language-service/src/utils/index.js
 function isTemplateNodeWithKeyAndValue(node) {
@@ -223,7 +228,7 @@ function getTargetAtPosition(template, position) {
   return { position, context: nodeInContext, template: context, parent };
 }
 function findFirstMatchingNodeForSourceSpan(tcb, sourceSpan) {
-  return (0, import_hybrid_analysis.findFirstMatchingNode)(tcb, {
+  return (0, import_comments.findFirstMatchingNode)(tcb, {
     withSpan: sourceSpan,
     filter: (node) => true
   });
@@ -238,7 +243,7 @@ function getTcbNodesOfTemplateAtPosition(templateNodes, position, tcb) {
   if (target.context.kind === TargetNodeKind.RawExpression) {
     const targetNode = target.context.node;
     if (targetNode instanceof import_compiler2.PropertyRead) {
-      const tsNode = (0, import_hybrid_analysis.findFirstMatchingNode)(tcb, {
+      const tsNode = (0, import_comments.findFirstMatchingNode)(tcb, {
         withSpan: targetNode.nameSpan,
         filter: (node) => import_typescript5.default.isPropertyAccessExpression(node)
       });
@@ -410,7 +415,6 @@ var TemplateTargetVisitor = class _TemplateTargetVisitor {
     this.visitAll(block.children);
   }
   visitSwitchExhaustiveCheck(block) {
-    block.expression && this.visitBinding(block.expression);
   }
   visitForLoopBlock(block) {
     this.visit(block.item);

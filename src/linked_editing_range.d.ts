@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { NgCompiler } from '@angular/compiler-cli';
+import { NgCompiler } from '@angular/compiler-cli/src/ngtsc/core';
 import { LinkedEditingRanges } from '../api';
 /**
  * Gets linked editing ranges for synchronized editing of HTML tag pairs.

@@ -6,7 +6,9 @@
  * found in the LICENSE file at https://angular.dev/license
  */
 /** @fileoverview provides adapters for communicating with the ng compiler */
-import { AbsoluteFsPath, ConfigurationHost, FileStats, NgCompilerAdapter, PathSegment, PathString } from '@angular/compiler-cli';
+import { ConfigurationHost } from '@angular/compiler-cli';
+import { NgCompilerAdapter } from '@angular/compiler-cli/src/ngtsc/core/api';
+import { AbsoluteFsPath, FileStats, PathSegment, PathString } from '@angular/compiler-cli/src/ngtsc/file_system';
 import ts from 'typescript';
 export declare class LanguageServiceAdapter implements NgCompilerAdapter {
     private readonly project;
