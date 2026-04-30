@@ -66,6 +66,7 @@ var DisplayInfoKind;
   DisplayInfoKind2["COMPONENT"] = "component";
   DisplayInfoKind2["DIRECTIVE"] = "directive";
   DisplayInfoKind2["EVENT"] = "event";
+  DisplayInfoKind2["INPUT"] = "input";
   DisplayInfoKind2["REFERENCE"] = "reference";
   DisplayInfoKind2["ELEMENT"] = "element";
   DisplayInfoKind2["VARIABLE"] = "variable";
