@@ -21,7 +21,6 @@ export declare class QuickInfoBuilder {
     get(): ts.QuickInfo | undefined;
     private getQuickInfoForSymbol;
     private getQuickInfoForBindingSymbol;
-    private getQuickInfoForTransformedInput;
     private getQuickInfoForElementSymbol;
     private getQuickInfoForVariableSymbol;
     private getQuickInfoForLetDeclarationSymbol;

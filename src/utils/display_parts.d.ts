@@ -22,7 +22,6 @@ export declare enum DisplayInfoKind {
     COMPONENT = "component",
     DIRECTIVE = "directive",
     EVENT = "event",
-    INPUT = "input",
     REFERENCE = "reference",
     ELEMENT = "element",
     VARIABLE = "variable",
