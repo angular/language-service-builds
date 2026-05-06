@@ -9,5 +9,7 @@ import { AST, Call, TmplAstBlockNode, TmplAstDeferredTrigger, TmplAstNode } from
 import type ts from 'typescript';
 export declare function isDollarAny(node: TmplAstNode | AST): node is Call;
 export declare function createDollarAnyQuickInfo(node: Call): ts.QuickInfo;
+export declare function isDollarSafeNavigationMigration(node: TmplAstNode | AST): node is Call;
+export declare function createDollarSafeNavigationMigration(node: Call): ts.QuickInfo;
 export declare function createNgTemplateQuickInfo(node: TmplAstNode | AST): ts.QuickInfo;
 export declare function createQuickInfoForBuiltIn(node: TmplAstDeferredTrigger | TmplAstBlockNode, cursorPositionInTemplate: number): ts.QuickInfo | undefined;
