@@ -416,7 +416,7 @@ var TemplateTargetVisitor = class _TemplateTargetVisitor {
     this.visit(block.item);
     this.visitAll(block.contextVariables);
     this.visitBinding(block.expression);
-    this.visitBinding(block.trackBy);
+    block.trackBy && this.visitBinding(block.trackBy);
     this.visitAll(block.children);
     block.empty && this.visit(block.empty);
   }
