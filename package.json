@@ -1,6 +1,6 @@
 {
   "name": "@angular/language-service",
-  "version": "22.1.0-next.0+sha-06f6dec",
+  "version": "22.1.0-next.0+sha-ec63947",
   "description": "Angular - language services",
   "main": "./index.js",
   "typings": "./index.d.ts",
