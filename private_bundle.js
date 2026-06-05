@@ -346,6 +346,9 @@ var TemplateTargetVisitor = class _TemplateTargetVisitor {
     (0, import_compiler2.tmplAstVisitAll)(this, content.attributes);
     this.visitAll(content.children);
   }
+  visitContentBlock(block) {
+    this.visitAll(block.children);
+  }
   visitVariable(variable) {
   }
   visitReference(reference) {
