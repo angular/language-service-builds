@@ -13,4 +13,4 @@ import type { AngularInlayHint, InlayHintsConfig } from '../api';
 /**
  * Get Angular-specific inlay hints for a template.
  */
-export declare function getInlayHintsForTemplate(compiler: NgCompiler, typeCheckInfo: TypeCheckInfo, span: ts.TextSpan, config?: InlayHintsConfig): AngularInlayHint[];
+export declare function getInlayHintsForTemplate(compiler: NgCompiler, typeCheckInfo: TypeCheckInfo, span: ts.TextSpan, targetFileName: string, config?: InlayHintsConfig): AngularInlayHint[];
