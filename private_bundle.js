@@ -86,7 +86,7 @@ var import_typescript3 = __toESM(require("typescript"));
 
 // packages/language-service/src/utils/index.js
 function isTemplateNodeWithKeyAndValue(node) {
-  return isTemplateNode(node) && node.hasOwnProperty("keySpan");
+  return isTemplateNode(node) && Object.hasOwn(node, "keySpan");
 }
 function isWithinKeyValue(position, node) {
   let { keySpan, valueSpan } = node;
