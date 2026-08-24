@@ -93,7 +93,14 @@ export declare function standaloneTraitOrNgModule(checker: TemplateTypeChecker, 
  * When the component is exported by default, the `symbolName` is `default`, and the `declarationName`
  * should be used as the import name.
  */
-export declare function updateImportsForTypescriptFile(file: ts.SourceFile, symbolName: string, declarationName: string, moduleSpecifier: string): [ts.TextChange[], string];
+export declare function updateImportsForTypescriptFile(file: ts.SourceFile, symbolName: string, declarationName: string, moduleSpecifier: string, preferences?: ts.UserPreferences): [ts.TextChange[], string];
+/**
+ * Whether new string literals in the given file should use single quotes, based on the
+ * user's `quotePreference`. When the preference is `auto` (or absent), the style is inferred
+ * from the first existing import in the file, mirroring TypeScript's own behavior. Defaults
+ * to double quotes when there is nothing to infer from.
+ */
+export declare function shouldUseSingleQuotes(file: ts.SourceFile, preferences: ts.UserPreferences | undefined): boolean;
 /**
  * Updates a given Angular trait, such as an NgModule or standalone Component, by adding
  * `importName` to the list of imports on the decorator arguments.
@@ -118,7 +125,7 @@ export declare function isStandaloneDecorator(decorator: ts.Decorator): boolean 
  * If `exportedSpecifierName` is null, or is equal to `name`, then the qualified import alias will
  * be omitted.
  */
-export declare function generateImport(localName: string, exportedSpecifierName: string | null, rawModuleSpecifier: string): ts.ImportDeclaration;
+export declare function generateImport(localName: string, exportedSpecifierName: string | null, rawModuleSpecifier: string, useSingleQuotes?: boolean): ts.ImportDeclaration;
 /**
  * Update an existing named import with a new member.
  * If `exportedSpecifierName` is null, or is equal to `name`, then the qualified import alias will
@@ -135,4 +142,4 @@ export declare function printNode(node: ts.Node, sourceFile: ts.SourceFile): str
 /**
  * Get the code actions to tell the vscode how to import the directive into the standalone component or ng module.
  */
-export declare function getCodeActionToImportTheDirectiveDeclaration(compiler: NgCompiler, component: ts.ClassDeclaration, importOn: ts.ClassDeclaration, directive: PotentialDirective | PotentialPipe, tsLs: ts.LanguageService, includeCompletionsForModuleExports?: boolean): ts.CodeAction[] | undefined;
+export declare function getCodeActionToImportTheDirectiveDeclaration(compiler: NgCompiler, component: ts.ClassDeclaration, importOn: ts.ClassDeclaration, directive: PotentialDirective | PotentialPipe, tsLs: ts.LanguageService, includeCompletionsForModuleExports?: boolean, preferences?: ts.UserPreferences): ts.CodeAction[] | undefined;
