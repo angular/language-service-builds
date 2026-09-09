@@ -434,6 +434,15 @@ var TemplateTargetVisitor = class _TemplateTargetVisitor {
     block.expressionAlias && this.visit(block.expressionAlias);
     this.visitAll(block.children);
   }
+  visitBoundaryBlock(block) {
+    this.visitAll(block.children);
+    this.visitAll(block.errorBlocks);
+  }
+  visitBoundaryErrorBlock(block) {
+    this.visitAll(block.contextVariables);
+    block.expression && this.visitBinding(block.expression);
+    this.visitAll(block.children);
+  }
   visitUnknownBlock(block) {
   }
   visitLetDeclaration(decl) {
