@@ -69,6 +69,16 @@ export declare class LanguageService {
     private getCompletionsAtPositionImpl;
     getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: ts.FormatCodeOptions | ts.FormatCodeSettings | undefined, preferences: ts.UserPreferences | undefined, data: ts.CompletionEntryData | undefined): ts.CompletionEntryDetails | undefined;
     getSignatureHelpItems(fileName: string, position: number, options?: ts.SignatureHelpItemsOptions): ts.SignatureHelpItems | undefined;
+    /**
+     * Gets the smart selection range (nested ranges used by the editor's
+     * "Expand/Shrink Selection" feature) at a position inside an Angular
+     * template. The ranges follow the template AST, so expressions, control flow
+     * blocks (`@if`, `@for`, ...) and their bodies become selection steps.
+     * Returns `undefined` outside templates; merging with the surrounding
+     * TypeScript structure is left to the editor, which combines the ranges of
+     * every registered selection range provider.
+     */
+    getTemplateSelectionRange(fileName: string, position: number): ts.SelectionRange | undefined;
     getOutliningSpans(fileName: string): ts.OutliningSpan[];
     /**
      * Gets document symbols for Angular templates, including control flow blocks,
