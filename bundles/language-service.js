@@ -1,6 +1,6 @@
 
 /**
- * @license Angular v22.2.3+sha-84a398b
+ * @license Angular v22.2.3+sha-ea8cdc4
  * Copyright Google LLC All Rights Reserved.
  * License: MIT
  */
@@ -38336,7 +38336,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
     function compileDeclareClassMetadata(metadata) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$6));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('decorators', metadata.decorators);
@@ -38358,7 +38358,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
         callbackReturnDefinitionMap.set('ctorParameters', compileCtorParameters(metadata.ctorParameters, /* allowSuppressions */ false));
         callbackReturnDefinitionMap.set('propDecorators', metadata.propDecorators ?? literal$1(null));
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_DEFER_SUPPORT_VERSION));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', metadata.type);
         definitionMap.set('resolveDeferredDeps', compileComponentMetadataAsyncResolver(dependencies));
@@ -38467,7 +38467,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
         const definitionMap = new DefinitionMap();
         const minVersion = getMinimumVersionForPartialOutput(meta);
         definitionMap.set('minVersion', literal$1(minVersion));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         // e.g. `type: MyDirective`
         definitionMap.set('type', meta.type.value);
         if (meta.isStandalone !== undefined) {
@@ -38906,7 +38906,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
     function compileDeclareFactoryFunction(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$5));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.type.value);
         definitionMap.set('deps', compileDependencies(meta.deps));
@@ -38948,7 +38948,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
     function createInjectableDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$4));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.type.value);
         // Only generate providedIn property if it has a non-null value
@@ -39002,7 +39002,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
     function createServiceDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$3));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.type.value);
         if (meta.autoProvided === false) {
@@ -39041,7 +39041,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
     function createInjectorDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$2));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.type.value);
         definitionMap.set('providers', meta.providers);
@@ -39084,7 +39084,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
             throw new Error('Invalid path! Isolated compilation mode should not get into the partial compilation path');
         }
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION$1));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         definitionMap.set('type', meta.type.value);
         // We only generate the keys in the metadata if the arrays contain values.
@@ -39142,7 +39142,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
     function createPipeDefinitionMap(meta) {
         const definitionMap = new DefinitionMap();
         definitionMap.set('minVersion', literal$1(MINIMUM_PARTIAL_LINKER_VERSION));
-        definitionMap.set('version', literal$1('22.2.3+sha-84a398b'));
+        definitionMap.set('version', literal$1('22.2.3+sha-ea8cdc4'));
         definitionMap.set('ngImport', importExpr(Identifiers.core));
         // e.g. `type: MyPipe`
         definitionMap.set('type', meta.type.value);
@@ -39312,7 +39312,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
      * @description
      * Entry point for all public APIs of the compiler package.
      */
-    const VERSION = new Version('22.2.3+sha-84a398b');
+    const VERSION = new Version('22.2.3+sha-ea8cdc4');
 
     /*!
      * @license
@@ -44414,7 +44414,7 @@ ${nodes.map((node) => `"${node.sourceSpan.toString()}"`).join('\n')}
      * @description
      * Entry point for all public APIs of the compiler-cli package.
      */
-    new Version('22.2.3+sha-84a398b');
+    new Version('22.2.3+sha-ea8cdc4');
 
     /**
      * @license
@@ -80898,7 +80898,7 @@ export * from '${relativeEntryPoint}';
      * @param minVersion Minimum required version for the feature.
      */
     function coreVersionSupportsFeature(coreVersion, minVersion) {
-        // A version of `22.2.3+sha-84a398b` usually means that core is at head so it supports
+        // A version of `22.2.3+sha-ea8cdc4` usually means that core is at head so it supports
         // all features. Use string interpolation prevent the placeholder from being replaced
         // with the current version during build time.
         if (coreVersion === `0.0.0-${'PLACEHOLDER'}`) {
