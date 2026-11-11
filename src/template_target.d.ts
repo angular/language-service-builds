@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { AST, Call, SafeCall, TmplAstBoundAttribute, TmplAstBoundEvent, TmplAstComponent, TmplAstDirective, TmplAstElement, TmplAstNode, TmplAstTemplate, TmplAstTextAttribute } from '@angular/compiler';
+import { AST, Call, SafeCall, TmplAstBoundAttribute, TmplAstBoundEvent, TmplAstElement, TmplAstNode, TmplAstTemplate, TmplAstTextAttribute } from '@angular/compiler';
 import tss from 'typescript';
 /**
  * Contextual information for a target position within the template.
@@ -39,7 +39,7 @@ export interface TemplateTarget {
  */
 export type TargetContext = SingleNodeTarget | MultiNodeTarget;
 /** Contexts which logically target only a single node in the template AST. */
-export type SingleNodeTarget = RawExpression | CallExpressionInArgContext | RawTemplateNode | ElementInBodyContext | ElementInTagContext | AttributeInKeyContext | AttributeInValueContext | ComponentInBodyContext | ComponentInTagContext | DirectiveInNameContext | DirectiveInBodyContext;
+export type SingleNodeTarget = RawExpression | CallExpressionInArgContext | RawTemplateNode | ElementInBodyContext | ElementInTagContext | AttributeInKeyContext | AttributeInValueContext;
 /**
  * Contexts which logically target multiple nodes in the template AST, which cannot be
  * disambiguated given a single position because they are all equally relevant. For example, in the
@@ -58,11 +58,7 @@ export declare enum TargetNodeKind {
     ElementInBodyContext = 4,
     AttributeInKeyContext = 5,
     AttributeInValueContext = 6,
-    TwoWayBindingContext = 7,
-    ComponentInTagContext = 8,
-    ComponentInBodyContext = 9,
-    DirectiveInNameContext = 10,
-    DirectiveInBodyContext = 11
+    TwoWayBindingContext = 7
 }
 /**
  * An `AST` expression that's targeted at a given position, with no additional context.
@@ -106,38 +102,6 @@ export interface ElementInTagContext {
 export interface ElementInBodyContext {
     kind: TargetNodeKind.ElementInBodyContext;
     node: TmplAstElement | TmplAstTemplate;
-}
-/**
- * A `TmplAstComponent` element node that's targeted, where the given position is within the tag,
- * e.g. `MyComp` in `<MyComp foo="bar"/>`.
- */
-export interface ComponentInTagContext {
-    kind: TargetNodeKind.ComponentInTagContext;
-    node: TmplAstComponent;
-}
-/**
- * A `TmplAstComponent` element node that's targeted, where the given position is within the body,
- * e.g. `foo="bar"/>` in `<MyComp foo="bar"/>`.
- */
-export interface ComponentInBodyContext {
-    kind: TargetNodeKind.ComponentInBodyContext;
-    node: TmplAstComponent;
-}
-/**
- * A `TmplAstDirective` element node that's targeted, where the given position is within the
- * directive's name (e.g. `MyDir` in `@MyDir`).
- */
-export interface DirectiveInNameContext {
-    kind: TargetNodeKind.DirectiveInNameContext;
-    node: TmplAstDirective;
-}
-/**
- * A `TmplAstDirective` element node that's targeted, where the given position is within the body,
- * e.g. `(foo="bar")` in `@MyDir(foo="bar")`.
- */
-export interface DirectiveInBodyContext {
-    kind: TargetNodeKind.DirectiveInBodyContext;
-    node: TmplAstDirective;
 }
 export interface AttributeInKeyContext {
     kind: TargetNodeKind.AttributeInKeyContext;

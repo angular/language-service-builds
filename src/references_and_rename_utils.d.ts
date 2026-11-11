@@ -5,7 +5,7 @@
  * Use of this source code is governed by an MIT-style license that can be
  * found in the LICENSE file at https://angular.dev/license
  */
-import { AST, TmplAstComponent, TmplAstDirective, TmplAstNode, TmplAstRecursiveVisitor } from '@angular/compiler';
+import { AST, TmplAstNode } from '@angular/compiler';
 import { DirectiveMeta, NgCompiler, PipeMeta, Symbol, TemplateTypeChecker } from '@angular/compiler-cli';
 import ts from 'typescript';
 import { TypeCheckInfo } from './utils';
@@ -62,9 +62,3 @@ export declare function getRenameTextAndSpanAtPosition(node: TmplAstNode | AST, 
  * Returns `null` if the node has no parent class or there is no meta associated with the class.
  */
 export declare function getParentClassMeta(requestNode: ts.Node, compiler: NgCompiler): PipeMeta | DirectiveMeta | null;
-/** Visitor that collects all selectorless AST nodes from a template. */
-export declare class SelectorlessCollector extends TmplAstRecursiveVisitor {
-    private nodes;
-    static getSelectorlessNodes(nodes: TmplAstNode[]): (TmplAstComponent | TmplAstDirective)[];
-    visit(node: TmplAstNode): void;
-}

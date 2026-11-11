@@ -22,7 +22,4 @@ export declare class RenameBuilder {
     private buildRenameRequestsFromTemplateDetails;
     private buildRenameRequestAtTypescriptPosition;
     private buildPipeRenameRequest;
-    private buildSelectorlessRenameRequest;
-    /** Gets the rename locations for a selectorless request. */
-    private getSelectorlessRenameLocations;
 }

@@ -28,7 +28,6 @@ export declare class QuickInfoBuilder {
     private getQuickInfoForPipeSymbol;
     private getQuickInfoForDomBinding;
     private getQuickInfoForDirectiveSymbol;
-    private getQuickInfoForSelectorlessSymbol;
     private getQuickInfoFromTypeDefAtLocation;
     private getQuickInfoAtTcbLocation;
 }

@@ -132,10 +132,6 @@ var TargetNodeKind;
   TargetNodeKind2[TargetNodeKind2["AttributeInKeyContext"] = 5] = "AttributeInKeyContext";
   TargetNodeKind2[TargetNodeKind2["AttributeInValueContext"] = 6] = "AttributeInValueContext";
   TargetNodeKind2[TargetNodeKind2["TwoWayBindingContext"] = 7] = "TwoWayBindingContext";
-  TargetNodeKind2[TargetNodeKind2["ComponentInTagContext"] = 8] = "ComponentInTagContext";
-  TargetNodeKind2[TargetNodeKind2["ComponentInBodyContext"] = 9] = "ComponentInBodyContext";
-  TargetNodeKind2[TargetNodeKind2["DirectiveInNameContext"] = 10] = "DirectiveInNameContext";
-  TargetNodeKind2[TargetNodeKind2["DirectiveInBodyContext"] = 11] = "DirectiveInBodyContext";
 })(TargetNodeKind || (TargetNodeKind = {}));
 var OutsideKeyValueMarkerAst = class extends import_compiler2.AST {
   visit() {
@@ -174,18 +170,6 @@ function getTargetAtPosition(template, position) {
   } else if (candidate instanceof import_compiler2.TmplAstElement) {
     nodeInContext = {
       kind: isWithinTagBody(position, candidate) ? TargetNodeKind.ElementInBodyContext : TargetNodeKind.ElementInTagContext,
-      node: candidate
-    };
-  } else if (candidate instanceof import_compiler2.TmplAstComponent) {
-    nodeInContext = {
-      kind: isWithinTagBody(position, candidate) ? TargetNodeKind.ComponentInBodyContext : TargetNodeKind.ComponentInTagContext,
-      node: candidate
-    };
-  } else if (candidate instanceof import_compiler2.TmplAstDirective) {
-    const startSpan = candidate.startSourceSpan;
-    const endOffset = startSpan.end.offset - (startSpan.toString().endsWith("(") ? 1 : 0);
-    nodeInContext = {
-      kind: position >= startSpan.start.offset && position <= endOffset ? TargetNodeKind.DirectiveInNameContext : TargetNodeKind.DirectiveInBodyContext,
       node: candidate
     };
   } else if ((candidate instanceof import_compiler2.TmplAstBoundAttribute || candidate instanceof import_compiler2.TmplAstBoundEvent || candidate instanceof import_compiler2.TmplAstTextAttribute) && candidate.keySpan !== void 0) {
@@ -310,19 +294,9 @@ var TemplateTargetVisitor = class _TemplateTargetVisitor {
   visitTemplate(template) {
     this.visitDirectiveHost(template);
   }
-  visitComponent(component) {
-    this.visitDirectiveHost(component);
-  }
-  visitDirective(directive) {
-    this.visitDirectiveHost(directive);
-  }
   visitDirectiveHost(node) {
     const isTemplate = node instanceof import_compiler2.TmplAstTemplate;
-    const isDirective = node instanceof import_compiler2.TmplAstDirective;
     this.visitAll(node.attributes);
-    if (!isDirective) {
-      this.visitAll(node.directives);
-    }
     this.visitAll(node.inputs);
     if (this.path[this.path.length - 1] !== node && !(this.path[this.path.length - 1] instanceof import_compiler2.TmplAstBoundAttribute)) {
       return;
@@ -338,9 +312,7 @@ var TemplateTargetVisitor = class _TemplateTargetVisitor {
     if (this.path[this.path.length - 1] !== node) {
       return;
     }
-    if (!isDirective) {
-      this.visitAll(node.children);
-    }
+    this.visitAll(node.children);
   }
   visitContent(content) {
     (0, import_compiler2.tmplAstVisitAll)(this, content.attributes);
@@ -497,8 +469,7 @@ function isWithinNode(position, node) {
   return node.bindings.length > 0 && node.bindings.some((binding) => isWithin(position, binding.sourceSpan)) || node.listeners.length > 0 && node.listeners.some((listener) => isWithin(position, listener.sourceSpan));
 }
 function isWithinTagBody(position, node) {
-  const name = node instanceof import_compiler2.TmplAstComponent ? node.fullName : node.name;
-  const tagEndPos = node.sourceSpan.start.offset + 1 + name.length;
+  const tagEndPos = node.sourceSpan.start.offset + 1 + node.name.length;
   return position > tagEndPos;
 }
 // Annotate the CommonJS export names for ESM import in node:
